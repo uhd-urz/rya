@@ -10,7 +10,6 @@ from ..configuration import (
     minimal_active_configuration,
 )
 
-# noinspection PyProtectedMember
 from ..configuration.config import (
     _NON_CANON_CONFIG_FILE_NAME,
     NON_CANON_YAML_EXTENSION,
@@ -18,7 +17,8 @@ from ..configuration.config import (
     CONFIG_MIS_PATH,
 )
 from ..loggers import LOG_FILE_PATH
-from ..styles import ColorText, Missing
+from ..styles import ColorText
+from ..utils import Missing
 from ..styles.colors import BLUE, LIGHTCYAN, LIGHTGREEN, RED, YELLOW
 
 detected_config = minimal_active_configuration

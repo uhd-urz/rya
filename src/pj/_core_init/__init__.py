@@ -16,6 +16,7 @@ __all__ = [
     "GlobalCLIGracefulCallback",
     "LogItemList",
     "PatternNotFoundError",
+    "Missing",
 ]
 import logging
 
@@ -33,6 +34,7 @@ from ._loggers import (
     SimpleLogger,
     STDERRBaseHandler,
 )
+from ._missing import Missing
 from ._utils import (
     GlobalCLIGracefulCallback,
     GlobalCLIResultCallback,

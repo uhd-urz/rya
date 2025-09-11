@@ -8,8 +8,7 @@ from ..core_validators import (
     Validator,
 )
 from ..loggers import DefaultLogLevels, Logger
-from ..styles import Missing
-from ..utils import add_message
+from ..utils import add_message, Missing
 from ._config_history import FieldValueWithKey, MinimalActiveConfiguration
 from .config import (
     DEVELOPMENT_MODE_DEFAULT_VAL,

@@ -97,8 +97,7 @@ def reinitiate_config(
 
 def preventive_missing_warning(field: Tuple[str, Any], /) -> None:
     from .._names import KEY_DEVELOPMENT_MODE
-    from ..styles import Missing
-    from ..utils import PreventiveWarning, get_sub_package_name
+    from ..utils import Missing, PreventiveWarning, get_sub_package_name
 
     configuration_sub_package_name = get_sub_package_name(__package__)
     if not isinstance(field, Iterable) and not isinstance(field, str):

@@ -3,7 +3,7 @@ import subprocess
 from pathlib import Path
 from typing import Tuple
 
-from ..styles import Missing
+from ..utils import Missing
 
 
 class PreventiveWarning(RuntimeWarning): ...

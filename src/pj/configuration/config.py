@@ -28,7 +28,7 @@ from ..core_validators import (
     ValidationError,
 )
 from ..loggers import _XDG_DATA_HOME, LOG_FILE_PATH, Logger
-from ..styles import Missing
+from ..utils import Missing
 from ..utils import add_message
 from ._config_history import (
     AppliedConfigIdentity,
@@ -81,6 +81,8 @@ __all__ = [
     "INTERNAL_PLUGIN_TYPER_APP_FILE_NAME",
     "INTERNAL_PLUGIN_TYPER_APP_VAR_NAME",
     "ROOT_INSTALLATION_DIR",
+    "_NON_CANON_CONFIG_FILE_NAME",
+    "CONFIG_MIS_PATH"
 ]
 
 logger = Logger()

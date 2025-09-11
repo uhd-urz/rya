@@ -1,11 +1,9 @@
-from ._missing import Missing
 from .base import __PACKAGE_IDENTIFIER__, stderr_console, stdout_console
 from .formats import BaseFormat, Format, FormatError, RegisterFormattingLanguage
 from .highlight import BaseHighlight, ColorText, Highlight, NoteText, print_typer_error
 from .rich_utils import rich_format_help_with_callback
 
 __all__ = [
-    "Missing",
     "stdout_console",
     "stderr_console",
     "__PACKAGE_IDENTIFIER__",
