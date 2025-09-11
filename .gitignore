@@ -4,6 +4,7 @@
 notes.md
 poetry.lock
 .ansible-lint
+pj.yaml
 
 # Python .gitignore
 # Byte-compiled / optimized / DLL files

@@ -5,6 +5,11 @@ description = "pj is a CLI tool."
 requires-python = ">=3.11,<4"
 dependencies = [
     "rich>=14.1.0,< 14.2.0",
+    "dynaconf>=3.2.0,<4",
+    "typer>=0.17.4",
+    "pyyaml==6.0.2",
+    "click>=8.1.8,<8.2",
+    "colorama>=0.4.6",
 ]
 readme = "README.md"
 authors = [{ name = "Mahadi Xion", email = "mhxions@gmail.com" }]
@@ -19,8 +24,14 @@ module-name = "pj"
 module-root = "src"
 
 [project.scripts]
-pj = "pj.pj:prettify"
+pj = "pj.cli.pj:app"
 
 [build-system]
 requires = ["uv_build>=0.7.19,<0.8.0"]
 build-backend = "uv_build"
+
+[tool.vendy]
+target = 'src/pj/'  # vendy will auto-crate src/pj/_vendor
+packages = [
+    "haggis==0.14.1",
+]
