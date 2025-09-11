@@ -1,5 +1,4 @@
 import logging
-from dataclasses import dataclass
 from functools import update_wrapper
 from types import NoneType
 from typing import Optional
@@ -62,17 +61,6 @@ class LogMessageTuple:
 
     def items(self) -> tuple[str, int, Optional[logging.Logger], bool]:
         return self.message, self.level, self.logger, self.is_aggressive
-
-
-@dataclass
-class DefaultLogLevels:
-    CRITICAL = logging.CRITICAL
-    FATAL = logging.FATAL
-    ERROR = logging.ERROR
-    WARNING = logging.WARNING
-    WARN = logging.WARN
-    INFO = logging.INFO
-    DEBUG = logging.DEBUG
 
 
 class LoggerUtil:

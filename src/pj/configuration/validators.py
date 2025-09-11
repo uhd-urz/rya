@@ -1,14 +1,15 @@
+import logging
 from typing import Iterable, Optional
 
 from dynaconf.utils.boxing import DynaBox
 
-from ..configuration.config import NON_CANON_YAML_EXTENSION, CONFIG_FILE_NAME
+from ..configuration.config import CONFIG_FILE_NAME, NON_CANON_YAML_EXTENSION
 from ..core_validators import (
     Validate,
     Validator,
 )
-from ..loggers import DefaultLogLevels, Logger
-from ..utils import add_message, Missing
+from ..loggers import Logger
+from ..utils import Missing, add_message
 from ._config_history import FieldValueWithKey, MinimalActiveConfiguration
 from .config import (
     DEVELOPMENT_MODE_DEFAULT_VAL,
@@ -161,14 +162,14 @@ class PluginConfigurationValidator(ConfigurationValidation, Validator):
                 f"'{self.key_name.lower()}' is detected in configuration file, "
                 f"but it's null."
             )
-            add_message(message, DefaultLogLevels.WARNING, is_aggressive=True)
+            add_message(message, logging.WARNING, is_aggressive=True)
             return self.fallback_value
         if not isinstance(value, dict):
             message = (
                 f"'{self.key_name.lower()}' is detected in configuration file, "
                 f"but it's not a {NON_CANON_YAML_EXTENSION.upper()} dictionary."
             )
-            add_message(message, DefaultLogLevels.WARNING, is_aggressive=True)
+            add_message(message, logging.WARNING, is_aggressive=True)
             return self.fallback_value
         else:
             value: dict = value.to_dict()  # Dynaconf uses Box:
@@ -181,7 +182,7 @@ class PluginConfigurationValidator(ConfigurationValidation, Validator):
                         f"but it's not a {NON_CANON_YAML_EXTENSION.upper()} dictionary. "
                         f"Plugin configuration for '{plugin_name}' will be ignored."
                     )
-                    add_message(message, DefaultLogLevels.WARNING, is_aggressive=True)
+                    add_message(message, logging.WARNING, is_aggressive=True)
                     value.pop(plugin_name)
         return value
 

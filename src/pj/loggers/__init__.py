@@ -1,5 +1,4 @@
 __all__ = [
-    "DefaultLogLevels",
     "LogMessageTuple",
     "SimpleLogger",
     "STDERRBaseHandler",
@@ -19,7 +18,6 @@ __all__ = [
 ]
 from .._core_init import (
     BaseHandler,
-    DefaultLogLevels,
     Logger,
     LoggerUtil,
     LogItemList,

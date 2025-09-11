@@ -28,7 +28,6 @@ from ..configuration import (
 )
 from ..core_validators import Exit, PathValidator, Validate, ValidationError
 from ..loggers import (
-    DefaultLogLevels,
     FileLogger,
     GlobalLogRecordContainer,
     Logger,
@@ -68,11 +67,11 @@ pretty.install()
 if get_development_mode(skip_validation=True) is True:
     Exit.SYSTEM_EXIT = False
     for handler in logger.handlers:
-        handler.setLevel(DefaultLogLevels.DEBUG)
+        handler.setLevel(logging.DEBUG)
     for handler in file_logger.handlers:
-        handler.setLevel(DefaultLogLevels.DEBUG)
+        handler.setLevel(logging.DEBUG)
     for handler in SimpleLogger().handlers:
-        handler.setLevel(DefaultLogLevels.DEBUG)
+        handler.setLevel(logging.DEBUG)
 
 
 def result_callback_wrapper(_, override_config):

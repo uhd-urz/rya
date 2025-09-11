@@ -1,5 +1,4 @@
 __all__ = [
-    "DefaultLogLevels",
     "LogMessageTuple",
     "SimpleLogger",
     "STDERRBaseHandler",
@@ -24,7 +23,6 @@ from .._vendor import haggis
 from .._vendor.haggis.logs import add_logging_level
 from ._loggers import (
     BaseHandler,
-    DefaultLogLevels,
     GlobalLogRecordContainer,
     Logger,
     LoggerUtil,
