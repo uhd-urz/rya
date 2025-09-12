@@ -1,6 +1,7 @@
 import logging
 import platform
 import sys
+from dataclasses import astuple
 from functools import partial
 from sys import argv
 from time import sleep
@@ -28,10 +29,10 @@ from ..configuration import (
 )
 from ..core_validators import Exit, PathValidator, Validate, ValidationError
 from ..loggers import (
-    get_file_logger,
     GlobalLogRecordContainer,
-    get_logger,
     ResultCallbackHandler,
+    get_file_logger,
+    get_logger,
     get_simple_logger,
 )
 from ..path import ProperPath
@@ -102,19 +103,7 @@ SENSITIVE_PLUGIN_NAMES: tuple[str, str, str] = (
 SPECIAL_SENSITIVE_PLUGIN_NAMES: tuple[str] = ("show-config",)
 COMMANDS_TO_SKIP_CLI_STARTUP: list = list(SENSITIVE_PLUGIN_NAMES)
 CLI_STARTUP_CALLBACK_PANEL_NAME: str = f"{APP_NAME} global options"
-RESERVED_PLUGIN_NAMES: tuple[str, ...] = (
-    "apikeys",
-    "config",
-    "info",
-    "items",
-    "events",
-    "todolist",
-    "users",
-    "idps",
-    "import",
-    "exports",
-    APP_NAME,
-)
+RESERVED_PLUGIN_NAMES: tuple[str, ...] = (APP_NAME,)
 INTERNAL_PLUGIN_NAME_REGISTRY: dict = {}
 EXTERNAL_LOCAL_PLUGIN_NAME_REGISTRY: dict = {}
 
@@ -300,7 +289,8 @@ def cli_startup_for_plugins(
     if override_config is not None:
         print_typer_error(
             f"--override-config/--OC can only be passed after "
-            f"the main program name '{APP_NAME}', and not after a plugin name."
+            f"the main program name '{APP_NAME}', "
+            f"and not after a plugin name."
         )
         raise Exit(1)
     # Calling cli_startup again here would call cli_startup
@@ -365,7 +355,7 @@ def messages_panel():
     messages = MessagesList()
 
     if messages:
-        handler = RichHandler(show_path=False, show_time=False)
+        rich_handler = RichHandler(show_path=False, show_time=False)
         log_record = logging.LogRecord(
             logger.name,
             level=logging.NOTSET,
@@ -379,7 +369,7 @@ def messages_panel():
         grid.add_column(style="bold")
         grid.add_column()
         for i, log_tuple in enumerate(messages, start=1):
-            message, level, logger_, is_aggressive = log_tuple.items()
+            message, level, logger_, is_aggressive = astuple(log_tuple)
             file_logger.log(level, message) if logger_ is None else logger_.log(
                 level, message
             )
@@ -387,10 +377,10 @@ def messages_panel():
             log_record.levelname = logging.getLevelName(log_tuple.level)
             # The following is the only way that I could figure out for the log
             # message to show up in a rich panel without breaking the pretty rich formatting.
-            message = handler.render(
+            message = rich_handler.render(
                 record=log_record,
                 traceback=None,
-                message_renderable=handler.render_message(
+                message_renderable=rich_handler.render_message(
                     record=log_record,
                     message=log_tuple.message,
                 ),
@@ -399,9 +389,11 @@ def messages_panel():
         grid.add_row(
             "",
             NoteText(
-                f"{APP_NAME} will continue to work despite the above warnings. "
-                f"Set [dim]development_mode: True[/dim] in {CONFIG_FILE_NAME} configuration "
-                "file to debug these errors with Python traceback (if any).",
+                f"{APP_NAME} will continue to work despite "
+                f"the above warnings. Set [dim]development_mode: True[/dim] "
+                f"in {CONFIG_FILE_NAME} configuration "
+                "file to debug these errors with Python "
+                "traceback (if any).",
                 stem="Note",
             ),
         )
@@ -422,21 +414,18 @@ typer.rich_utils.rich_format_help = partial(
 @app.command(short_help=f"Initialize {APP_NAME} configuration file.")
 def init() -> None:
     """
-    A quick and simple command to initialize pj configuration file.
-    A 'host' and an 'api_token' are absolutely necessary to be able to make API calls to eLabFTW API endpoints.
-    We define those values in the configuration file. pj is capable of multiple configuration files
-    that follow an order of hierarchy. This command is meant to be user-friendly and only creates one configuration
-    file in the user's home directory. See [README](https://pypi.org/project/pj/) for use-cases of
-    advanced configuration files.
+    A quick and simple command to initialize the pj configuration file.
+    pj supports multiple configuration files
+    that follow a priority hierarchy. This command is meant to be user-friendly and
+    only creates one configuration file in the user's home directory.
+    See [README](https://pypi.org/project/pj-cli/) for use-cases of advanced configuration files.
 
-    <br/>
     'pj init' can be run with or without any arguments. When it is run without arguments, a user prompt is shown
-    asking for the required values. E.g.,
-    <br/>
-    Without arguments: `pj init`
-    <br/>
-    With arguments: `pj init --host <host> --api-token <api-token> --export-dir <export-directory>`
+    asking for the required values.
 
+    Without arguments: `pj init`
+
+    With arguments: `pj init --development_mode <value>`
     """
     with stdout_console.status(
         f"Creating configuration file {CONFIG_FILE_NAME}...", refresh_per_second=15
@@ -448,8 +437,10 @@ def init() -> None:
             validate_local_config_loc()
         except ValidationError:
             logger.error(
-                f"{APP_NAME} couldn't validate path '{LOCAL_CONFIG_LOC}' for writing configuration! "
-                f"Please make sure you have write and read access to '{LOCAL_CONFIG_LOC}'. "
+                f"{APP_NAME} couldn't validate path '{LOCAL_CONFIG_LOC}' "
+                f"for writing configuration! "
+                f"Please make sure you have write and read access to "
+                f"'{LOCAL_CONFIG_LOC}'. "
                 "Configuration initialization has failed!"
             )
             raise Exit(1)
@@ -460,7 +451,8 @@ def init() -> None:
                     if f.read():
                         status.stop()
                         logger.error(
-                            f"A configuration file '{LOCAL_CONFIG_LOC}' already exists and it's not empty! "
+                            f"A configuration file '{LOCAL_CONFIG_LOC}' already exists "
+                            f"and it's not empty! "
                             f"It's ambiguous what to do in this situation."
                         )
                         logger.error("Configuration initialization has failed!")
@@ -485,7 +477,8 @@ def init() -> None:
             else:
                 stdout_console.print(
                     "Configuration file has been successfully created! "
-                    f"Run '{APP_NAME} show-config' to see the configuration path "
+                    f"Run '{APP_NAME} show-config' to see "
+                    f"the configuration path "
                     "and more configuration details.",
                     style="green",
                 )
@@ -494,7 +487,7 @@ def init() -> None:
 @app.command(name="show-config")
 def show_config(
     no_keys: Annotated[
-        Optional[bool],
+        bool,
         typer.Option("--no-keys", help=docs["no_keys"], show_default=True),
     ] = False,
 ) -> None:
@@ -529,57 +522,59 @@ for plugin_info in external_local_plugin_typer_apps:
         continue
     if ext_app_obj is not None:
         original_name: str = ext_app_obj.info.name
-        app_name: str = original_name.lower()
-        if app_name in EXTERNAL_LOCAL_PLUGIN_NAME_REGISTRY:
+        ext_app_name: str = original_name.lower()
+        if ext_app_name in EXTERNAL_LOCAL_PLUGIN_NAME_REGISTRY:
             error_message = (
                 f"Plugin name '{original_name}' from {_path} conflicts with an "
-                f"existing third-party plugin from {EXTERNAL_LOCAL_PLUGIN_NAME_REGISTRY[app_name].path}. "
+                f"existing third-party plugin from "
+                f"{EXTERNAL_LOCAL_PLUGIN_NAME_REGISTRY[ext_app_name].path}. "
                 f"Please rename the plugin."
             )
             error_message += (
                 " Note, plugin names are case-insensitive."
-                if original_name != app_name
+                if original_name != ext_app_name
                 else ""
             )
             disable_plugin(
                 app,
-                plugin_name=app_name,
+                plugin_name=ext_app_name,
                 err_msg=error_message,
                 panel_name=THIRD_PARTY_PLUGIN_PANEL_NAME,
                 short_reason="naming conflict",
             )
-        elif app_name in INTERNAL_PLUGIN_NAME_REGISTRY:
+        elif ext_app_name in INTERNAL_PLUGIN_NAME_REGISTRY:
             error_message = (
-                f"Plugin name '{original_name}' from {_path} conflicts with an "
+                f"Plugin name '{original_name}' from {_path} "
+                f"conflicts with an "
                 f"existing built-in plugin name. "
                 f"Please rename the plugin."
             )
             error_message += (
                 " Note, plugin names are case-insensitive."
-                if original_name != app_name
+                if original_name != ext_app_name
                 else ""
             )
             disable_plugin(
                 app,
-                plugin_name=app_name,
+                plugin_name=ext_app_name,
                 err_msg=error_message,
                 panel_name=INTERNAL_PLUGIN_PANEL_NAME,
                 short_reason="naming conflict",
             )
-        elif app_name in RESERVED_PLUGIN_NAMES:
+        elif ext_app_name in RESERVED_PLUGIN_NAMES:
             error_message = (
-                f"Plugin name '{original_name}' from {_path} conflicts with an "
-                f"reserved name. "
+                f"Plugin name '{original_name}' from {_path} "
+                f"conflicts with a reserved name. "
                 f"Please rename the plugin."
             )
             error_message += (
                 " Note, plugin names are case-insensitive."
-                if original_name != app_name
+                if original_name != ext_app_name
                 else ""
             )
             disable_plugin(
                 app,
-                plugin_name=app_name,
+                plugin_name=ext_app_name,
                 err_msg=error_message,
                 panel_name=THIRD_PARTY_PLUGIN_PANEL_NAME,
                 short_reason="naming conflict",
@@ -592,13 +587,15 @@ for plugin_info in external_local_plugin_typer_apps:
                     )[:2]
                 except PythonVersionCheckFailed as e:
                     error_message = (
-                        f"Plugin name '{original_name}' from {_path} uses virtual environment "
+                        f"Plugin name '{original_name}' from {_path} uses "
+                        f"virtual environment "
                         f"{_venv} whose own Python version could not "
-                        f"be determined for the following reason: {e}. Plugin will be disabled."
+                        f"be determined for the following reason: "
+                        f"{e}. Plugin will be disabled."
                     )
                     disable_plugin(
                         app,
-                        plugin_name=app_name,
+                        plugin_name=ext_app_name,
                         err_msg=error_message,
                         panel_name=THIRD_PARTY_PLUGIN_PANEL_NAME,
                         short_reason="undetermined .venv Python version",
@@ -609,24 +606,26 @@ for plugin_info in external_local_plugin_typer_apps:
                         own_python_version := platform.python_version_tuple()[:2]
                     ):
                         error_message = (
-                            f"Plugin name '{original_name}' from {_path} uses virtual environment "
+                            f"Plugin name '{original_name}' from {_path} "
+                            f"uses virtual environment "
                             f"{_venv} whose Python version (major and minor) "
                             f"'{'.'.join(external_plugin_python_version)}' "
                             f"does not match {APP_NAME}'s own Python version "
-                            f"'{'.'.join(own_python_version)}'. Plugin will be disabled."
+                            f"'{'.'.join(own_python_version)}'. "
+                            f"Plugin will be disabled."
                         )
                         disable_plugin(
                             app,
-                            plugin_name=app_name,
+                            plugin_name=ext_app_name,
                             err_msg=error_message,
                             panel_name=THIRD_PARTY_PLUGIN_PANEL_NAME,
                             short_reason=".venv Python version conflict",
                         )
                         continue
-            EXTERNAL_LOCAL_PLUGIN_NAME_REGISTRY[app_name] = PluginInfo(
+            EXTERNAL_LOCAL_PLUGIN_NAME_REGISTRY[ext_app_name] = PluginInfo(
                 ext_app_obj, _path, _venv, _proj_dir
             )
-            COMMANDS_TO_SKIP_CLI_STARTUP.append(app_name)
+            COMMANDS_TO_SKIP_CLI_STARTUP.append(ext_app_name)
             app.add_typer(
                 ext_app_obj,
                 rich_help_panel=THIRD_PARTY_PLUGIN_PANEL_NAME,

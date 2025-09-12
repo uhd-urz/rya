@@ -28,8 +28,7 @@ from ..core_validators import (
     ValidationError,
 )
 from ..loggers import _XDG_DATA_HOME, LOG_FILE_PATH, get_logger
-from ..utils import Missing
-from ..utils import add_message
+from ..utils import Missing, add_message
 from ._config_history import (
     AppliedConfigIdentity,
     ConfigHistory,
@@ -137,8 +136,8 @@ else:
         APP_DATA_DIR = validate_app_dir.get()
     except ValidationError:
         logger.critical(
-            f"{APP_NAME} couldn't validate {FALLBACK_DIR} to store {APP_NAME} internal application data. "
-            f"{APP_NAME} will not run!"
+            f"{APP_NAME} couldn't validate {FALLBACK_DIR} to store {APP_NAME} "
+            f"internal application data. {APP_NAME} will not run!"
         )
         raise CriticalValidationError
 

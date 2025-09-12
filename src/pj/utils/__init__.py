@@ -7,7 +7,7 @@ from .._core_init import (
     PatternNotFoundError,
     get_app_version,
 )
-from .messages import MessagesList, TupleList, add_message
+from .messages import MessagesList, DataObjectList, add_message
 from .utils import (
     PreventiveWarning,
     PythonVersionCheckFailed,
@@ -19,7 +19,7 @@ from .utils import (
 
 __all__ = [
     "MessagesList",
-    "TupleList",
+    "DataObjectList",
     "add_message",
     "PreventiveWarning",
     "PythonVersionCheckFailed",
