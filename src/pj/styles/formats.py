@@ -224,12 +224,6 @@ class RegisterFormattingLanguage:
         )
 
 
-class Format:
-    def __new__(cls, language: str, /, *, package_identifier: str) -> BaseFormat:
-        lang = RegisterFormattingLanguage(
-            language, package_identifier=package_identifier
-        )
-        return lang.formatter()
-
-
-BaseFormat.register(Format)
+def get_formatter(language: str, /, *, package_identifier: str) -> BaseFormat:
+    lang = RegisterFormattingLanguage(language, package_identifier=package_identifier)
+    return lang.formatter()

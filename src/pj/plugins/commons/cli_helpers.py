@@ -1,7 +1,8 @@
+from collections import namedtuple
 from collections.abc import Iterable
 from dataclasses import dataclass
 from functools import wraps
-from typing import Callable, Literal, Optional, Type, Union
+from typing import Callable, Literal, NamedTuple, Optional, Type
 
 import click
 import typer
@@ -9,10 +10,12 @@ from typer.core import TyperGroup
 from typer.models import CommandFunctionType
 
 from ...configuration import APP_NAME, DEFAULT_EXPORT_DATA_FORMAT
-from ...core_validators import Exit, PathValidationError
+from ...core_validators import Exit, PathValidationError, Validate
 from ...loggers import get_logger
 from ...path import ProperPath
+from ...styles import FormatError, get_formatter
 from ...utils import check_reserved_keyword
+from .export import ExportPathValidator
 
 logger = get_logger()
 
@@ -28,75 +31,74 @@ detected_click_feedback: _DetectedClickFeedback = _DetectedClickFeedback(
 )
 
 
-class CLIExport:
-    def __new__(
-        cls,
-        data_format: Optional[str] = None,
-        export_dest: Optional[str] = None,
-        can_overwrite: bool = False,
-    ):
-        from collections import namedtuple
-
-        from ...core_validators import Validate
-        from .export import ExportPathValidator
-
-        try:
-            validate_export = Validate(
-                ExportPathValidator(export_dest, can_overwrite=can_overwrite)
-            )
-        except (ValueError, PathValidationError) as e:
-            logger.error(e)
-            raise Exit(1)
-        export_dest: ProperPath = validate_export.get()
-
-        _export_file_ext: str = (
-            export_dest.expanded.suffix.removeprefix(".")
-            if export_dest.kind == "file"
-            else None
+def get_cli_exportable_params(
+    data_format: Optional[str] = None,
+    export_dest: Optional[str] = None,
+    can_overwrite: bool = False,
+) -> NamedTuple:
+    try:
+        validate_export = Validate(
+            ExportPathValidator(export_dest, can_overwrite=can_overwrite)
         )
-        data_format = (
-            data_format or _export_file_ext or DEFAULT_EXPORT_DATA_FORMAT
-        )  # default data_format format
-        ExportParams = namedtuple(
-            "ExportParams", ["data_format", "destination", "extension"]
+    except (ValueError, PathValidationError) as e:
+        logger.error(e)
+        raise Exit(1)
+    validated_export_dest: ProperPath = validate_export.get()
+
+    _export_file_ext: Optional[str] = (
+        validated_export_dest.expanded.suffix.removeprefix(".")
+        if validated_export_dest.kind == "file"
+        else None
+    )
+    data_format = (
+        data_format or _export_file_ext or DEFAULT_EXPORT_DATA_FORMAT
+    )  # default data_format format
+    ExportableParams = namedtuple(
+        "ExportableParams", ["data_format", "destination", "extension"]
+    )
+    return ExportableParams(data_format, validated_export_dest, _export_file_ext)
+
+
+def get_cli_formatter(
+    data_format: str,
+    package_identifier: str,
+    export_file_ext: Optional[str] = None,
+):
+    try:
+        format = get_formatter(data_format, package_identifier=package_identifier)
+    except FormatError as e:
+        logger.error(e)
+        logger.info(
+            f"{APP_NAME} will fallback to '{DEFAULT_EXPORT_DATA_FORMAT}' format."
         )
-        return ExportParams(data_format, export_dest, _export_file_ext)
-
-
-class CLIFormat:
-    FALLBACK_DATA_FORMAT = DEFAULT_EXPORT_DATA_FORMAT
-
-    def __new__(
-        cls,
-        data_format: str,
-        package_identifier: str,
-        export_file_ext: Optional[str] = None,
-    ):
-        from ...styles import Format, FormatError
-
-        try:
-            format = Format(data_format, package_identifier=package_identifier)
-        except FormatError as e:
-            logger.error(e)
-            logger.info(
-                f"{APP_NAME} will fallback to '{cls.FALLBACK_DATA_FORMAT}' format."
-            )
-            format = Format(
-                cls.FALLBACK_DATA_FORMAT, package_identifier=package_identifier
-            )  # Falls back to DEFAULT_EXPORT_DATA_FORMAT
-        format_convention: Union[str, Iterable[str]] = format.convention
-        if isinstance(format.convention, str):
+        format = get_formatter(
+            DEFAULT_EXPORT_DATA_FORMAT, package_identifier=package_identifier
+        )
+    format_convention = format.convention
+    if format_convention is not None:
+        if isinstance(format_convention, str):
             ...
-        elif isinstance(format.convention, Iterable):
+        elif isinstance(format_convention, Iterable):
             format.convention = next(
                 iter(format_convention)
             )  # only accept the first item as convention and modify format.convention
-        if export_file_ext and export_file_ext not in format_convention:
+        if export_file_ext is not None and export_file_ext != format_convention:
             logger.info(
                 f"File extension is '{export_file_ext}' but data "
                 f"format will be of format '{format.convention.upper()}'."
             )
         return format
+    logger.warning(
+        f"The formatter found {format!r} for format '{data_format}' "
+        f"does not have a non-empty convention."
+    )
+    logger.info(
+        f"{APP_NAME} will fallback to '{DEFAULT_EXPORT_DATA_FORMAT}' "
+        f"format for exporting."
+    )
+    return get_formatter(
+        DEFAULT_EXPORT_DATA_FORMAT, package_identifier=package_identifier
+    )
 
 
 class OrderedCommands(TyperGroup):
