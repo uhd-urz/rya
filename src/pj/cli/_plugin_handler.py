@@ -88,8 +88,7 @@ class ExternalPluginLocationValidator(Validator):
                     f"'location' attribute for class {self.__class__.__class__} "
                     f"is invalid."
                 ) from e
-            else:
-                self._location = value.expanded
+        self._location = value
 
     def validate(self):
         _CANON_PLUGIN_METADATA_FILE_NAME: str = f"{EXTERNAL_LOCAL_PLUGIN_METADATA_FILE_NAME_PREFIX}.{NON_CANON_YAML_EXTENSION}"
@@ -161,10 +160,10 @@ class ExternalPluginLocationValidator(Validator):
                                     f"value '{CLI_SCRIPT_PATH}' is invalid."
                                 )
                             else:
-                                if CLI_SCRIPT_PATH.expanded.exists():
+                                if CLI_SCRIPT_PATH.exists():
                                     parsed_metadata[
                                         EXTERNAL_LOCAL_PLUGIN_METADATA_FILE_KEY_CLI_SCRIPT_PATH
-                                    ] = CLI_SCRIPT_PATH.expanded.absolute()
+                                    ] = CLI_SCRIPT_PATH.absolute()
                                 else:
                                     raise ValidationError(
                                         f"Key '{EXTERNAL_LOCAL_PLUGIN_METADATA_FILE_KEY_CLI_SCRIPT_PATH}' "
@@ -189,10 +188,10 @@ class ExternalPluginLocationValidator(Validator):
                                     f"value '{VENV_PATH}' is invalid."
                                 )
                             else:
-                                if VENV_PATH.expanded.exists():
+                                if VENV_PATH.exists():
                                     parsed_metadata[
                                         EXTERNAL_LOCAL_PLUGIN_METADATA_FILE_KEY_VENV_PATH
-                                    ] = VENV_PATH.expanded.absolute()
+                                    ] = VENV_PATH.absolute()
                                 else:
                                     raise ValidationError(
                                         f"Key '{EXTERNAL_LOCAL_PLUGIN_METADATA_FILE_KEY_VENV_PATH}' "
@@ -206,7 +205,7 @@ class ExternalPluginLocationValidator(Validator):
                         except KeyError:
                             PROJECT_PATH = parsed_metadata[
                                 EXTERNAL_LOCAL_PLUGIN_METADATA_FILE_KEY_PROJECT_PATH
-                            ] = CLI_SCRIPT_PATH.expanded.parent
+                            ] = CLI_SCRIPT_PATH.parent
                         else:
                             try:
                                 PROJECT_PATH = ProperPath(PROJECT_PATH)
@@ -217,10 +216,10 @@ class ExternalPluginLocationValidator(Validator):
                                     f"value '{PROJECT_PATH}' is invalid."
                                 )
                             else:
-                                if PROJECT_PATH.expanded.exists():
+                                if PROJECT_PATH.exists():
                                     parsed_metadata[
                                         EXTERNAL_LOCAL_PLUGIN_METADATA_FILE_KEY_PROJECT_PATH
-                                    ] = PROJECT_PATH.expanded.absolute()
+                                    ] = PROJECT_PATH.absolute()
                                 else:
                                     raise ValidationError(
                                         f"Key '{EXTERNAL_LOCAL_PLUGIN_METADATA_FILE_KEY_PROJECT_PATH}' "

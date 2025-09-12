@@ -72,9 +72,9 @@ class PathValidator(Validator):
                 else p
             )
             try:
-                if not p.expanded.exists():
+                if not p.exists():
                     p.create()
-                    self._self_created_files.append(p.expanded)
+                    self._self_created_files.append(p)
                     _self_created_file = True
                 with p_child.open(mode="ba+") as f:
                     f.write(
@@ -102,10 +102,10 @@ class PathValidator(Validator):
                     not self.retain_created_file
                     and _self_created_file
                     and p.kind == "file"
-                    and p.expanded.stat().st_size == 0
+                    and p.stat().st_size == 0
                 ):
                     p.remove()
-                return p.expanded
+                return p
         validation_error = PathValidationError()
         validation_error.errno = errno
         raise validation_error("Given path(s) could not be validated!")

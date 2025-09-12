@@ -1,5 +1,4 @@
 import logging
-import os
 from pathlib import Path
 from shutil import rmtree
 from typing import Optional, Self, Union
@@ -10,46 +9,44 @@ from ._core_init import NoException, get_logger
 class ProperPath(Path):
     def __init__(
         self,
-        name: Union[str, Path, None, "ProperPath"],
-        env_var: bool = False,
+        actual: Union[str, Path, "ProperPath"],
         kind: Optional[str] = None,  # Here, None => Undefined/unknown
         err_logger: Optional[logging.Logger] = None,
     ):
-        self.name = name
-        self.env_var = env_var
+        self.actual = actual
+        super().__init__(self._expanded)
         self.kind = kind
         self.err_logger = err_logger or get_logger()
         self.PathException = NoException
-        super().__init__(self.name)
 
     def __str__(self):
-        return str(self.expanded)
+        return super().__str__()
 
     def __repr__(self):
         return (
-            f"{self.__class__.__name__}(name={self.name}, env_var={self.env_var}, kind={self.kind}, "
-            f"err_logger={self.err_logger})"
+            f"{self.__class__.__name__}(path={self}, actual={self.actual}, "
+            f"kind={self.kind}, err_logger={self.err_logger})"
         )
 
     def __eq__(self, to):
-        return self.expanded == ProperPath(to).expanded
+        return super().__eq__(to)
 
     def __truediv__(self, other) -> "ProperPath":
-        return ProperPath(self.expanded / other, err_logger=self.err_logger)
+        return ProperPath(self._expanded / other, err_logger=self.err_logger)
 
     @property
-    def name(self) -> str:
-        return self._name
+    def actual(self) -> str:
+        return self._actual
 
-    @name.setter
-    def name(self, value) -> None:
+    @actual.setter
+    def actual(self, value) -> None:
         if isinstance(
             value, ProperPath
         ):  # We want to be able to pass a ProperPath() to ProperPath()
-            value = value.name
+            value = value.actual
         if value == "":
             raise ValueError("Path cannot be an empty string!")
-        self._name = value
+        self._actual = value
 
     @property
     def err_logger(self):
@@ -58,7 +55,9 @@ class ProperPath(Path):
     @err_logger.setter
     def err_logger(self, value):
         if not isinstance(value, logging.Logger):
-            raise ValueError("'err_logger' must be a logging.Logger instance!")
+            raise ValueError(
+                f"'err_logger' must be a {logging.Logger.__name__} instance!"
+            )
         self._err_logger = value
 
     # noinspection PyPep8Naming
@@ -82,18 +81,11 @@ class ProperPath(Path):
         raise AttributeError("PathException cannot be deleted!")
 
     @property
-    def expanded(self) -> Path:
-        if self.env_var:
-            try:
-                return Path(os.environ[self.name]).expanduser()
-            except KeyError as e:
-                raise ValueError(
-                    f"Environment variable {self.name} doesn't exist."
-                ) from e
-        return Path(self.name).expanduser()
+    def _expanded(self) -> Path:
+        return Path(self.actual).expanduser()
 
-    @expanded.setter
-    def expanded(self, value) -> None:
+    @_expanded.setter
+    def _expanded(self, value) -> None:
         raise AttributeError("Expanded is not meant to be modified.")
 
     @property
@@ -105,14 +97,10 @@ class ProperPath(Path):
         if value is None:
             self._kind = (
                 "dir"
-                if self.expanded.is_dir()
+                if super().is_dir()
                 else "file"
-                if (
-                    self.expanded.is_file()
-                    or self.expanded.suffix
-                    or self.expanded.exists()
-                )
-                # self.expanded.exists() for special files like /dev/null
+                if (super().is_file() or super().suffix or super().exists())
+                # self.exists() for special files like /dev/null
                 # since is_file() doesn't consider /dev/null to be a file!
                 else "dir"
             )
@@ -139,14 +127,14 @@ class ProperPath(Path):
         )
 
     def create(self, verbose: bool = True) -> None:
-        path = self.expanded.resolve(strict=False)
+        path = super().resolve(strict=False)
         try:
             match self.kind:
                 case "file":
                     path_parent, path_file = path.parent, path.name
                     if not path_parent.exists() and verbose:
                         self.err_logger.debug(
-                            f"File {self._error_helper_compare_path_source(self.name, path_parent)} "
+                            f"File {self._error_helper_compare_path_source(self.actual, path_parent)} "
                             f"could not be found. An attempt to create file "
                             f"{path_parent} will be made."
                         )
@@ -155,20 +143,20 @@ class ProperPath(Path):
                 case "dir":
                     if not path.exists() and verbose:
                         self.err_logger.debug(
-                            f"Directory {self._error_helper_compare_path_source(self.name, path)} "
+                            f"Directory {self._error_helper_compare_path_source(self.actual, path)} "
                             f"could not be found. An attempt to create directory "
                             f"{path} will be made."
                         )
                     path.mkdir(parents=True, exist_ok=True)
         except (permission_exception := PermissionError) as e:
-            message = f"Permission to create {self._error_helper_compare_path_source(self.name, path)} is denied."
+            message = f"Permission to create {self._error_helper_compare_path_source(self.actual, path)} is denied."
             self.err_logger.debug(message)
             self.PathException = permission_exception
             raise e
         except (not_a_dir_exception := NotADirectoryError) as e:
-            # Both "file" and "dir" cases are handled, but when path is under special files like
+            # Both "file" and "dir" cases are handled, but when the path is under special files like
             # /dev/null/<directory name>, os.mkdir() will throw NotADirectoryError.
-            message = f"Couldn't create {self._error_helper_compare_path_source(self.name, path)}."
+            message = f"Couldn't create {self._error_helper_compare_path_source(self.actual, path)}."
             self.err_logger.debug(message)
             self.PathException = not_a_dir_exception
             raise e
@@ -182,7 +170,7 @@ class ProperPath(Path):
     def _remove_file(
         self, _file: Union[Path, Self, None] = None, verbose: bool = False
     ) -> None:
-        file = _file or self.expanded
+        file = _file or self._expanded
         if not isinstance(file, Path):
             raise ValueError(
                 f"PATH={file} is empty or isn't a valid pathlib.Path instance! "
@@ -192,12 +180,15 @@ class ProperPath(Path):
             file.unlink()
         except (file_not_found_exception := FileNotFoundError) as e:
             # unlink() throws FileNotFoundError when a directory is passed as it expects files only
-            self.err_logger.error(f"{e!r}")
+            self.err_logger.error(
+                f"Could not remove {self._error_helper_compare_path_source(self.actual, file)}. "
+                f"Exception: {e!r}"
+            )
             self.PathException = file_not_found_exception
             raise e
         except (permission_exception := PermissionError) as e:
             message = (
-                f"Permission to remove {self._error_helper_compare_path_source(self.name, file)} "
+                f"Permission to remove {self._error_helper_compare_path_source(self.actual, file)} "
                 f"as a file is denied."
             )
             self.err_logger.debug(message)
@@ -212,11 +203,7 @@ class ProperPath(Path):
         if self.kind == "file":
             self._remove_file(verbose=verbose)
         elif self.kind == "dir":
-            ls_ref = (
-                self.expanded.glob(r"**/*")
-                if not parent_only
-                else self.expanded.glob(r"*.*")
-            )
+            ls_ref = super().glob(r"**/*") if not parent_only else super().glob(r"*.*")
             for ref in ls_ref:
                 match ProperPath(ref).kind:
                     case "file":
@@ -234,9 +221,12 @@ class ProperPath(Path):
                         # traceback message. I.e., which file or directory exactly
 
     def open(self, mode="r", encoding=None, *args):
-        path = self.expanded.resolve()
         try:
-            return path.open(mode=mode, encoding=encoding, *args)
+            return Path(super().resolve()).open(
+                mode=mode,
+                encoding=encoding,
+                *args,
+            )
         except OSError as e:
             self.err_logger.warning(f"{e!r}")
             self.PathException = e

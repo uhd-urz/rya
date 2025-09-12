@@ -46,7 +46,7 @@ def get_cli_exportable_params(
     validated_export_dest: ProperPath = validate_export.get()
 
     _export_file_ext: Optional[str] = (
-        validated_export_dest.expanded.suffix.removeprefix(".")
+        validated_export_dest.suffix.removeprefix(".")
         if validated_export_dest.kind == "file"
         else None
     )

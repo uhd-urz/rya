@@ -38,7 +38,7 @@ class ValidateCLIJSONFile(Validator):
         self._json_file_path = value
 
     def validate(self):
-        if not self.json_file_path.expanded.exists():
+        if not self.json_file_path.exists():
             err_msg = (
                 f"{self.option_name} was passed a string '{self.json_file_path}' "
                 f"that was assumed as a {ValidateCLIJSONFile.FILE_EXTENSION} file path, "
@@ -89,7 +89,7 @@ class ValidateCLIYAMLFile(Validator):
         self._yaml_file_path = value
 
     def validate(self):
-        if not self.yaml_file_path.expanded.exists():
+        if not self.yaml_file_path.exists():
             raise ValidationError(
                 f"{self.option_name} was passed a string '{self.yaml_file_path}' "
                 f"that was assumed as a {ValidateCLIYAMLFile.FILE_EXTENSION.upper()} file path, "

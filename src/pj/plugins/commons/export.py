@@ -114,8 +114,8 @@ class ExportPathValidator(PathValidator):
         else:
             if (
                 path.kind == "file"
-                and path.expanded.exists()
-                and path.expanded not in super()._self_created_files
+                and path.exists()
+                and path not in super()._self_created_files
                 and not self.can_overwrite
             ):
                 logger.warning(
