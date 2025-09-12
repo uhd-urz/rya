@@ -1,7 +1,7 @@
 from ..loggers import LOG_FILE_PATH
-from ._config_history import AppliedConfigIdentity, FieldValueWithKey
+from ._config_history import ConfigIdentity, FieldValueWithKey
 from ._overload_history import (
-    ApplyConfigHistory,
+    PatchConfigHistory,
     preventive_missing_warning,
     reinitiate_config,
     validate_configuration,
@@ -36,14 +36,14 @@ from .config import (
     PROJECT_CONFIG_LOC,
     SYSTEM_CONFIG_LOC,
     VERSION_FILE_NAME,
-    MinimalActiveConfiguration,
+    MinimalConfigData,
     history,
     inspect,
     minimal_active_configuration,
     settings,
 )
 from .overridable_vars import (
-    get_active_plugin_configs,
+    get_plugin_configs,
     get_development_mode,
 )
 from .validators import ConfigurationValidation
@@ -55,9 +55,9 @@ if get_development_mode(skip_validation=True) is False:
 
 __all__ = [
     "LOG_FILE_PATH",
-    "AppliedConfigIdentity",
+    "ConfigIdentity",
     "FieldValueWithKey",
-    "ApplyConfigHistory",
+    "PatchConfigHistory",
     "preventive_missing_warning",
     "reinitiate_config",
     "validate_configuration",
@@ -90,12 +90,12 @@ __all__ = [
     "PROJECT_CONFIG_LOC",
     "SYSTEM_CONFIG_LOC",
     "VERSION_FILE_NAME",
-    "MinimalActiveConfiguration",
+    "MinimalConfigData",
     "history",
     "inspect",
     "settings",
     "minimal_active_configuration",
-    "get_active_plugin_configs",
+    "get_plugin_configs",
     "get_development_mode",
     "ConfigurationValidation",
 ]

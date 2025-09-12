@@ -1,21 +1,24 @@
 from typing import Any, Iterable, Optional, Tuple
 
+from .._names import KEY_DEVELOPMENT_MODE
 from ..core_validators import Exit, Validate, ValidationError
 from ..loggers import get_logger
-from ._config_history import AppliedConfigIdentity, FieldValueWithKey
-from .config import FALLBACK_SOURCE_NAME, history
+from ..utils import Missing, PreventiveWarning, get_sub_package_name
+from ._config_history import (
+    ConfigIdentity,
+    FieldValueWithKey,
+    MinimalConfigData,
+)
+from .config import FALLBACK_SOURCE_NAME, history, settings
 from .validators import MainConfigurationValidator
 
 logger = get_logger()
 
 
-class ApplyConfigHistory:
+class PatchConfigHistory:
     def __init__(self, configuration_fields: list[FieldValueWithKey]):
-        from ._config_history import MinimalActiveConfiguration
-        from .config import settings
-
         self.configuration_fields = configuration_fields
-        self.active_configuration = MinimalActiveConfiguration()
+        self.active_configuration = MinimalConfigData()
         self.settings = settings
 
     @property
@@ -37,25 +40,19 @@ class ApplyConfigHistory:
 
     def _modify_history(self, key_name: str, value: str) -> None:
         _val, _src = self.active_configuration[key_name]
-        self.active_configuration[key_name] = AppliedConfigIdentity(value, _src)
+        self.active_configuration[key_name] = ConfigIdentity(value, _src)
         if value != _val:
             try:
                 history.delete(key_name)
             except KeyError:
                 ...
-            self.active_configuration[key_name] = AppliedConfigIdentity(
+            self.active_configuration[key_name] = ConfigIdentity(
                 value, FALLBACK_SOURCE_NAME
             )
 
     def apply(self) -> None:
-        from .config import (
-            KEY_DEVELOPMENT_MODE,
-            KEY_PLUGIN_KEY_NAME,
-        )
-
         for key_name, value in self.configuration_fields:
-            if key_name in [KEY_DEVELOPMENT_MODE, KEY_PLUGIN_KEY_NAME]:
-                self._modify_history(key_name, value)
+            self._modify_history(key_name, value)
 
 
 def validate_configuration(limited_to: Optional[list]) -> None:
@@ -66,24 +63,26 @@ def validate_configuration(limited_to: Optional[list]) -> None:
     except ValidationError:
         raise Exit(1)
     else:
-        for validator in limited_to:
-            validator.ALREADY_VALIDATED = True
+        if limited_to is not None:
+            for validator in limited_to:
+                validator.ALREADY_VALIDATED = True
         if validated_fields:
-            apply_settings = ApplyConfigHistory(validated_fields)
-            apply_settings.apply()
+            patch_settings = PatchConfigHistory(validated_fields)
+            patch_settings.apply()
 
 
 def reinitiate_config(
     ignore_essential_validation: bool = False, ignore_already_validated: bool = True
 ) -> None:
-    limited_to: list = []
+    limited_to: Optional[list]
+    limited_to = []
     if not ignore_essential_validation:
         if ignore_already_validated:
             for validator in MainConfigurationValidator.ALL_VALIDATORS:
                 if validator.ALREADY_VALIDATED is False:
                     limited_to.append(validator)
         else:
-            limited_to: None = None
+            limited_to = None
         validate_configuration(limited_to)
     else:
         if ignore_already_validated:
@@ -96,9 +95,6 @@ def reinitiate_config(
 
 
 def preventive_missing_warning(field: Tuple[str, Any], /) -> None:
-    from .._names import KEY_DEVELOPMENT_MODE
-    from ..utils import Missing, PreventiveWarning, get_sub_package_name
-
     configuration_sub_package_name = get_sub_package_name(__package__)
     if not isinstance(field, Iterable) and not isinstance(field, str):
         raise TypeError(

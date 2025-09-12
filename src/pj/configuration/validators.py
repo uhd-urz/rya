@@ -10,7 +10,7 @@ from ..core_validators import (
 )
 from ..loggers import get_logger
 from ..utils import Missing, add_message
-from ._config_history import FieldValueWithKey, MinimalActiveConfiguration
+from ._config_history import FieldValueWithKey, MinimalConfigData
 from .config import (
     DEVELOPMENT_MODE_DEFAULT_VAL,
     KEY_DEVELOPMENT_MODE,
@@ -22,18 +22,18 @@ logger = get_logger()
 
 
 class ConfigurationValidation:
-    def __init__(self, minimal_active_config_obj: MinimalActiveConfiguration, /):
+    def __init__(self, minimal_active_config_obj: MinimalConfigData, /):
         self.active_configuration = minimal_active_config_obj
 
     @property
-    def active_configuration(self) -> MinimalActiveConfiguration:
+    def active_configuration(self) -> MinimalConfigData:
         return self._active_configuration
 
     @active_configuration.setter
-    def active_configuration(self, value: MinimalActiveConfiguration):
-        if not isinstance(value, MinimalActiveConfiguration):
+    def active_configuration(self, value: MinimalConfigData):
+        if not isinstance(value, MinimalConfigData):
             raise TypeError(
-                f"Value must be an instance of {MinimalActiveConfiguration.__name__}."
+                f"Value must be an instance of {MinimalConfigData.__name__}."
             )
         self._active_configuration = value
 
@@ -205,9 +205,9 @@ class MainConfigurationValidator(ConfigurationValidation, Validator):
         *,
         limited_to: Optional[Iterable[type[Validator]]] = None,
     ):
-        from ._config_history import MinimalActiveConfiguration
+        from ._config_history import MinimalConfigData
 
-        super().__init__(MinimalActiveConfiguration())
+        super().__init__(MinimalConfigData())
         self.limited_to = limited_to
 
     @property

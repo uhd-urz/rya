@@ -7,13 +7,14 @@ from .._core_init import (
     PatternNotFoundError,
     get_app_version,
 )
-from .messages import MessagesList, DataObjectList, add_message
+from .messages import DataObjectList, MessagesList, add_message
 from .utils import (
     PreventiveWarning,
     PythonVersionCheckFailed,
     check_reserved_keyword,
     get_external_python_version,
     get_sub_package_name,
+    switch_development_state,
     update_kwargs_with_defaults,
 )
 
@@ -34,4 +35,5 @@ __all__ = [
     "GlobalCLIResultCallback",
     "GlobalCLIGracefulCallback",
     "Missing",
+    "switch_development_state",
 ]

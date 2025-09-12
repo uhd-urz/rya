@@ -13,7 +13,7 @@ from ..loggers import get_logger
 
 logger = get_logger()
 
-AppliedConfigIdentity = namedtuple("AppliedConfigIdentity", ["value", "source"])
+ConfigIdentity = namedtuple("ConfigIdentity", ["value", "source"])
 FieldValueWithKey = namedtuple("FieldValueWithKey", ["key_name", "value"])
 
 
@@ -122,9 +122,7 @@ class InspectConfigHistory:
         applied_config = {}
         for config in self.history:
             for k, v in config["value"].items():
-                applied_config.update(
-                    {k: AppliedConfigIdentity(v, config["identifier"])}
-                )
+                applied_config.update({k: ConfigIdentity(v, config["identifier"])})
         return applied_config
 
     @applied_config.setter
@@ -135,30 +133,33 @@ class InspectConfigHistory:
         )
 
 
-class MinimalActiveConfiguration:
+class MinimalConfigData:
     _instance = None
-    _container = {}
+    _container: dict[str, ConfigIdentity] = {}
 
     def __new__(cls):
         if cls._instance is None:
-            cls._instance = super(MinimalActiveConfiguration, cls).__new__(cls)
+            cls._instance = super(MinimalConfigData, cls).__new__(cls)
         return cls._instance
 
+    def __str__(self):
+        return str(self._container)
+
     @classmethod
-    def __getitem__(cls, item: str) -> AppliedConfigIdentity:
+    def __getitem__(cls, item: str) -> ConfigIdentity:
         return cls._container[_ConfigRules.get_valid_key(item)]
 
     @classmethod
-    def __setitem__(cls, key: str, value: AppliedConfigIdentity):
+    def __setitem__(cls, key: str, value: ConfigIdentity):
         cls._container[_ConfigRules.get_valid_key(key)] = value
 
     @classmethod
     def update(cls, value: dict):
         for k, v in value.items():
-            if not isinstance(v, AppliedConfigIdentity):
+            if not isinstance(v, ConfigIdentity):
                 raise ValueError(
                     f"Value '{v}' for key '{k}' must be an "
-                    f"instance of {AppliedConfigIdentity.__name__}."
+                    f"instance of {ConfigIdentity.__name__}."
                 )
         cls._container.update(value)
 

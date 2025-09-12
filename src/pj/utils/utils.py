@@ -1,8 +1,11 @@
+import logging
 import re
 import subprocess
 from pathlib import Path
 from typing import Tuple
 
+from ..core_validators import Exit
+from ..loggers import get_file_logger, get_logger, get_simple_logger
 from ..utils import Missing
 
 
@@ -88,3 +91,26 @@ def get_external_python_version(venv_dir: Path) -> Tuple[str, str, str]:
         raise PythonVersionCheckFailed(
             "Matching Python version not found in output string"
         )
+
+
+def switch_development_state(development_mode: bool, /) -> None:
+    logger = get_logger()
+    file_logger = get_file_logger()
+    simple_logger = get_simple_logger()
+
+    if development_mode is True:
+        Exit.SYSTEM_EXIT = False
+        for handler in logger.handlers:
+            handler.setLevel(logging.DEBUG)
+        for handler in file_logger.handlers:
+            handler.setLevel(logging.DEBUG)
+        for handler in simple_logger.handlers:
+            handler.setLevel(logging.DEBUG)
+    else:
+        Exit.SYSTEM_EXIT = True
+        for handler in logger.handlers:
+            handler.setLevel(logging.INFO)
+        for handler in file_logger.handlers:
+            handler.setLevel(logging.INFO)
+        for handler in simple_logger.handlers:
+            handler.setLevel(logging.INFO)

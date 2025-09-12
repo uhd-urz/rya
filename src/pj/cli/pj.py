@@ -17,11 +17,12 @@ from rich.table import Table
 from typing_extensions import Annotated
 
 from .. import APP_NAME
+from .._names import KEY_DEVELOPMENT_MODE
 from ..configuration import (
     CONFIG_FILE_NAME,
     KEY_PLUGIN_KEY_NAME,
     LOCAL_CONFIG_LOC,
-    AppliedConfigIdentity,
+    ConfigIdentity,
     get_development_mode,
     minimal_active_configuration,
     reinitiate_config,
@@ -33,7 +34,6 @@ from ..loggers import (
     ResultCallbackHandler,
     get_file_logger,
     get_logger,
-    get_simple_logger,
 )
 from ..path import ProperPath
 from ..plugins.commons.cli_helpers import Typer
@@ -52,6 +52,7 @@ from ..utils import (
     MessagesList,
     PythonVersionCheckFailed,
     get_external_python_version,
+    switch_development_state,
 )
 from ._plugin_handler import (
     PluginInfo,
@@ -65,14 +66,7 @@ file_logger = get_file_logger()
 pretty.install()
 
 
-if get_development_mode(skip_validation=True) is True:
-    Exit.SYSTEM_EXIT = False
-    for handler in logger.handlers:
-        handler.setLevel(logging.DEBUG)
-    for handler in file_logger.handlers:
-        handler.setLevel(logging.DEBUG)
-    for handler in get_simple_logger().handlers:
-        handler.setLevel(logging.DEBUG)
+switch_development_state(get_development_mode(skip_validation=True))
 
 
 def result_callback_wrapper(_, override_config):
@@ -126,7 +120,7 @@ def prettify() -> None:
                 break
             stdout_console.print(line, end="")
     except KeyboardInterrupt:
-        raise SystemExit(1)
+        raise Exit(1)
     finally:
         stdout_console.print("\n[green]Command finished.[/green]")
 
@@ -134,7 +128,7 @@ def prettify() -> None:
 @app.callback(invoke_without_command=True)
 def cli_startup(
     override_config: Annotated[
-        Optional[str],
+        str,
         typer.Option(
             OVERRIDE_CONFIG_OPTION_NAME_LONG,
             OVERRIDE_CONFIG_OPTION_NAME_SHORT,
@@ -166,19 +160,26 @@ def cli_startup(
                 )
 
     try:
-        override_config: dict = get_structured_data(
+        struct_override_config: dict = get_structured_data(
             override_config, option_name=OVERRIDE_CONFIG_OPTION_NAME
         )
     except ValueError:
         raise Exit(1)
     else:
         OVERRIDABLE_FIELDS_SOURCE: str = "CLI"
-        for key, value in override_config.items():
+        for key, value in struct_override_config.items():
+            if key.lower() == KEY_DEVELOPMENT_MODE.lower():
+                switch_development_state(value)
+                logger.info(
+                    f"'{KEY_DEVELOPMENT_MODE.lower()}' value is overridden with '--OC'. "
+                    f"The new value will be respected from this point on. "
+                    f"Some internal layers might have escaped this modification."
+                )
             if key.lower() == KEY_PLUGIN_KEY_NAME.lower():
                 plugins = minimal_active_configuration[key].value
                 if not isinstance(value, dict):
                     # I.e., invalid type for plugin value. --override-config will simply comply.
-                    minimal_active_configuration[key] = AppliedConfigIdentity(
+                    minimal_active_configuration[key] = ConfigIdentity(
                         value, OVERRIDABLE_FIELDS_SOURCE
                     )
                 else:
@@ -202,11 +203,11 @@ def cli_startup(
                                 )
                             plugins[plugin_name] = {}
                             plugins[plugin_name].update(plugin_config)
-                    minimal_active_configuration[key] = AppliedConfigIdentity(
+                    minimal_active_configuration[key] = ConfigIdentity(
                         plugins, OVERRIDABLE_FIELDS_SOURCE
                     )
             else:
-                minimal_active_configuration[key] = AppliedConfigIdentity(
+                minimal_active_configuration[key] = ConfigIdentity(
                     value, OVERRIDABLE_FIELDS_SOURCE
                 )
         if (
@@ -231,7 +232,7 @@ def cli_startup(
                     global_graceful_callbacks.call_callbacks()
         else:
             if calling_sub_command_name in SENSITIVE_PLUGIN_NAMES:
-                if override_config:
+                if struct_override_config:
                     print_typer_error(
                         f"{APP_NAME} command '{calling_sub_command_name}' does not support "
                         f"the override argument {OVERRIDE_CONFIG_OPTION_NAME}."
@@ -240,7 +241,8 @@ def cli_startup(
                 if calling_sub_command_name in SPECIAL_SENSITIVE_PLUGIN_NAMES:
                     reinitiate_config(ignore_essential_validation=True)
                 return
-    prettify()
+    if calling_sub_command_name is None:
+        prettify()
 
 
 def check_result_callback_log_container():

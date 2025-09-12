@@ -30,10 +30,10 @@ from ..core_validators import (
 from ..loggers import _XDG_DATA_HOME, LOG_FILE_PATH, get_logger
 from ..utils import Missing, add_message
 from ._config_history import (
-    AppliedConfigIdentity,
+    ConfigIdentity,
     ConfigHistory,
     InspectConfigHistory,
-    MinimalActiveConfiguration,
+    MinimalConfigData,
 )
 
 __all__ = [
@@ -57,7 +57,7 @@ __all__ = [
     "minimal_active_configuration",
     "DEVELOPMENT_MODE_DEFAULT_VAL",
     "PLUGIN_DEFAULT_VALUE",
-    "MinimalActiveConfiguration",
+    "MinimalConfigData",
     "VERSION_FILE_NAME",
     "DEVELOPMENT_MODE",
     "EXTERNAL_LOCAL_PLUGIN_DIR",
@@ -81,7 +81,7 @@ __all__ = [
     "INTERNAL_PLUGIN_TYPER_APP_VAR_NAME",
     "ROOT_INSTALLATION_DIR",
     "_NON_CANON_CONFIG_FILE_NAME",
-    "CONFIG_MIS_PATH"
+    "CONFIG_MIS_PATH",
 ]
 
 logger = get_logger()
@@ -91,7 +91,7 @@ LOCAL_CONFIG_LOC: Path = LOCAL_CONFIG_LOC
 PROJECT_CONFIG_LOC: Path = PROJECT_CONFIG_LOC
 
 env_var_app_name = APP_NAME.upper().replace("-", "_")
-FALLBACK_SOURCE_NAME: str = "DEFAULT"
+FALLBACK_SOURCE_NAME: str = f"{APP_BRAND_NAME} DEFAULT"
 
 NON_CANON_YAML_EXTENSION: str = "yml"
 _NON_CANON_CONFIG_FILE_NAME: str = f"{APP_NAME}.{NON_CANON_YAML_EXTENSION}"
@@ -122,7 +122,7 @@ settings = Dynaconf(
 )
 
 history = ConfigHistory(settings)
-minimal_active_configuration: MinimalActiveConfiguration = MinimalActiveConfiguration()
+minimal_active_configuration: MinimalConfigData = MinimalConfigData()
 
 
 # App internal data location
@@ -160,7 +160,7 @@ for key_name, key_val in [
     try:
         history.patch(key_name, key_val)
     except KeyError:
-        minimal_active_configuration[key_name] = AppliedConfigIdentity(Missing(), None)
+        minimal_active_configuration[key_name] = ConfigIdentity(Missing(), None)
     else:
         minimal_active_configuration[key_name] = InspectConfigHistory(
             history
