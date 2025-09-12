@@ -1,24 +1,25 @@
 __all__ = [
     "LogMessageTuple",
-    "SimpleLogger",
-    "STDERRBaseHandler",
-    "Logger",
-    "BaseHandler",
-    "LoggerUtil",
+    "get_simple_logger",
+    "STDERRBaseHandlerMaker",
+    "get_logger",
+    "BaseHandlerMaker",
+    "LoggerMaker",
     "ResultCallbackHandler",
     "GlobalLogRecordContainer",
     "LogItemList",
+    "get_logger",
 ]
 from .base import (
-    Logger,
-    LoggerUtil,
+    LoggerMaker,
     LogMessageTuple,
-    SimpleLogger,
+    get_logger,
+    get_simple_logger,
 )
 from .handlers import (
-    BaseHandler,
-    LogItemList,
+    BaseHandlerMaker,
     GlobalLogRecordContainer,
+    LogItemList,
     ResultCallbackHandler,
-    STDERRBaseHandler,
+    STDERRBaseHandlerMaker,
 )

@@ -6,7 +6,7 @@ from pathlib import Path
 from shutil import rmtree
 from typing import IO, Generator, Optional, Self, Union
 
-from ._core_init import Logger, NoException
+from ._core_init import get_logger, NoException
 
 
 class ProperPath:
@@ -20,7 +20,7 @@ class ProperPath:
         self.name = name
         self.env_var = env_var
         self.kind = kind
-        self.err_logger = err_logger or Logger()
+        self.err_logger = err_logger or get_logger()
         self.PathException = NoException
 
     def __str__(self):

@@ -1,12 +1,12 @@
 from typing import Any, Iterable, Optional, Tuple
 
 from ..core_validators import Exit, Validate, ValidationError
-from ..loggers import Logger
+from ..loggers import get_logger
 from ._config_history import AppliedConfigIdentity, FieldValueWithKey
 from .config import FALLBACK_SOURCE_NAME, history
 from .validators import MainConfigurationValidator
 
-logger = Logger()
+logger = get_logger()
 
 
 class ApplyConfigHistory:
@@ -76,14 +76,14 @@ def validate_configuration(limited_to: Optional[list]) -> None:
 def reinitiate_config(
     ignore_essential_validation: bool = False, ignore_already_validated: bool = True
 ) -> None:
-    limited_to: Optional[list] = []
+    limited_to: list = []
     if not ignore_essential_validation:
         if ignore_already_validated:
             for validator in MainConfigurationValidator.ALL_VALIDATORS:
                 if validator.ALREADY_VALIDATED is False:
                     limited_to.append(validator)
         else:
-            limited_to = None
+            limited_to: None = None
         validate_configuration(limited_to)
     else:
         if ignore_already_validated:

@@ -11,7 +11,6 @@ import yaml
 
 from ..configuration import (
     APP_BRAND_NAME,
-    NON_CANON_YAML_EXTENSION,
     CONFIG_FILE_EXTENSION,
     EXTERNAL_LOCAL_PLUGIN_METADATA_FILE_KEY_CLI_SCRIPT_PATH,
     EXTERNAL_LOCAL_PLUGIN_METADATA_FILE_KEY_FILE_EXISTS,
@@ -22,6 +21,7 @@ from ..configuration import (
     EXTERNAL_LOCAL_PLUGIN_METADATA_FILE_NAME_PREFIX,
     EXTERNAL_LOCAL_PLUGIN_METADATA_KEY_PLUGIN_ROOT_DIR,
     EXTERNAL_LOCAL_PLUGIN_TYPER_APP_FILE_NAME,
+    NON_CANON_YAML_EXTENSION,
     get_development_mode,
 )
 from ..configuration.config import (
@@ -33,13 +33,13 @@ from ..configuration.config import (
     ROOT_INSTALLATION_DIR,
 )
 from ..core_validators import Validate, ValidationError, Validator
-from ..loggers import Logger
+from ..loggers import get_logger
 from ..path import ProperPath
 from ..plugins import __PACKAGE_IDENTIFIER__ as plugins_sub_package_identifier
 from ..utils import add_message
 from ._venv_state_manager import switch_venv_state
 
-logger = Logger()
+logger = get_logger()
 PluginInfo = namedtuple("PluginInfo", ["plugin_app", "path", "venv", "project_dir"])
 
 
@@ -53,7 +53,7 @@ class InternalPluginHandler:
                     _paths.append((path.name, path))
         return _paths
 
-    def get_typer_apps(self) -> Generator[typer.Typer, None, None]:
+    def get_typer_apps(self) -> Generator[typer.Typer | None, None, None]:
         for plugin_name, path in self.plugin_locations:
             spec = importlib.util.spec_from_file_location(
                 plugin_name,
@@ -67,7 +67,7 @@ class InternalPluginHandler:
             try:
                 yield getattr(module, INTERNAL_PLUGIN_TYPER_APP_VAR_NAME)
             except AttributeError:
-                yield
+                yield None
 
 
 class ExternalPluginLocationValidator(Validator):
@@ -92,9 +92,7 @@ class ExternalPluginLocationValidator(Validator):
                 self._location = value.expanded
 
     def validate(self):
-        _CANON_PLUGIN_METADATA_FILE_NAME: str = (
-            f"{EXTERNAL_LOCAL_PLUGIN_METADATA_FILE_NAME_PREFIX}.{NON_CANON_YAML_EXTENSION}"
-        )
+        _CANON_PLUGIN_METADATA_FILE_NAME: str = f"{EXTERNAL_LOCAL_PLUGIN_METADATA_FILE_NAME_PREFIX}.{NON_CANON_YAML_EXTENSION}"
         parsed_metadata: dict = {
             EXTERNAL_LOCAL_PLUGIN_METADATA_FILE_KEY_FILE_EXISTS: None,
             EXTERNAL_LOCAL_PLUGIN_METADATA_FILE_KEY_CLI_SCRIPT_PATH: None,

@@ -10,11 +10,11 @@ from typer.models import CommandFunctionType
 
 from ...configuration import APP_NAME, DEFAULT_EXPORT_DATA_FORMAT
 from ...core_validators import Exit, PathValidationError
-from ...loggers import Logger
+from ...loggers import get_logger
 from ...path import ProperPath
 from ...utils import check_reserved_keyword
 
-logger = Logger()
+logger = get_logger()
 
 
 @dataclass

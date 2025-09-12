@@ -27,7 +27,7 @@ from ..core_validators import (
     Validate,
     ValidationError,
 )
-from ..loggers import _XDG_DATA_HOME, LOG_FILE_PATH, Logger
+from ..loggers import _XDG_DATA_HOME, LOG_FILE_PATH, get_logger
 from ..utils import Missing
 from ..utils import add_message
 from ._config_history import (
@@ -85,7 +85,7 @@ __all__ = [
     "CONFIG_MIS_PATH"
 ]
 
-logger = Logger()
+logger = get_logger()
 
 SYSTEM_CONFIG_LOC: Path = SYSTEM_CONFIG_LOC
 LOCAL_CONFIG_LOC: Path = LOCAL_CONFIG_LOC

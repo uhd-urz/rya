@@ -1,42 +1,43 @@
 import logging
 from hashlib import md5
 from pathlib import Path
-from typing import TextIO, Union
+from typing import Union
 
+from ..._core_init import BaseHandlerMaker
 from ...path import ProperPath
-from ..._core_init import BaseHandler
 
 
-class FileBaseHandler(BaseHandler):
-    class CustomFileHandler(logging.FileHandler):
-        def __init__(self, filename: Union[ProperPath, Path], **kwargs):
-            self.file = filename
-            super().__init__(str(self.file), **kwargs)
+class _CustomFileHandler(logging.FileHandler):
+    def __init__(self, filename: Union[ProperPath, Path], **kwargs):
+        self.file = filename
+        super().__init__(str(self.file), **kwargs)
 
-        @property
-        def file(self) -> Union[Path, ProperPath]:
-            return self._file
+    @property
+    def file(self) -> Union[Path, ProperPath]:
+        return self._file
 
-        @file.setter
-        def file(self, value):
-            if not isinstance(value, (ProperPath, Path)):
-                raise ValueError(
-                    f"{self.__class__.__name__} only supports Path and ProperPath "
-                    f"instances for 'filename'!"
-                )
-            self._file = value
+    @file.setter
+    def file(self, value):
+        if not isinstance(value, (ProperPath, Path)):
+            raise ValueError(
+                f"{self.__class__.__name__} only supports Path and ProperPath "
+                f"instances for 'filename'!"
+            )
+        self._file = value
 
-        def _open(self) -> TextIO:
-            return self.file.open(mode="a", encoding="utf-8")
+    def _open(self):
+        return self.file.open(mode="a", encoding="utf-8")
 
-        def emit(self, record: logging.LogRecord) -> None:
-            entry = self.format(record)
-            with self._open() as log:
-                log.write(entry)
-                log.write("\n")
+    def emit(self, record: logging.LogRecord) -> None:
+        entry = self.format(record)
+        with self._open() as log:
+            log.write(entry)
+            log.write("\n")
 
-    def __init__(self, log_file_path):
-        self.log_file_path: Union[Path, ProperPath, str] = log_file_path
+
+class FileHandlerMaker(BaseHandlerMaker):
+    def __init__(self, log_file_path: Union[Path, ProperPath, str]):
+        self.log_file_path = log_file_path
         self.formatter: logging.Formatter = logging.Formatter(
             "%(asctime)s:%(levelname)s:%(filename)s: %(message)s",
             datefmt="%Y-%m-%d %H:%M:%S",
@@ -73,7 +74,7 @@ class FileBaseHandler(BaseHandler):
 
     @property
     def handler(self) -> logging.Handler:
-        handler = FileBaseHandler.CustomFileHandler(self.log_file_path)
+        handler = _CustomFileHandler(self.log_file_path)
         handler.setFormatter(self.formatter)
         handler.setLevel(logging.INFO)
         return handler

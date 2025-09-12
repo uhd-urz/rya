@@ -1,33 +1,36 @@
 __all__ = [
     "LogMessageTuple",
-    "SimpleLogger",
-    "STDERRBaseHandler",
-    "Logger",
-    "BaseHandler",
-    "FileLogger",
-    "MainLogger",
-    "FileBaseHandler",
-    "LoggerUtil",
+    "get_simple_logger",
+    "STDERRBaseHandlerMaker",
+    "get_logger",
+    "BaseHandlerMaker",
+    "get_file_logger",
+    "get_main_logger",
+    "FileHandlerMaker",
+    "LoggerMaker",
     "LOG_FILE_PATH",
     "_XDG_DATA_HOME",
-    "update_logger_state",
     "add_logging_level",
     "LogItemList",
     "GlobalLogRecordContainer",
     "ResultCallbackHandler",
+    "get_file_logger",
+    "get_main_logger",
+    "get_logger",
 ]
 from .._core_init import (
-    BaseHandler,
-    Logger,
-    LoggerUtil,
+    BaseHandlerMaker,
+    GlobalLogRecordContainer,
+    get_logger,
+    LoggerMaker,
     LogItemList,
     LogMessageTuple,
-    GlobalLogRecordContainer,
     ResultCallbackHandler,
-    SimpleLogger,
-    STDERRBaseHandler,
+    STDERRBaseHandlerMaker,
     add_logging_level,
+    get_logger,
+    get_simple_logger,
 )
-from .base import FileLogger, MainLogger, update_logger_state
-from .handlers import FileBaseHandler
+from .base import get_file_logger, get_main_logger, get_file_logger, get_main_logger
+from .handlers import FileHandlerMaker
 from .log_file import _XDG_DATA_HOME, LOG_FILE_PATH

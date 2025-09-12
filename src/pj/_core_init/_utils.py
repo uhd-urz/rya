@@ -11,7 +11,9 @@ __all__ = [
     "GlobalCLISuperStartupCallback",
     "GlobalCLIGracefulCallback",
 ]
-from ._loggers import Logger
+from ._loggers import get_logger
+
+logger = get_logger()
 
 
 class NoException(Exception): ...
@@ -56,8 +58,6 @@ class _Callback:
         raise self._invalid_callback_type_exception()
 
     def call_callbacks(self) -> None:
-        logger = Logger()
-
         if not self.in_a_call:
             if self._callbacks is not None:
                 if not isinstance(self._callbacks, list):

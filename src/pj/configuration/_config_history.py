@@ -9,9 +9,9 @@ from .._names import (
     PROJECT_CONFIG_LOC,
     SYSTEM_CONFIG_LOC,
 )
-from ..loggers import Logger
+from ..loggers import get_logger
 
-logger = Logger()
+logger = get_logger()
 
 AppliedConfigIdentity = namedtuple("AppliedConfigIdentity", ["value", "source"])
 FieldValueWithKey = namedtuple("FieldValueWithKey", ["key_name", "value"])

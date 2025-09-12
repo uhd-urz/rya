@@ -4,11 +4,11 @@ from typing import Any, Iterable, Optional, Union
 
 from ...configuration import APP_NAME
 from ...core_validators import PathValidationError, PathValidator, ValidationError
-from ...loggers import Logger
+from ...loggers import get_logger
 from ...path import ProperPath
 from ...styles import NoteText, stdout_console
 
-logger = Logger()
+logger = get_logger()
 
 
 class Export:

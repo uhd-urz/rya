@@ -1,4 +1,4 @@
-__all__ = ["FileBaseHandler"]
+__all__ = ["FileHandlerMaker"]
 
 
-from .file import FileBaseHandler
+from .file import FileHandlerMaker

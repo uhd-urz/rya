@@ -8,7 +8,7 @@ from ..core_validators import (
     Validate,
     Validator,
 )
-from ..loggers import Logger
+from ..loggers import get_logger
 from ..utils import Missing, add_message
 from ._config_history import FieldValueWithKey, MinimalActiveConfiguration
 from .config import (
@@ -18,7 +18,7 @@ from .config import (
     PLUGIN_DEFAULT_VALUE,
 )
 
-logger = Logger()
+logger = get_logger()
 
 
 class ConfigurationValidation:
@@ -48,9 +48,6 @@ class ModesWithFallbackConfigurationValidator(ConfigurationValidation, Validator
         self.fallback_value = fallback_value
 
     def validate(self) -> bool:
-        from ..loggers import Logger
-
-        logger = Logger()
         if isinstance(
             value := self.active_configuration.get_value(self.key_name), Missing
         ):
@@ -86,7 +83,7 @@ class TimeWithFallbackConfigurationValidator(ConfigurationValidation, Validator)
         self.fallback_value = fallback_value
         self.allow_none = allow_none
 
-    def validate(self) -> float:
+    def validate(self) -> Optional[float]:
         if isinstance(
             value := self.active_configuration.get_value(self.key_name), Missing
         ):

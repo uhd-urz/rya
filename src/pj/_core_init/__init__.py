@@ -1,10 +1,10 @@
 __all__ = [
     "LogMessageTuple",
-    "SimpleLogger",
-    "STDERRBaseHandler",
-    "Logger",
-    "BaseHandler",
-    "LoggerUtil",
+    "get_simple_logger",
+    "STDERRBaseHandlerMaker",
+    "get_logger",
+    "BaseHandlerMaker",
+    "LoggerMaker",
     "add_logging_level",
     "get_app_version",
     "NoException",
@@ -16,21 +16,23 @@ __all__ = [
     "LogItemList",
     "PatternNotFoundError",
     "Missing",
+    "get_logger",
 ]
 import logging
 
 from .._vendor import haggis
 from .._vendor.haggis.logs import add_logging_level
 from ._loggers import (
-    BaseHandler,
+    BaseHandlerMaker,
     GlobalLogRecordContainer,
-    Logger,
-    LoggerUtil,
+    get_logger,
+    LoggerMaker,
     LogItemList,
     LogMessageTuple,
     ResultCallbackHandler,
-    SimpleLogger,
-    STDERRBaseHandler,
+    STDERRBaseHandlerMaker,
+    get_logger,
+    get_simple_logger,
 )
 from ._missing import Missing
 from ._utils import (

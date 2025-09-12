@@ -4,7 +4,7 @@ from random import choices
 from types import NoneType
 from typing import Iterable, Optional, Union
 
-from .._core_init import Logger
+from .._core_init import get_logger
 from ..path import ProperPath
 from .base import ValidationError, Validator
 
@@ -29,7 +29,7 @@ class PathValidator(Validator):
         **kwargs,
     ):
         self.path = path
-        self.err_logger = kwargs.get("err_logger", Logger())
+        self.err_logger = kwargs.get("err_logger", get_logger())
         self.TMP_FILE = (
             f".tmp_{''.join(choices(string.ascii_lowercase + string.digits, k=16))}"
         )

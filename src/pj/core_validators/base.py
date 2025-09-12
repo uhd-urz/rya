@@ -44,11 +44,11 @@ class CriticalValidationError(Exit, ValidationError): ...
 
 class Validator(ABC):
     @abstractmethod
-    def validate(self): ...
+    def validate(self, *args, **kwargs): ...
 
 
 class Validate:
-    def __init__(self, *_typ: (Validator, ...)):
+    def __init__(self, *_typ: Validator):
         self.typ = _typ
 
     def __call__(self, *args, **kwargs) -> None:

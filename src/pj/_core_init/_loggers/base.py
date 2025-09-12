@@ -3,7 +3,7 @@ from functools import update_wrapper
 from types import NoneType
 from typing import Optional
 
-from .handlers.stderr import STDERRBaseHandler
+from .handlers.stderr import STDERRBaseHandlerMaker
 
 
 class LogMessageTuple:
@@ -63,7 +63,7 @@ class LogMessageTuple:
         return self.message, self.level, self.logger, self.is_aggressive
 
 
-class LoggerUtil:
+class LoggerMaker:
     _logger_wrapper_classes: dict[str, type] = {}
     _logger_objects: dict[str, logging.Logger] = {}
 
@@ -72,11 +72,11 @@ class LoggerUtil:
         return cls._logger_wrapper_classes.get(name)
 
     @classmethod
-    def get_registered_logger(cls, name: str) -> Optional[dict[str, logging.Logger]]:
+    def get_registered_logger(cls, name: str) -> Optional[logging.Logger]:
         return cls._logger_objects.get(name)
 
     @classmethod
-    def register_wrapper_class(cls):
+    def register_logger_caller(cls):
         def decorator(logger_singleton):
             update_wrapper(wrapper=decorator, wrapped=logger_singleton)
             if cls._logger_wrapper_classes.get(logger_singleton.__name__) is None:
@@ -88,7 +88,7 @@ class LoggerUtil:
         return decorator
 
     @classmethod
-    def remove_registered_wrapper_class(cls, name: str) -> None:
+    def remove_registered_logger_caller(cls, name: str) -> None:
         if cls._logger_wrapper_classes.get(name) is not None:
             cls._logger_wrapper_classes.pop(name)
 
@@ -106,34 +106,21 @@ class LoggerUtil:
         return cls._logger_objects[name]
 
 
-logger_util = LoggerUtil()
+logger_maker = LoggerMaker()
 
 
-@logger_util.register_wrapper_class()
-class SimpleLogger:
-    suppress: bool = False
-
-    def __new__(cls):
-        logger = logger_util.get_registered_logger(cls.__name__)
-        if logger is None:
-            logger = logger_util.create_singleton_logger(name=cls.__name__)
-            if not cls.suppress:
-                stdout_handler = STDERRBaseHandler().handler
-                logger.addHandler(stdout_handler)
-        return logger
+@logger_maker.register_logger_caller()
+def get_simple_logger() -> logging.Logger:
+    logger = logger_maker.get_registered_logger(get_simple_logger.__name__)
+    if logger is None:
+        logger = logger_maker.create_singleton_logger(name=get_simple_logger.__name__)
+        stdout_handler = STDERRBaseHandlerMaker().handler
+        logger.addHandler(stdout_handler)
+    return logger
 
 
-class Logger:
-    suppress: bool = False
-    suppress_stderr: bool = False
-    suppress_result_callback: bool = False
-
-    def __new__(cls) -> logging.Logger:
-        main_logger = logger_util.get_registered_wrapper_class("MainLogger")
-        if main_logger is not None:
-            main_logger.suppress = cls.suppress
-            main_logger.suppress_stderr = cls.suppress_stderr
-            main_logger.suppress_result_callback = cls.suppress_result_callback
-            return main_logger()
-        SimpleLogger.suppress = cls.suppress or cls.suppress_stderr
-        return SimpleLogger()
+def get_logger() -> logging.Logger:
+    main_logger = logger_maker.get_registered_wrapper_class("main_logger")
+    if main_logger is not None:
+        return main_logger()
+    return get_simple_logger()

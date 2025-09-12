@@ -8,10 +8,10 @@ from rich.logging import RichHandler
 from rich.theme import Theme
 
 from ....styles import stderr_console
-from .base import BaseHandler
+from .base import BaseHandlerMaker
 
 
-class STDERRBaseHandler(BaseHandler):
+class STDERRBaseHandlerMaker(BaseHandlerMaker):
     def __init__(
         self,
         formatter: logging.Formatter = logging.Formatter("%(message)s"),

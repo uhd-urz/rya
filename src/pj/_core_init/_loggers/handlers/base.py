@@ -4,12 +4,12 @@ from collections import UserList
 from logging import LogRecord
 
 
-class BaseHandler(ABC):
+class BaseHandlerMaker(ABC):
     @abstractmethod
     def __eq__(self, other):
-        if not (isinstance(other, BaseHandler) and hasattr(other, "__hash__")):
+        if not (isinstance(other, BaseHandlerMaker) and hasattr(other, "__hash__")):
             raise AssertionError(
-                f"'{other}' must be an instance of {BaseHandler.__class__} and "
+                f"'{other}' must be an instance of {BaseHandlerMaker.__class__} and "
                 f"must have the '__hash__' attribute."
             )
         return self.__hash__() == other.__hash__()
@@ -17,14 +17,16 @@ class BaseHandler(ABC):
     @abstractmethod
     def __hash__(self): ...
 
+    @property
     @abstractmethod
     def formatter(self): ...
 
+    @property
     @abstractmethod
     def handler(self): ...
 
 
-BaseHandler.register(logging.Handler)
+BaseHandlerMaker.register(logging.Handler)
 
 
 class LogItemList(UserList):

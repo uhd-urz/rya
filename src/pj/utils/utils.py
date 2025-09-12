@@ -20,14 +20,14 @@ def check_reserved_keyword(
         error_verbose := str(error_instance),
         re.IGNORECASE,
     ):
-        _reserved_key_end = re.match(
-            r"^'\w+'", error_verbose[::-1], re.IGNORECASE
-        ).end()
-        raise AttributeError(
-            f"{what} reserves the keyword argument "
-            f"'{error_verbose[-_reserved_key_end + 1 : -1]}' "
-            f"for {against}."
-        ) from error_instance
+        match = re.match(r"^'\w+'", error_verbose[::-1], re.IGNORECASE)
+        if match:
+            _reserved_key_end = match.end()
+            raise AttributeError(
+                f"{what} reserves the keyword argument "
+                f"'{error_verbose[-_reserved_key_end + 1 : -1]}' "
+                f"for {against}."
+            ) from error_instance
 
 
 def get_sub_package_name(dunder_package: str, /) -> str:
@@ -83,11 +83,8 @@ def get_external_python_version(venv_dir: Path) -> Tuple[str, str, str]:
             flags=re.IGNORECASE,
         )
         if external_python_version_match is not None:
-            # noinspection PyTypeChecker
-            external_python_version: Tuple[str, str, str] = (
-                external_python_version_match.groups()
-            )
-            return external_python_version
+            major, micro, patch = external_python_version_match.groups()
+            return major, micro, patch
         raise PythonVersionCheckFailed(
             "Matching Python version not found in output string"
         )

@@ -28,11 +28,11 @@ from ..configuration import (
 )
 from ..core_validators import Exit, PathValidator, Validate, ValidationError
 from ..loggers import (
-    FileLogger,
+    get_file_logger,
     GlobalLogRecordContainer,
-    Logger,
+    get_logger,
     ResultCallbackHandler,
-    SimpleLogger,
+    get_simple_logger,
 )
 from ..path import ProperPath
 from ..plugins.commons.cli_helpers import Typer
@@ -59,8 +59,8 @@ from ._plugin_handler import (
 )
 from .doc import __PARAMETERS__doc__ as docs
 
-logger = Logger()
-file_logger = FileLogger()
+logger = get_logger()
+file_logger = get_file_logger()
 pretty.install()
 
 
@@ -70,7 +70,7 @@ if get_development_mode(skip_validation=True) is True:
         handler.setLevel(logging.DEBUG)
     for handler in file_logger.handlers:
         handler.setLevel(logging.DEBUG)
-    for handler in SimpleLogger().handlers:
+    for handler in get_simple_logger().handlers:
         handler.setLevel(logging.DEBUG)
 
 

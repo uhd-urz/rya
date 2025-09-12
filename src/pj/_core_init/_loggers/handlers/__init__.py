@@ -1,11 +1,11 @@
 __all__ = [
-    "STDERRBaseHandler",
-    "BaseHandler",
+    "STDERRBaseHandlerMaker",
+    "BaseHandlerMaker",
     "LogItemList",
     "GlobalLogRecordContainer",
     "ResultCallbackHandler",
 ]
 
-from .base import BaseHandler, LogItemList, GlobalLogRecordContainer
+from .base import BaseHandlerMaker, LogItemList, GlobalLogRecordContainer
 from .callback import ResultCallbackHandler
-from .stderr import STDERRBaseHandler
+from .stderr import STDERRBaseHandlerMaker
