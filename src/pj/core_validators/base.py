@@ -12,6 +12,7 @@ class BaseExit(BaseException, ABC): ...
 
 
 class Exit(BaseExit):
+    SYSTEM_EXIT: bool
     if (
         hasattr(sys, "ps1")
         or hasattr(sys, "ps2")
@@ -20,9 +21,9 @@ class Exit(BaseExit):
         )  # hasattr(sys, "ps1") doesn't work with ptpython.
         or sys.modules.get("bpython", False)
     ):
-        SYSTEM_EXIT: bool = False
+        SYSTEM_EXIT = False
     else:
-        SYSTEM_EXIT: bool = True
+        SYSTEM_EXIT = True
 
     def __new__(cls, *args, **kwargs) -> Union[SystemExit, Self]:
         GlobalCLIResultCallback().call_callbacks()

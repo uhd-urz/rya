@@ -42,9 +42,10 @@ from .config import (
     minimal_active_configuration,
     settings,
 )
+from ._developement_mode import DevelopmentState
 from .overridable_vars import (
-    get_plugin_configs,
     get_development_mode,
+    get_plugin_configs,
 )
 from .validators import ConfigurationValidation
 from .validators import PluginConfigurationValidator as _PluginConfigurationValidator
@@ -98,4 +99,5 @@ __all__ = [
     "get_plugin_configs",
     "get_development_mode",
     "ConfigurationValidation",
+    "DevelopmentState",
 ]

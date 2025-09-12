@@ -14,7 +14,6 @@ from .utils import (
     check_reserved_keyword,
     get_external_python_version,
     get_sub_package_name,
-    switch_development_state,
     update_kwargs_with_defaults,
 )
 
@@ -35,5 +34,4 @@ __all__ = [
     "GlobalCLIResultCallback",
     "GlobalCLIGracefulCallback",
     "Missing",
-    "switch_development_state",
 ]

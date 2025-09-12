@@ -25,7 +25,6 @@ from .._vendor.haggis.logs import add_logging_level
 from ._loggers import (
     BaseHandlerMaker,
     GlobalLogRecordContainer,
-    get_logger,
     LoggerMaker,
     LogItemList,
     LogMessageTuple,

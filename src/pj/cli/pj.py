@@ -23,6 +23,7 @@ from ..configuration import (
     KEY_PLUGIN_KEY_NAME,
     LOCAL_CONFIG_LOC,
     ConfigIdentity,
+    DevelopmentState,
     get_development_mode,
     minimal_active_configuration,
     reinitiate_config,
@@ -52,7 +53,6 @@ from ..utils import (
     MessagesList,
     PythonVersionCheckFailed,
     get_external_python_version,
-    switch_development_state,
 )
 from ._plugin_handler import (
     PluginInfo,
@@ -65,8 +65,7 @@ logger = get_logger()
 file_logger = get_file_logger()
 pretty.install()
 
-
-switch_development_state(get_development_mode(skip_validation=True))
+DevelopmentState.switch_state(get_development_mode(skip_validation=True))
 
 
 def result_callback_wrapper(_, override_config):
@@ -169,12 +168,7 @@ def cli_startup(
         OVERRIDABLE_FIELDS_SOURCE: str = "CLI"
         for key, value in struct_override_config.items():
             if key.lower() == KEY_DEVELOPMENT_MODE.lower():
-                switch_development_state(value)
-                logger.info(
-                    f"'{KEY_DEVELOPMENT_MODE.lower()}' value is overridden with '--OC'. "
-                    f"The new value will be respected from this point on. "
-                    f"Some internal layers might have escaped this modification."
-                )
+                DevelopmentState.switch_state(value)
             if key.lower() == KEY_PLUGIN_KEY_NAME.lower():
                 plugins = minimal_active_configuration[key].value
                 if not isinstance(value, dict):

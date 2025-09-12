@@ -2,7 +2,7 @@
 name = "pj-cli"
 version = "0.1.0"
 description = "pj is a CLI tool."
-requires-python = ">=3.11,<4"
+requires-python = ">=3.13,<4"
 dependencies = [
     "rich>=14.1.0,< 14.2.0",
     "dynaconf>=3.2.0,<4",

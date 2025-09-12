@@ -15,33 +15,35 @@ class LogMessageTuple:
 
 
 class LoggerMaker:
-    _logger_wrapper_classes: dict[str, type] = {}
+    _logger_wrapper_callers: dict[str, type] = {}
     _logger_objects: dict[str, logging.Logger] = {}
 
     @classmethod
     def get_registered_wrapper_class(cls, name: str) -> Optional[type]:
-        return cls._logger_wrapper_classes.get(name)
+        return cls._logger_wrapper_callers.get(name)
 
     @classmethod
     def get_registered_logger(cls, name: str) -> Optional[logging.Logger]:
         return cls._logger_objects.get(name)
 
     @classmethod
+    def registered_logger_items(cls):
+        return cls._logger_objects.items()
+
+    @classmethod
     def register_logger_caller(cls):
-        def decorator(logger_singleton):
-            update_wrapper(wrapper=decorator, wrapped=logger_singleton)
-            if cls._logger_wrapper_classes.get(logger_singleton.__name__) is None:
-                cls._logger_wrapper_classes[logger_singleton.__name__] = (
-                    logger_singleton
-                )
-            return cls._logger_wrapper_classes[logger_singleton.__name__]
+        def decorator(caller):
+            update_wrapper(wrapper=decorator, wrapped=caller)
+            if cls._logger_wrapper_callers.get(caller.__name__) is None:
+                cls._logger_wrapper_callers[caller.__name__] = caller
+            return cls._logger_wrapper_callers[caller.__name__]
 
         return decorator
 
     @classmethod
     def remove_registered_logger_caller(cls, name: str) -> None:
-        if cls._logger_wrapper_classes.get(name) is not None:
-            cls._logger_wrapper_classes.pop(name)
+        if cls._logger_wrapper_callers.get(name) is not None:
+            cls._logger_wrapper_callers.pop(name)
 
     @classmethod
     def remove_registered_singleton_logger(cls, name: str) -> None:
