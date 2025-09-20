@@ -17,26 +17,24 @@ from rich.table import Table
 from typing_extensions import Annotated
 
 from .. import APP_NAME
-from .._names import KEY_DEVELOPMENT_MODE
+from .._names import KEY_DEVELOPMENT_MODE, config_files
 from ..configuration import (
     CONFIG_FILE_NAME,
     KEY_PLUGIN_KEY_NAME,
-    LOCAL_CONFIG_LOC,
     ConfigIdentity,
     DevelopmentState,
     get_development_mode,
-    minimal_active_configuration,
+    minimal_config_data,
     reinitiate_config,
     settings,
 )
-from ..core_validators import Exit, PathValidator, Validate, ValidationError
+from ..core_validators import Exit, PathWriteValidator, Validate, ValidationError
 from ..loggers import (
     GlobalLogRecordContainer,
     ResultCallbackHandler,
     get_file_logger,
     get_logger,
 )
-from ..path import ProperPath
 from ..plugins.commons.cli_helpers import Typer
 from ..plugins.commons.parse_user_cli_input import get_structured_data
 from ..styles import (
@@ -170,10 +168,10 @@ def cli_startup(
             if key.lower() == KEY_DEVELOPMENT_MODE.lower():
                 DevelopmentState.switch_state(value)
             if key.lower() == KEY_PLUGIN_KEY_NAME.lower():
-                plugins = minimal_active_configuration[key].value
+                plugins = minimal_config_data[key].value
                 if not isinstance(value, dict):
                     # I.e., invalid type for plugin value. --override-config will simply comply.
-                    minimal_active_configuration[key] = ConfigIdentity(
+                    minimal_config_data[key] = ConfigIdentity(
                         value, OVERRIDABLE_FIELDS_SOURCE
                     )
                 else:
@@ -197,11 +195,11 @@ def cli_startup(
                                 )
                             plugins[plugin_name] = {}
                             plugins[plugin_name].update(plugin_config)
-                    minimal_active_configuration[key] = ConfigIdentity(
+                    minimal_config_data[key] = ConfigIdentity(
                         plugins, OVERRIDABLE_FIELDS_SOURCE
                     )
             else:
-                minimal_active_configuration[key] = ConfigIdentity(
+                minimal_config_data[key] = ConfigIdentity(
                     value, OVERRIDABLE_FIELDS_SOURCE
                 )
         if (
@@ -236,6 +234,7 @@ def cli_startup(
                     reinitiate_config(ignore_essential_validation=True)
                 return
     if calling_sub_command_name is None:
+        # This is where we know that pj is run as is
         prettify()
 
 
@@ -429,25 +428,25 @@ def init() -> None:
         sleep(0.5)
         typer.echo()  # mainly for a newline!
         try:
-            validate_local_config_loc = Validate(PathValidator(LOCAL_CONFIG_LOC))
+            validate_local_config_loc = Validate(PathWriteValidator(config_files.user.file))
             validate_local_config_loc()
         except ValidationError:
             logger.error(
-                f"{APP_NAME} couldn't validate path '{LOCAL_CONFIG_LOC}' "
+                f"{APP_NAME} couldn't validate path '{config_files.user.file}' "
                 f"for writing configuration! "
                 f"Please make sure you have write and read access to "
-                f"'{LOCAL_CONFIG_LOC}'. "
+                f"'{config_files.user.file}'. "
                 "Configuration initialization has failed!"
             )
             raise Exit(1)
         else:
-            path = ProperPath(LOCAL_CONFIG_LOC)
+            path = config_files.user.file
             try:
                 with path.open(mode="r") as f:
                     if f.read():
                         status.stop()
                         logger.error(
-                            f"A configuration file '{LOCAL_CONFIG_LOC}' already exists "
+                            f"A configuration file '{path}' already exists "
                             f"and it's not empty! "
                             f"It's ambiguous what to do in this situation."
                         )

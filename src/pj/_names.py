@@ -1,5 +1,9 @@
-import os
+from collections import namedtuple
+from dataclasses import dataclass
+from enum import StrEnum
 from pathlib import Path
+
+from properpath import ProperPath
 
 # variables with leading underscores here indicate that they are to be overwritten by config.py
 # In which case, import their counterparts from src/config.py
@@ -7,30 +11,78 @@ from pathlib import Path
 APP_NAME: str = "pj"
 APP_BRAND_NAME: str = "pj"
 LOG_FILE_NAME: str = f"{APP_NAME}.log"
-CONFIG_FILE_EXTENSION: str = "yaml"
+CONFIG_FILE_EXTENSION: str = "yml"
 CONFIG_FILE_NAME: str = f"{APP_NAME}.{CONFIG_FILE_EXTENSION}"
 DEFAULT_EXPORT_DATA_FORMAT: str = "json"
 VERSION_FILE_NAME: str = "VERSION"
-user_home: Path = Path.home()
-cur_dir: Path = Path.cwd()
 
-# XDG and other convention variable definitions
-ENV_XDG_DATA_HOME: str = "XDG_DATA_HOME"
-ENV_XDG_DOWNLOAD_DIR: str = "XDG_DOWNLOAD_DIR"
-ENV_XDG_CONFIG_HOME: str = "XDG_CONFIG_HOME"
 
-# Fallback definitions
-FALLBACK_DIR: Path = user_home / ".local/share" / APP_NAME
-FALLBACK_EXPORT_DIR: Path = user_home / "Downloads"
-FALLBACK_CONFIG_DIR: Path = user_home / ".config"
+class AppIdentity(StrEnum):
+    app_name = "pj"
+    app_brand_name = "pj"
+    log_file_name = f"{app_name}.log"
+    config_file_extension = "yml"
+    user_config_file_name = f"config.{config_file_extension}"
+    project_config_file_name = f"{app_name}.{config_file_extension}"
+    version_file_name = "VERSION"
 
-# Configuration path definitions
-SYSTEM_CONFIG_LOC: Path = Path("/etc") / CONFIG_FILE_NAME
-LOCAL_CONFIG_LOC: Path = (
-    Path(os.getenv(ENV_XDG_CONFIG_HOME, FALLBACK_CONFIG_DIR)) / CONFIG_FILE_NAME
+ConfigFileTuple = namedtuple("ConfigFileTuple", ("file", "level"))
+LogFileTuple = namedtuple("LogFileTuple", ("file", "level"))
+
+
+app_dirs = ProperPath.platformdirs(
+    appname=AppIdentity.app_name,
+    appauthor=AppIdentity.app_name,
+    ensure_exists=True,
+    follow_unix=True,
 )
-# In case $XDG_CONFIG_HOME isn't defined in the machine, it falls back to $HOME/.config/pj.yml
-PROJECT_CONFIG_LOC: Path = cur_dir / CONFIG_FILE_NAME
+
+
+@dataclass(frozen=True, slots=True)
+class ConfigPaths:
+    system_config_file: Path = (
+        ProperPath("/etc") / AppIdentity.app_name / AppIdentity.user_config_file_name
+    )
+    user_config_dir: Path = app_dirs.user_config_dir
+    user_config_file: Path = (
+        app_dirs.user_config_dir / AppIdentity.user_config_file_name
+    )
+    project_config_file: Path = ProperPath.cwd() / AppIdentity.project_config_file_name
+
+
+@dataclass(frozen=True, slots=True)
+class LogPaths:
+    system_log_file: Path = (
+        ProperPath("/var/log") / AppIdentity.app_name / AppIdentity.log_file_name
+    )
+    user_log_dir: Path = app_dirs.user_log_dir
+    user_log_file: Path = app_dirs.user_log_dir / AppIdentity.log_file_name
+
+
+config_paths = ConfigPaths()
+log_paths = LogPaths()
+
+@dataclass(frozen=True, slots=True)
+class LogFiles:
+    root: LogFileTuple = LogFileTuple(log_paths.system_log_file, "SYSTEM LOG")
+    user: LogFileTuple = LogFileTuple(log_paths.user_log_file, "USER LOG")
+
+
+@dataclass(frozen=True, slots=True)
+class ConfigFiles:
+    root: ConfigFileTuple = ConfigFileTuple(
+        config_paths.system_config_file, "SYSTEM CONFIG"
+    )
+    user: ConfigFileTuple = ConfigFileTuple(
+        config_paths.user_config_file, "USER CONFIG"
+    )
+    project: ConfigFileTuple = ConfigFileTuple(
+        config_paths.project_config_file, "PROJECT CONFIG"
+    )
+
+
+config_files = ConfigFiles()
+log_files = LogFiles()
 
 # Configuration field definitions
 KEY_DEVELOPMENT_MODE: str = "DEVELOPMENT_MODE"

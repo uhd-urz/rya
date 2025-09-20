@@ -5,7 +5,7 @@ __all__ = [
     "ValidationError",
     "RuntimeValidationError",
     "CriticalValidationError",
-    "PathValidator",
+    "PathWriteValidator",
     "PathValidationError",
 ]
 
@@ -17,4 +17,4 @@ from .base import (
     ValidationError,
     Validator,
 )
-from .path import PathValidationError, PathValidator
+from .path import PathValidationError, PathWriteValidator

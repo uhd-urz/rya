@@ -7,22 +7,15 @@ from ..configuration import (
     KEY_DEVELOPMENT_MODE,
     get_development_mode,
     inspect,
-    minimal_active_configuration,
-)
-
-from ..configuration.config import (
-    _NON_CANON_CONFIG_FILE_NAME,
-    NON_CANON_YAML_EXTENSION,
-    CONFIG_FILE_EXTENSION,
-    CONFIG_MIS_PATH,
+    minimal_config_data,
 )
 from ..loggers import LOG_FILE_PATH
 from ..styles import ColorText
+from ..styles.colors import BLUE, LIGHTCYAN, LIGHTGREEN, YELLOW
 from ..utils import Missing
-from ..styles.colors import BLUE, LIGHTCYAN, LIGHTGREEN, RED, YELLOW
 
-detected_config = minimal_active_configuration
-detected_config_files = inspect.applied_config_files
+detected_config = minimal_config_data
+detected_config_files = inspect.tagged_config_files
 missing = ColorText(Missing())
 
 
@@ -41,13 +34,13 @@ detected_config_files_formatted = "\n- " + "\n- ".join(
     f"`{v}`: {k}" for k, v in detected_config_files.items()
 )
 
-wrong_ext_warning = (
-    f"File '{_NON_CANON_CONFIG_FILE_NAME}' detected in location '{CONFIG_MIS_PATH}'. "
-    f"If it is meant to be an {APP_NAME} configuration file, "
-    f"please rename the file extension from '{NON_CANON_YAML_EXTENSION}' "
-    f"to '{CONFIG_FILE_EXTENSION}'. {APP_NAME} only supports '{CONFIG_FILE_EXTENSION}' "
-    f"as file extension for configuration files."
-)
+# wrong_ext_warning = (
+#     f"File '{_NON_CANON_CONFIG_FILE_NAME}' detected in location '{CONFIG_MIS_PATH}'. "
+#     f"If it is meant to be an {APP_NAME} configuration file, "
+#     f"please rename the file extension from '{NON_CANON_YAML_EXTENSION}' "
+#     f"to '{CONFIG_FILE_EXTENSION}'. {APP_NAME} only supports '{CONFIG_FILE_EXTENSION}' "
+#     f"as file extension for configuration files."
+# )
 
 
 def show(no_keys: bool) -> str:
@@ -86,16 +79,16 @@ The following information includes configuration values and their sources as det
             if FALLBACK_SOURCE_NAME in (development_mode_source,)
             else ""
         )
-        + (
-            f"""
-
-
-**{ColorText("Attention:").colorize(RED)}**
-    {wrong_ext_warning}
-    """
-            if CONFIG_MIS_PATH is not None
-            else ""
-        )
+#         + (
+#             f"""
+#
+#
+# **{ColorText("Attention:").colorize(RED)}**
+#     {wrong_ext_warning}
+#     """
+#             if CONFIG_MIS_PATH is not None
+#             else ""
+#         )
     )
 
     return _info

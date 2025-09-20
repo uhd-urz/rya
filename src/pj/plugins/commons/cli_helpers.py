@@ -15,7 +15,7 @@ from ...loggers import get_logger
 from ...path import ProperPath
 from ...styles import FormatError, get_formatter
 from ...utils import check_reserved_keyword
-from .export import ExportPathValidator
+from .export import ExportPathWriteValidator
 
 logger = get_logger()
 
@@ -38,7 +38,7 @@ def get_cli_exportable_params(
 ) -> NamedTuple:
     try:
         validate_export = Validate(
-            ExportPathValidator(export_dest, can_overwrite=can_overwrite)
+            ExportPathWriteValidator(export_dest, can_overwrite=can_overwrite)
         )
     except (ValueError, PathValidationError) as e:
         logger.error(e)

@@ -10,6 +10,8 @@ dependencies = [
     "pyyaml==6.0.2",
     "click>=8.1.8,<8.2",
     "colorama>=0.4.6",
+    "platformdirs>=4.4.0",
+    "properpath",
 ]
 readme = "README.md"
 authors = [{ name = "Mahadi Xion", email = "mhxions@gmail.com" }]
@@ -22,6 +24,9 @@ keywords = [
 [tool.uv.build-backend]
 module-name = "pj"
 module-root = "src"
+
+[tool.uv.sources]
+properpath = { git = "https://github.com/uhd-urz/properpath.git", rev = "add-mkdoc" }
 
 [project.scripts]
 pj = "pj.cli.pj:app"

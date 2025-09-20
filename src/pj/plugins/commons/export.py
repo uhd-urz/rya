@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Any, Iterable, Optional, Union
 
 from ...configuration import APP_NAME
-from ...core_validators import PathValidationError, PathValidator, ValidationError
+from ...core_validators import PathValidationError, PathWriteValidator, ValidationError
 from ...loggers import get_logger
 from ...path import ProperPath
 from ...styles import NoteText, stdout_console
@@ -82,7 +82,7 @@ class Export:
             )
 
 
-class ExportPathValidator(PathValidator):
+class ExportPathWriteValidator(PathWriteValidator):
     def __init__(
         self,
         /,

@@ -7,7 +7,6 @@ __all__ = [
     "LoggerMaker",
     "add_logging_level",
     "get_app_version",
-    "NoException",
     "GlobalCLIResultCallback",
     "GlobalCLISuperStartupCallback",
     "ResultCallbackHandler",
@@ -38,7 +37,6 @@ from ._utils import (
     GlobalCLIGracefulCallback,
     GlobalCLIResultCallback,
     GlobalCLISuperStartupCallback,
-    NoException,
     PatternNotFoundError,
     get_app_version,
 )

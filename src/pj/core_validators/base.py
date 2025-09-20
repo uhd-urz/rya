@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Self, Union
 
 from .._core_init import GlobalCLIResultCallback
+from .path import PathWriteValidator
 
 
 class ValidationError(Exception): ...
@@ -49,7 +50,7 @@ class Validator(ABC):
 
 
 class Validate:
-    def __init__(self, *_typ: Validator):
+    def __init__(self, *_typ: Validator | PathWriteValidator):
         self.typ = _typ
 
     def __call__(self, *args, **kwargs) -> None:

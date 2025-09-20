@@ -1,5 +1,6 @@
 from ..loggers import LOG_FILE_PATH
 from ._config_history import ConfigIdentity, FieldValueWithKey
+from ._developement_mode import DevelopmentState
 from ._overload_history import (
     PatchConfigHistory,
     preventive_missing_warning,
@@ -26,23 +27,18 @@ from .config import (
     EXTERNAL_LOCAL_PLUGIN_METADATA_KEY_PLUGIN_ROOT_DIR,
     EXTERNAL_LOCAL_PLUGIN_TYPER_APP_FILE_NAME,
     EXTERNAL_LOCAL_PLUGIN_TYPER_APP_VAR_NAME,
-    FALLBACK_EXPORT_DIR,
     FALLBACK_SOURCE_NAME,
     KEY_DEVELOPMENT_MODE,
     KEY_PLUGIN_KEY_NAME,
-    LOCAL_CONFIG_LOC,
     NON_CANON_YAML_EXTENSION,
     PLUGIN,
-    PROJECT_CONFIG_LOC,
-    SYSTEM_CONFIG_LOC,
     VERSION_FILE_NAME,
     MinimalConfigData,
     history,
     inspect,
-    minimal_active_configuration,
+    minimal_config_data,
     settings,
 )
-from ._developement_mode import DevelopmentState
 from .overridable_vars import (
     get_development_mode,
     get_plugin_configs,
@@ -82,20 +78,16 @@ __all__ = [
     "EXTERNAL_LOCAL_PLUGIN_METADATA_KEY_PLUGIN_ROOT_DIR",
     "EXTERNAL_LOCAL_PLUGIN_TYPER_APP_FILE_NAME",
     "EXTERNAL_LOCAL_PLUGIN_TYPER_APP_VAR_NAME",
-    "FALLBACK_EXPORT_DIR",
     "FALLBACK_SOURCE_NAME",
     "KEY_DEVELOPMENT_MODE",
     "KEY_PLUGIN_KEY_NAME",
-    "LOCAL_CONFIG_LOC",
     "PLUGIN",
-    "PROJECT_CONFIG_LOC",
-    "SYSTEM_CONFIG_LOC",
     "VERSION_FILE_NAME",
     "MinimalConfigData",
     "history",
     "inspect",
     "settings",
-    "minimal_active_configuration",
+    "minimal_config_data",
     "get_plugin_configs",
     "get_development_mode",
     "ConfigurationValidation",

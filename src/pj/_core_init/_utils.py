@@ -4,7 +4,6 @@ from typing import Callable, Optional
 from .._names import VERSION_FILE_NAME
 
 __all__ = [
-    "NoException",
     "get_app_version",
     "GlobalCLIResultCallback",
     "PatternNotFoundError",
@@ -14,9 +13,6 @@ __all__ = [
 from ._loggers import get_logger
 
 logger = get_logger()
-
-
-class NoException(Exception): ...
 
 
 class PatternNotFoundError(Exception): ...

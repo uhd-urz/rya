@@ -1,4 +1,4 @@
-import logging
+from dataclasses import asdict
 from pathlib import Path
 from typing import Optional
 
@@ -10,28 +10,24 @@ from .._names import (
     CONFIG_FILE_EXTENSION,
     CONFIG_FILE_NAME,
     DEFAULT_EXPORT_DATA_FORMAT,
-    ENV_XDG_DOWNLOAD_DIR,
-    FALLBACK_DIR,
-    FALLBACK_EXPORT_DIR,
     KEY_DEVELOPMENT_MODE,
     KEY_PLUGIN_KEY_NAME,
-    LOCAL_CONFIG_LOC,
     LOG_DIR_ROOT,
-    PROJECT_CONFIG_LOC,
-    SYSTEM_CONFIG_LOC,
     VERSION_FILE_NAME,
+    app_dirs,
+    config_files,
 )
 from ..core_validators import (
     CriticalValidationError,
-    PathValidator,
+    PathWriteValidator,
     Validate,
     ValidationError,
 )
-from ..loggers import _XDG_DATA_HOME, LOG_FILE_PATH, get_logger
-from ..utils import Missing, add_message
+from ..loggers import get_logger
+from ..utils import Missing
 from ._config_history import (
-    ConfigIdentity,
     ConfigHistory,
+    ConfigIdentity,
     InspectConfigHistory,
     MinimalConfigData,
 )
@@ -42,19 +38,13 @@ __all__ = [
     "CONFIG_FILE_EXTENSION",
     "CONFIG_FILE_NAME",
     "DEFAULT_EXPORT_DATA_FORMAT",
-    "ENV_XDG_DOWNLOAD_DIR",
-    "FALLBACK_DIR",
-    "FALLBACK_EXPORT_DIR",
     "KEY_DEVELOPMENT_MODE",
     "KEY_PLUGIN_KEY_NAME",
-    "LOCAL_CONFIG_LOC",
     "LOG_DIR_ROOT",
-    "PROJECT_CONFIG_LOC",
-    "SYSTEM_CONFIG_LOC",
     "settings",
     "history",
     "inspect",
-    "minimal_active_configuration",
+    "minimal_config_data",
     "DEVELOPMENT_MODE_DEFAULT_VAL",
     "PLUGIN_DEFAULT_VALUE",
     "MinimalConfigData",
@@ -86,29 +76,25 @@ __all__ = [
 
 logger = get_logger()
 
-SYSTEM_CONFIG_LOC: Path = SYSTEM_CONFIG_LOC
-LOCAL_CONFIG_LOC: Path = LOCAL_CONFIG_LOC
-PROJECT_CONFIG_LOC: Path = PROJECT_CONFIG_LOC
-
 env_var_app_name = APP_NAME.upper().replace("-", "_")
 FALLBACK_SOURCE_NAME: str = f"{APP_BRAND_NAME} DEFAULT"
 
-NON_CANON_YAML_EXTENSION: str = "yml"
+NON_CANON_YAML_EXTENSION: str = "yaml"
 _NON_CANON_CONFIG_FILE_NAME: str = f"{APP_NAME}.{NON_CANON_YAML_EXTENSION}"
 CONFIG_MIS_PATH: Optional[Path] = None
-for path in [
-    SYSTEM_CONFIG_LOC.parent / _NON_CANON_CONFIG_FILE_NAME,
-    LOCAL_CONFIG_LOC.parent / _NON_CANON_CONFIG_FILE_NAME,
-    PROJECT_CONFIG_LOC.parent / _NON_CANON_CONFIG_FILE_NAME,
-]:
-    if path.exists():
-        CONFIG_MIS_PATH = path
-        message = (
-            f"You have a message marked as 'Attention' waiting for you. "
-            f"Please run '{APP_NAME} show-config' to see it."
-        )
-        add_message(message, logging.INFO)
-        break
+# for path in [
+#     SYSTEM_CONFIG_LOC.parent / _NON_CANON_CONFIG_FILE_NAME,
+#     LOCAL_CONFIG_LOC.parent / _NON_CANON_CONFIG_FILE_NAME,
+#     PROJECT_CONFIG_LOC.parent / _NON_CANON_CONFIG_FILE_NAME,
+# ]:
+#     if path.exists():
+#         CONFIG_MIS_PATH = path
+#         message = (
+#             f"You have a message marked as 'Attention' waiting for you. "
+#             f"Please run '{APP_NAME} show-config' to see it."
+#         )
+#         add_message(message, logging.INFO)
+#         break
 settings = Dynaconf(
     envar_prefix=env_var_app_name,
     env_switcher=f"{env_var_app_name}_ENV",
@@ -116,33 +102,29 @@ settings = Dynaconf(
     core_loaders=["YAML"],  # will not read any file extensions except YAML
     # loaders=['conf'], # will not work without properly defining a custom loader for .conf first
     yaml_loader="safe_load",  # safe load doesn't execute arbitrary Python code in YAML files
-    settings_files=[SYSTEM_CONFIG_LOC, LOCAL_CONFIG_LOC, PROJECT_CONFIG_LOC],
+    settings_files=[file for file, _ in asdict(config_files).values()],
     # Order of the "settings_files" list is the overwrite priority order.
     # PROJECT_CONFIG_LOC has the highest priority.
 )
 
 history = ConfigHistory(settings)
-minimal_active_configuration: MinimalConfigData = MinimalConfigData()
+minimal_config_data: MinimalConfigData = MinimalConfigData()
 
 
 # App internal data location
-if LOG_FILE_PATH.parent != LOG_DIR_ROOT:
-    APP_DATA_DIR = LOG_FILE_PATH.parent
-else:
-    validate_app_dir = Validate(
-        PathValidator([_XDG_DATA_HOME / APP_NAME, FALLBACK_DIR / APP_NAME])
+validate_app_dir = Validate(PathWriteValidator(app_dirs.user_data_dir))
+try:
+    APP_DATA_DIR = validate_app_dir.get()
+except ValidationError:
+    logger.critical(
+        f"{APP_NAME} couldn't validate {app_dirs.user_data_dir} "
+        f"to store {APP_NAME} "
+        f"internal application data. {APP_NAME} will not run!"
     )
-    try:
-        APP_DATA_DIR = validate_app_dir.get()
-    except ValidationError:
-        logger.critical(
-            f"{APP_NAME} couldn't validate {FALLBACK_DIR} to store {APP_NAME} "
-            f"internal application data. {APP_NAME} will not run!"
-        )
-        raise CriticalValidationError
+    raise CriticalValidationError
 
 # The history is ready to be inspected
-inspect = InspectConfigHistory(history)
+inspect = InspectConfigHistory(history, config_files=config_files)
 
 # DEVELOPMENT_MODE falls back to false if not defined in the configuration
 DEVELOPMENT_MODE_DEFAULT_VAL: bool = False
@@ -160,11 +142,11 @@ for key_name, key_val in [
     try:
         history.patch(key_name, key_val)
     except KeyError:
-        minimal_active_configuration[key_name] = ConfigIdentity(Missing(), None)
+        minimal_config_data[key_name] = ConfigIdentity(Missing(), None)
     else:
-        minimal_active_configuration[key_name] = InspectConfigHistory(
-            history
-        ).applied_config[key_name]
+        minimal_config_data[key_name] = InspectConfigHistory(
+            history, config_files
+        ).config_data[key_name]
 
 
 # Plugin file definitions and locations

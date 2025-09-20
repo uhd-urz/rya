@@ -1,14 +1,11 @@
 from collections import namedtuple
+from dataclasses import asdict
 from typing import Any, Union
 
 from dynaconf import Dynaconf
 from dynaconf.utils import inspect
 
-from .._names import (
-    LOCAL_CONFIG_LOC,
-    PROJECT_CONFIG_LOC,
-    SYSTEM_CONFIG_LOC,
-)
+from .._names import ConfigFiles
 from ..loggers import get_logger
 
 logger = get_logger()
@@ -76,8 +73,14 @@ class ConfigHistory:
 
 
 class InspectConfigHistory:
-    def __init__(self, history_obj: Union[ConfigHistory, Dynaconf], /):
+    def __init__(
+        self,
+        history_obj: Union[ConfigHistory, Dynaconf],
+        /,
+        config_files: ConfigFiles,
+    ):
         self.history = history_obj
+        self.config_files = config_files
 
     @property
     def history(self) -> list[dict]:
@@ -96,37 +99,31 @@ class InspectConfigHistory:
         )
 
     @property
-    def applied_config_files(self) -> dict:
-        config_files_with_tag: dict = {
-            SYSTEM_CONFIG_LOC: "ROOT LEVEL",
-            LOCAL_CONFIG_LOC: "USER LEVEL",
-            PROJECT_CONFIG_LOC: "PROJECT LEVEL",
-        }
-
-        applied_config_files: list = [config["identifier"] for config in self.history]
+    def tagged_config_files(self) -> dict:
+        config_identifiers: list = [config["identifier"] for config in self.history]
         return {
             str(k): v
-            for k, v in config_files_with_tag.items()
-            if str(k) in applied_config_files
+            for k, v in asdict(self.config_files).values()
+            if str(k) in config_identifiers
         }
 
-    @applied_config_files.setter
-    def applied_config_files(self, value) -> None:
+    @tagged_config_files.setter
+    def tagged_config_files(self, value) -> None:
         raise AttributeError(
             f"{self.__class__.__name__} instance cannot modify configuration history. "
             "Use ConfigHistory to modify history."
         )
 
     @property
-    def applied_config(self) -> dict:
-        applied_config = {}
+    def config_data(self) -> dict:
+        config_data = {}
         for config in self.history:
             for k, v in config["value"].items():
-                applied_config.update({k: ConfigIdentity(v, config["identifier"])})
-        return applied_config
+                config_data.update({k: ConfigIdentity(v, config["identifier"])})
+        return config_data
 
-    @applied_config.setter
-    def applied_config(self, value) -> None:
+    @config_data.setter
+    def config_data(self, value) -> None:
         raise AttributeError(
             f"{self.__class__.__name__} instance cannot modify configuration history. "
             "Use ConfigHistory to modify history."

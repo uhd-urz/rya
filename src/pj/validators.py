@@ -3,7 +3,7 @@ from .core_validators import (
     CriticalValidationError,
     Exit,
     PathValidationError,
-    PathValidator,
+    PathWriteValidator,
     RuntimeValidationError,
     Validate,
     ValidationError,
@@ -18,6 +18,6 @@ __all__ = [
     "ValidationError",
     "RuntimeValidationError",
     "CriticalValidationError",
-    "PathValidator",
+    "PathWriteValidator",
     "PathValidationError",
 ]

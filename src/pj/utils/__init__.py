@@ -3,7 +3,6 @@ from .._core_init import (
     GlobalCLIResultCallback,
     GlobalCLISuperStartupCallback,
     Missing,
-    NoException,
     PatternNotFoundError,
     get_app_version,
 )
@@ -28,7 +27,6 @@ __all__ = [
     "get_sub_package_name",
     "update_kwargs_with_defaults",
     "get_app_version",
-    "NoException",
     "PatternNotFoundError",
     "GlobalCLISuperStartupCallback",
     "GlobalCLIResultCallback",
