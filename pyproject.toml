@@ -2,7 +2,7 @@
 name = "pj-cli"
 version = "0.1.0"
 description = "pj is a CLI tool."
-requires-python = ">=3.13,<4"
+requires-python = ">=3.12,<4"
 dependencies = [
     "rich>=14.1.0,< 14.2.0",
     "dynaconf>=3.2.0,<4",
@@ -11,7 +11,7 @@ dependencies = [
     "click>=8.1.8,<8.2",
     "colorama>=0.4.6",
     "platformdirs>=4.4.0",
-    "properpath",
+    "properpath==0.2.4",
 ]
 readme = "README.md"
 authors = [{ name = "Mahadi Xion", email = "mhxions@gmail.com" }]
@@ -24,9 +24,6 @@ keywords = [
 [tool.uv.build-backend]
 module-name = "pj"
 module-root = "src"
-
-[tool.uv.sources]
-properpath = { git = "https://github.com/uhd-urz/properpath.git", rev = "add-mkdoc" }
 
 [project.scripts]
 pj = "pj.cli.pj:app"
