@@ -1,7 +1,6 @@
 from collections import namedtuple
 from dataclasses import dataclass
 from enum import StrEnum
-from pathlib import Path
 
 from properpath import ProperPath
 
@@ -26,6 +25,7 @@ class AppIdentity(StrEnum):
     project_config_file_name = f"{app_name}.{config_file_extension}"
     version_file_name = "VERSION"
 
+
 ConfigFileTuple = namedtuple("ConfigFileTuple", ("file", "level"))
 LogFileTuple = namedtuple("LogFileTuple", ("file", "level"))
 
@@ -40,27 +40,30 @@ app_dirs = ProperPath.platformdirs(
 
 @dataclass(frozen=True, slots=True)
 class ConfigPaths:
-    system_config_file: Path = (
+    system_config_file: ProperPath = (
         ProperPath("/etc") / AppIdentity.app_name / AppIdentity.user_config_file_name
     )
-    user_config_dir: Path = app_dirs.user_config_dir
-    user_config_file: Path = (
+    user_config_dir: ProperPath = app_dirs.user_config_dir
+    user_config_file: ProperPath = (
         app_dirs.user_config_dir / AppIdentity.user_config_file_name
     )
-    project_config_file: Path = ProperPath.cwd() / AppIdentity.project_config_file_name
+    project_config_file: ProperPath = (
+        ProperPath.cwd() / AppIdentity.project_config_file_name
+    )
 
 
 @dataclass(frozen=True, slots=True)
 class LogPaths:
-    system_log_file: Path = (
+    system_log_file: ProperPath = (
         ProperPath("/var/log") / AppIdentity.app_name / AppIdentity.log_file_name
     )
-    user_log_dir: Path = app_dirs.user_log_dir
-    user_log_file: Path = app_dirs.user_log_dir / AppIdentity.log_file_name
+    user_log_dir: ProperPath = app_dirs.user_log_dir
+    user_log_file: ProperPath = app_dirs.user_log_dir / AppIdentity.log_file_name
 
 
 config_paths = ConfigPaths()
 log_paths = LogPaths()
+
 
 @dataclass(frozen=True, slots=True)
 class LogFiles:
@@ -87,6 +90,3 @@ log_files = LogFiles()
 # Configuration field definitions
 KEY_DEVELOPMENT_MODE: str = "DEVELOPMENT_MODE"
 KEY_PLUGIN_KEY_NAME: str = "PLUGINS"
-
-# Log data directory with root permission
-LOG_DIR_ROOT: Path = Path(f"/var/log/{APP_NAME}")

@@ -12,7 +12,6 @@ from .._names import (
     DEFAULT_EXPORT_DATA_FORMAT,
     KEY_DEVELOPMENT_MODE,
     KEY_PLUGIN_KEY_NAME,
-    LOG_DIR_ROOT,
     VERSION_FILE_NAME,
     app_dirs,
     config_files,
@@ -40,7 +39,6 @@ __all__ = [
     "DEFAULT_EXPORT_DATA_FORMAT",
     "KEY_DEVELOPMENT_MODE",
     "KEY_PLUGIN_KEY_NAME",
-    "LOG_DIR_ROOT",
     "settings",
     "history",
     "inspect",
@@ -76,7 +74,6 @@ __all__ = [
 
 logger = get_logger()
 
-env_var_app_name = APP_NAME.upper().replace("-", "_")
 FALLBACK_SOURCE_NAME: str = f"{APP_BRAND_NAME} DEFAULT"
 
 NON_CANON_YAML_EXTENSION: str = "yaml"
@@ -96,8 +93,6 @@ CONFIG_MIS_PATH: Optional[Path] = None
 #         add_message(message, logging.INFO)
 #         break
 settings = Dynaconf(
-    envar_prefix=env_var_app_name,
-    env_switcher=f"{env_var_app_name}_ENV",
     # environment variable to apply mode of environment (e.g., dev, production)
     core_loaders=["YAML"],  # will not read any file extensions except YAML
     # loaders=['conf'], # will not work without properly defining a custom loader for .conf first
