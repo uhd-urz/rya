@@ -14,7 +14,7 @@ from .formats import RegisterFormattingLanguage
 class BaseHighlight(ABC):
     @classmethod
     def __subclasshook__(cls, subclass) -> bool:
-        return issubclass(subclass, Syntax) or super().__subclasshook__(cls, subclass)
+        return issubclass(subclass, Syntax) or super().__subclasshook__(subclass)
 
     @abstractmethod
     def __call__(self, *args, **kwargs): ...
