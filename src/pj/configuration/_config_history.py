@@ -131,13 +131,7 @@ class InspectConfigHistory:
 
 
 class MinimalConfigData:
-    _instance = None
     _container: dict[str, ConfigIdentity] = {}
-
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super(MinimalConfigData, cls).__new__(cls)
-        return cls._instance
 
     def __str__(self):
         return str(self._container)
@@ -179,3 +173,6 @@ class MinimalConfigData:
             return default
         else:
             return value
+
+
+minimal_config_data = MinimalConfigData()

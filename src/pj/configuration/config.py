@@ -1,8 +1,10 @@
+from copy import deepcopy
 from dataclasses import asdict
 from pathlib import Path
 from typing import Optional
 
 from dynaconf import Dynaconf
+from dynaconf.vendor.ruamel.yaml.scanner import ScannerError
 
 from .._names import (
     APP_BRAND_NAME,
@@ -18,6 +20,7 @@ from .._names import (
 )
 from ..core_validators import (
     CriticalValidationError,
+    Exit,
     PathWriteValidator,
     Validate,
     ValidationError,
@@ -28,7 +31,7 @@ from ._config_history import (
     ConfigHistory,
     ConfigIdentity,
     InspectConfigHistory,
-    MinimalConfigData,
+    minimal_config_data,
 )
 
 __all__ = [
@@ -45,7 +48,6 @@ __all__ = [
     "minimal_config_data",
     "DEVELOPMENT_MODE_DEFAULT_VAL",
     "PLUGIN_DEFAULT_VALUE",
-    "MinimalConfigData",
     "VERSION_FILE_NAME",
     "DEVELOPMENT_MODE",
     "EXTERNAL_LOCAL_PLUGIN_DIR",
@@ -93,18 +95,19 @@ CONFIG_MIS_PATH: Optional[Path] = None
 #         add_message(message, logging.INFO)
 #         break
 settings = Dynaconf(
-    # environment variable to apply mode of environment (e.g., dev, production)
     core_loaders=["YAML"],  # will not read any file extensions except YAML
-    # loaders=['conf'], # will not work without properly defining a custom loader for .conf first
     yaml_loader="safe_load",  # safe load doesn't execute arbitrary Python code in YAML files
     settings_files=[file for file, _ in asdict(config_files).values()],
     # Order of the "settings_files" list is the overwrite priority order.
-    # PROJECT_CONFIG_LOC has the highest priority.
 )
-
-history = ConfigHistory(settings)
-minimal_config_data: MinimalConfigData = MinimalConfigData()
-
+try:
+    original_history = ConfigHistory(settings)
+except ScannerError as e:
+    logger.critical(
+        f"There was an error reading configuration file. Exception details: {e}"
+    )
+    raise Exit(1)
+history = deepcopy(original_history)
 
 # App internal data location
 validate_app_dir = Validate(PathWriteValidator(app_dirs.user_data_dir))
@@ -126,8 +129,8 @@ DEVELOPMENT_MODE_DEFAULT_VAL: bool = False
 DEVELOPMENT_MODE = settings.get(KEY_DEVELOPMENT_MODE, None)
 
 # Plugins
-PLUGIN = settings.get(KEY_PLUGIN_KEY_NAME, None)
 PLUGIN_DEFAULT_VALUE: dict = {}
+PLUGIN = settings.get(KEY_PLUGIN_KEY_NAME, None)
 
 
 for key_name, key_val in [
@@ -140,7 +143,7 @@ for key_name, key_val in [
         minimal_config_data[key_name] = ConfigIdentity(Missing(), None)
     else:
         minimal_config_data[key_name] = InspectConfigHistory(
-            history, config_files
+            history, config_files=config_files
         ).config_data[key_name]
 
 

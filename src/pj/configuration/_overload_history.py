@@ -7,7 +7,7 @@ from ..utils import Missing, PreventiveWarning, get_sub_package_name
 from ._config_history import (
     ConfigIdentity,
     FieldValueWithKey,
-    MinimalConfigData,
+    minimal_config_data
 )
 from .config import FALLBACK_SOURCE_NAME, history, settings
 from .validators import MainConfigurationValidator
@@ -18,7 +18,7 @@ logger = get_logger()
 class PatchConfigHistory:
     def __init__(self, configuration_fields: list[FieldValueWithKey]):
         self.configuration_fields = configuration_fields
-        self.active_configuration = MinimalConfigData()
+        self.config_data = minimal_config_data
         self.settings = settings
 
     @property
@@ -39,14 +39,14 @@ class PatchConfigHistory:
         self._configuration_fields = value
 
     def _modify_history(self, key_name: str, value: str) -> None:
-        _val, _src = self.active_configuration[key_name]
-        self.active_configuration[key_name] = ConfigIdentity(value, _src)
+        _val, _src = self.config_data[key_name]
+        self.config_data[key_name] = ConfigIdentity(value, _src)
         if value != _val:
             try:
                 history.delete(key_name)
             except KeyError:
                 ...
-            self.active_configuration[key_name] = ConfigIdentity(
+            self.config_data[key_name] = ConfigIdentity(
                 value, FALLBACK_SOURCE_NAME
             )
 

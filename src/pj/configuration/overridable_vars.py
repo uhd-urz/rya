@@ -1,14 +1,10 @@
 from ..utils import Missing
 from ._overload_history import reinitiate_config
-from .config import (
-    KEY_DEVELOPMENT_MODE,
-    KEY_PLUGIN_KEY_NAME,
-    MinimalConfigData,
-)
+from .config import KEY_DEVELOPMENT_MODE, KEY_PLUGIN_KEY_NAME, minimal_config_data
 
 
 def _development_mode_validation_switch() -> None:
-    _value = MinimalConfigData().get_value(KEY_DEVELOPMENT_MODE)
+    _value = minimal_config_data.get_value(KEY_DEVELOPMENT_MODE)
     if _value is False or _value == Missing():
         reinitiate_config()
 
@@ -16,10 +12,10 @@ def _development_mode_validation_switch() -> None:
 def get_development_mode(*, skip_validation: bool = False) -> bool:
     if not skip_validation:
         _development_mode_validation_switch()
-    return MinimalConfigData().get_value(KEY_DEVELOPMENT_MODE)
+    return minimal_config_data.get_value(KEY_DEVELOPMENT_MODE)
 
 
 def get_plugin_configs(*, skip_validation: bool = False) -> dict:
     if not skip_validation:
         _development_mode_validation_switch()
-    return MinimalConfigData().get_value(KEY_PLUGIN_KEY_NAME)
+    return minimal_config_data.get_value(KEY_PLUGIN_KEY_NAME)

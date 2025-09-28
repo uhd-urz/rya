@@ -10,7 +10,7 @@ from ..core_validators import (
 )
 from ..loggers import get_logger
 from ..utils import Missing, add_message
-from ._config_history import FieldValueWithKey, MinimalConfigData
+from ._config_history import FieldValueWithKey, MinimalConfigData, minimal_config_data
 from .config import (
     DEVELOPMENT_MODE_DEFAULT_VAL,
     KEY_DEVELOPMENT_MODE,
@@ -22,20 +22,20 @@ logger = get_logger()
 
 
 class ConfigurationValidation:
-    def __init__(self, minimal_active_config_obj: MinimalConfigData, /):
-        self.active_configuration = minimal_active_config_obj
+    def __init__(self, minimal_config_data_obj: MinimalConfigData, /):
+        self.config_data = minimal_config_data_obj
 
     @property
-    def active_configuration(self) -> MinimalConfigData:
-        return self._active_configuration
+    def config_data(self) -> MinimalConfigData:
+        return self._config_data
 
-    @active_configuration.setter
-    def active_configuration(self, value: MinimalConfigData):
+    @config_data.setter
+    def config_data(self, value: MinimalConfigData):
         if not isinstance(value, MinimalConfigData):
             raise TypeError(
                 f"Value must be an instance of {MinimalConfigData.__name__}."
             )
-        self._active_configuration = value
+        self._config_data = value
 
 
 class ModesWithFallbackConfigurationValidator(ConfigurationValidation, Validator):
@@ -48,9 +48,7 @@ class ModesWithFallbackConfigurationValidator(ConfigurationValidation, Validator
         self.fallback_value = fallback_value
 
     def validate(self) -> bool:
-        if isinstance(
-            value := self.active_configuration.get_value(self.key_name), Missing
-        ):
+        if isinstance(value := self.config_data.get_value(self.key_name), Missing):
             return self.fallback_value
         if value is None:
             logger.warning(
@@ -84,9 +82,7 @@ class TimeWithFallbackConfigurationValidator(ConfigurationValidation, Validator)
         self.allow_none = allow_none
 
     def validate(self) -> Optional[float]:
-        if isinstance(
-            value := self.active_configuration.get_value(self.key_name), Missing
-        ):
+        if isinstance(value := self.config_data.get_value(self.key_name), Missing):
             return self.fallback_value
         if value is None and not self.allow_none:
             logger.warning(
@@ -120,9 +116,7 @@ class DiscreteWithFallbackConfigurationValidator(ConfigurationValidation, Valida
         self.allow_none = allow_none
 
     def validate(self) -> Optional[int]:
-        if isinstance(
-            value := self.active_configuration.get_value(self.key_name), Missing
-        ):
+        if isinstance(value := self.config_data.get_value(self.key_name), Missing):
             return self.fallback_value
         if value is None:
             if not self.allow_none:
@@ -151,7 +145,7 @@ class PluginConfigurationValidator(ConfigurationValidation, Validator):
         self.fallback_value = fallback_value
 
     def validate(self) -> dict:
-        value: DynaBox = self.active_configuration.get_value(self.key_name)
+        value: DynaBox = self.config_data.get_value(self.key_name)
         if isinstance(value, Missing):
             return self.fallback_value
         if value is None:
@@ -205,9 +199,7 @@ class MainConfigurationValidator(ConfigurationValidation, Validator):
         *,
         limited_to: Optional[Iterable[type[Validator]]] = None,
     ):
-        from ._config_history import MinimalConfigData
-
-        super().__init__(MinimalConfigData())
+        super().__init__(minimal_config_data)
         self.limited_to = limited_to
 
     @property
@@ -239,7 +231,7 @@ class MainConfigurationValidator(ConfigurationValidation, Validator):
             ]:
                 value = Validate(
                     ModesWithFallbackConfigurationValidator(
-                        self.active_configuration,
+                        self.config_data,
                         key_name=key_name,
                         fallback_value=default_value,
                     )
@@ -249,7 +241,7 @@ class MainConfigurationValidator(ConfigurationValidation, Validator):
         if PluginConfigurationValidator in self.limited_to:
             plugin = Validate(
                 PluginConfigurationValidator(
-                    self.active_configuration,
+                    self.config_data,
                     key_name=KEY_PLUGIN_KEY_NAME,
                     fallback_value=PLUGIN_DEFAULT_VALUE,
                 )
