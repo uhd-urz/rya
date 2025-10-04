@@ -14,7 +14,7 @@ from .base import BaseHandlerMaker
 class STDERRBaseHandlerMaker(BaseHandlerMaker):
     def __init__(
         self,
-        formatter: logging.Formatter = logging.Formatter("%(message)s"),
+        formatter: logging.Formatter = logging.Formatter("%(name)s: %(message)s"),
         rich_level_colors: Optional[dict] = None,
     ):
         self.formatter: logging.Formatter = formatter

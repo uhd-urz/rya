@@ -39,7 +39,7 @@ class FileHandlerMaker(BaseHandlerMaker):
     def __init__(self, log_file_path: Union[Path, ProperPath, str]):
         self.log_file_path = log_file_path
         self.formatter: logging.Formatter = logging.Formatter(
-            "%(asctime)s:%(levelname)s:%(filename)s: %(message)s",
+            "%(asctime)s:%(levelname)s:%(name)s:%(filename)s: %(message)s",
             datefmt="%Y-%m-%d %H:%M:%S",
         )
 
