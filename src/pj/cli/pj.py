@@ -9,7 +9,6 @@ from typing import Optional
 
 import click
 import typer
-from rich import pretty
 from rich.logging import RichHandler
 from rich.markdown import Markdown
 from rich.panel import Panel
@@ -61,7 +60,6 @@ from .doc import __PARAMETERS__doc__ as docs
 
 logger = get_logger()
 file_logger = get_file_logger()
-pretty.install()
 
 DevelopmentState.switch_state(get_development_mode(skip_validation=True))
 

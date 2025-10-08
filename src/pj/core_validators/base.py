@@ -1,6 +1,6 @@
 import sys
 from abc import ABC, abstractmethod
-from typing import Any, Self, Union
+from typing import Any, Self
 
 from .._core_init import GlobalCLIResultCallback
 from .path import PathWriteValidator
@@ -26,7 +26,7 @@ class Exit(BaseExit):
     else:
         SYSTEM_EXIT = True
 
-    def __new__(cls, *args, **kwargs) -> Union[SystemExit, Self]:
+    def __new__(cls, *args, **kwargs) -> SystemExit | Self:  # type: ignore
         GlobalCLIResultCallback().call_callbacks()
         if cls.SYSTEM_EXIT:
             return SystemExit(*args)

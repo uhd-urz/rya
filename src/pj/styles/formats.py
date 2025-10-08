@@ -1,16 +1,21 @@
+import json
 import re
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
+from csv import DictWriter
+from io import StringIO
 from typing import Any, Optional, Self, Union
 
+import yaml
+
 from .. import APP_NAME
-from .base import __PACKAGE_IDENTIFIER__ as styles_package_identifier
+from . import base
 
 
 class BaseFormat(ABC):
-    _registry: dict[str, dict[str, type[Self]]] = {styles_package_identifier: {}}
-    _names: dict[str, list[str]] = {styles_package_identifier: []}
-    _conventions: dict[str, list[str]] = {styles_package_identifier: []}
+    _registry: dict[str, dict[str, type[Self]]] = {base.__package__: {}}
+    _names: dict[str, list[str]] = {base.__package__: []}
+    _conventions: dict[str, list[str]] = {base.__package__: []}
 
     # noinspection PyTypeChecker
     def __init_subclass__(cls, **kwargs):
@@ -18,21 +23,23 @@ class BaseFormat(ABC):
         if cls.package_identifier not in cls._registry:
             cls._registry[cls.package_identifier] = {}
             cls._registry[cls.package_identifier].update(
-                cls._registry[styles_package_identifier]
+                cls._registry[base.__package__]
             )
         if cls.package_identifier not in cls._names:
             cls._names[cls.package_identifier] = []
-            cls._names[cls.package_identifier] += cls._names[styles_package_identifier]
+            cls._names[cls.package_identifier] += cls._names[
+                base.__package__
+            ]
         if cls.package_identifier not in cls._conventions:
             cls._conventions[cls.package_identifier] = []
             cls._conventions[cls.package_identifier] += cls._conventions[
-                styles_package_identifier
+                base.__package__
             ]
         if cls.name is None:
-            if cls.package_identifier == styles_package_identifier:
+            if cls.package_identifier == base.__package__:
                 raise ValueError(
                     f"Attribute 'name' cannot be None for when package_identifier "
-                    f"is {styles_package_identifier} as it will "
+                    f"is {base.__package__} as it will "
                     f"remove {APP_NAME} built-in formats."
                 )
             existing_cls = cls._registry[cls.package_identifier].pop(cls.pattern())
@@ -98,15 +105,13 @@ class FormatError(Exception): ...
 class JSONFormat(BaseFormat):
     name: str = "json"
     convention: str = name
-    package_identifier: str = styles_package_identifier
+    package_identifier: str = base.__package__
 
     @classmethod
     def pattern(cls) -> str:
         return r"^json$"
 
     def __call__(self, data: Any) -> str:
-        import json
-
         return json.dumps(
             data, indent=2, ensure_ascii=False
         )  # ensure_ascii==False allows unicode
@@ -115,31 +120,26 @@ class JSONFormat(BaseFormat):
 class YAMLFormat(BaseFormat):
     name: str = "yaml"
     convention: list[str] = ["yml", "yaml"]
-    package_identifier: str = styles_package_identifier
+    package_identifier: str = base.__package__
 
     @classmethod
     def pattern(cls) -> str:
         return r"^ya?ml$"
 
     def __call__(self, data: Any) -> str:
-        import yaml
-
         return yaml.dump(data, indent=2, allow_unicode=True, sort_keys=False)
 
 
 class CSVFormat(BaseFormat):
     name: str = "csv"
     convention: str = name
-    package_identifier: str = styles_package_identifier
+    package_identifier: str = base.__package__
 
     @classmethod
     def pattern(cls) -> str:
         return r"^csv$"
 
     def __call__(self, data: Any) -> str:
-        from csv import DictWriter
-        from io import StringIO
-
         with StringIO() as csv_buffer:
             writer: DictWriter = DictWriter(csv_buffer, fieldnames=[])
             if isinstance(data, dict):
@@ -168,7 +168,7 @@ class CSVFormat(BaseFormat):
 class TXTFormat(BaseFormat):
     name: str = "txt"
     convention: list[str] = ["txt"]
-    package_identifier: str = styles_package_identifier
+    package_identifier: str = base.__package__
 
     @classmethod
     def pattern(cls) -> str:
