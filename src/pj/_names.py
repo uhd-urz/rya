@@ -2,7 +2,7 @@ from collections import namedtuple
 from dataclasses import dataclass
 from enum import StrEnum
 
-from properpath import ProperPath
+from properpath import P
 
 # variables with leading underscores here indicate that they are to be overwritten by config.py
 # In which case, import their counterparts from src/config.py
@@ -15,6 +15,9 @@ CONFIG_FILE_NAME: str = f"{APP_NAME}.{CONFIG_FILE_EXTENSION}"
 DEFAULT_EXPORT_DATA_FORMAT: str = "json"
 VERSION_FILE_NAME: str = "VERSION"
 
+ConfigFileTuple = namedtuple("ConfigFileTuple", ("file", "level"))
+LogFileTuple = namedtuple("LogFileTuple", ("file", "level"))
+
 
 class AppIdentity(StrEnum):
     app_name = "pj"
@@ -26,11 +29,7 @@ class AppIdentity(StrEnum):
     version_file_name = "VERSION"
 
 
-ConfigFileTuple = namedtuple("ConfigFileTuple", ("file", "level"))
-LogFileTuple = namedtuple("LogFileTuple", ("file", "level"))
-
-
-app_dirs = ProperPath.platformdirs(
+app_dirs = P.platformdirs(
     appname=AppIdentity.app_name,
     appauthor=AppIdentity.app_name,
     ensure_exists=True,
@@ -40,25 +39,21 @@ app_dirs = ProperPath.platformdirs(
 
 @dataclass(frozen=True, slots=True)
 class ConfigPaths:
-    system_config_file: ProperPath = (
-        ProperPath("/etc") / AppIdentity.app_name / AppIdentity.user_config_file_name
+    system_config_file: P = (
+        P("/etc") / AppIdentity.app_name / AppIdentity.user_config_file_name
     )
-    user_config_dir: ProperPath = app_dirs.user_config_dir
-    user_config_file: ProperPath = (
-        app_dirs.user_config_dir / AppIdentity.user_config_file_name
-    )
-    project_config_file: ProperPath = (
-        ProperPath.cwd() / AppIdentity.project_config_file_name
-    )
+    user_config_dir: P = app_dirs.user_config_dir
+    user_config_file: P = app_dirs.user_config_dir / AppIdentity.user_config_file_name
+    project_config_file: P = P.cwd() / AppIdentity.project_config_file_name
 
 
 @dataclass(frozen=True, slots=True)
 class LogPaths:
-    system_log_file: ProperPath = (
-        ProperPath("/var/log") / AppIdentity.app_name / AppIdentity.log_file_name
+    system_log_file: P = (
+        P("/var/log") / AppIdentity.app_name / AppIdentity.log_file_name
     )
-    user_log_dir: ProperPath = app_dirs.user_log_dir
-    user_log_file: ProperPath = app_dirs.user_log_dir / AppIdentity.log_file_name
+    user_log_dir: P = app_dirs.user_log_dir
+    user_log_file: P = app_dirs.user_log_dir / AppIdentity.log_file_name
 
 
 config_paths = ConfigPaths()
@@ -71,7 +66,7 @@ class LogFiles:
     user: LogFileTuple = LogFileTuple(log_paths.user_log_file, "USER LOG")
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass()
 class ConfigFiles:
     root: ConfigFileTuple = ConfigFileTuple(
         config_paths.system_config_file, "SYSTEM CONFIG"

@@ -1,6 +1,6 @@
 from .base import stderr_console, stdout_console
-from .formats import BaseFormat, get_formatter, FormatError, RegisterFormattingLanguage
-from .highlight import BaseHighlight, ColorText, Highlight, NoteText, print_typer_error
+from .formats import BaseFormat, FormatError, FormatInstantiator, get_formatter
+from .highlight import color_text, make_noted_text, print_typer_error
 from .rich_utils import rich_format_help_with_callback
 
 __all__ = [
@@ -9,11 +9,9 @@ __all__ = [
     "BaseFormat",
     "FormatError",
     "get_formatter",
-    "RegisterFormattingLanguage",
-    "BaseHighlight",
-    "Highlight",
-    "NoteText",
-    "ColorText",
+    "FormatInstantiator",
+    "make_noted_text",
+    "color_text",
     "print_typer_error",
     "rich_format_help_with_callback",
 ]

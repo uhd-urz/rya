@@ -1,14 +1,15 @@
 import logging
-from dataclasses import dataclass
 from functools import update_wrapper
 from typing import Optional
 
-from ..._names import AppIdentity
-from .handlers.stderr import STDERRBaseHandlerMaker
+from pydantic import BaseModel, ConfigDict
+
+from ...names import AppIdentity
+from .handlers.stderr import AppRichHandler, AppRichHandlerArgs
 
 
-@dataclass
-class LogMessageTuple:
+class LogMessageData(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
     message: str
     level: int = logging.NOTSET
     logger: Optional[logging.Logger] = None
@@ -71,6 +72,7 @@ class LoggerMaker:
 
 
 logger_maker = LoggerMaker()
+app_rich_handler_args = AppRichHandlerArgs()
 
 
 @logger_maker.register_logger_caller()
@@ -82,7 +84,7 @@ def get_simple_logger(name: Optional[str] = None) -> logging.Logger:
         logger = logger_maker.create_singleton_logger(
             get_simple_logger.__name__, name=name
         )
-        stdout_handler = STDERRBaseHandlerMaker().handler
+        stdout_handler = AppRichHandler(app_rich_handler_args)
         logger.addHandler(stdout_handler)
     return logger
 

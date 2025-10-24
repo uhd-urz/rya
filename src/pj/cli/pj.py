@@ -15,7 +15,6 @@ from rich.panel import Panel
 from rich.table import Table
 from typing_extensions import Annotated
 
-from .. import APP_NAME
 from .._names import KEY_DEVELOPMENT_MODE, config_files
 from ..configuration import (
     CONFIG_FILE_NAME,
@@ -29,27 +28,29 @@ from ..configuration import (
 )
 from ..core_validators import Exit, PathWriteValidator, Validate, ValidationError
 from ..loggers import (
-    GlobalLogRecordContainer,
     ResultCallbackHandler,
     get_file_logger,
     get_logger,
+    global_log_record_container,
 )
+from ..names import AppIdentity
 from ..plugins.commons.cli_helpers import Typer
 from ..plugins.commons.parse_user_cli_input import get_structured_data
 from ..styles import (
-    NoteText,
+    make_noted_text,
     print_typer_error,
     rich_format_help_with_callback,
     stderr_console,
     stdout_console,
 )
 from ..utils import (
-    GlobalCLIGracefulCallback,
-    GlobalCLIResultCallback,
-    GlobalCLISuperStartupCallback,
-    MessagesList,
     PythonVersionCheckFailed,
+    get_app_version,
     get_external_python_version,
+    global_cli_graceful_callback,
+    global_cli_result_callback,
+    global_cli_super_startup_callback,
+    messages_list,
 )
 from ._plugin_handler import (
     PluginInfo,
@@ -71,14 +72,13 @@ def result_callback_wrapper(_, override_config):
         ).invoked_subcommand
     ) not in SENSITIVE_PLUGIN_NAMES and ctx.command.name != calling_sub_command_name:
         if argv[-1] != (ARG_TO_SKIP := "--help") or ARG_TO_SKIP not in argv:
-            global_result_callback = GlobalCLIResultCallback()
-            if global_result_callback.get_callbacks():
+            if global_cli_result_callback.get_callbacks():
                 logger.debug(
                     f"Running {__package__} controlled callback with "
                     f"Typer result callback: "
-                    f"{global_result_callback.singleton_subclass_name}"
+                    f"{global_cli_result_callback.instance_name}"
                 )
-                global_result_callback.call_callbacks()
+                global_cli_result_callback.call_callbacks()
 
 
 app = Typer(result_callback=result_callback_wrapper)
@@ -91,8 +91,8 @@ SENSITIVE_PLUGIN_NAMES: tuple[str, str, str] = (
 )  # version is no longer a plugin, but it used to be
 SPECIAL_SENSITIVE_PLUGIN_NAMES: tuple[str] = ("show-config",)
 COMMANDS_TO_SKIP_CLI_STARTUP: list = list(SENSITIVE_PLUGIN_NAMES)
-CLI_STARTUP_CALLBACK_PANEL_NAME: str = f"{APP_NAME} global options"
-RESERVED_PLUGIN_NAMES: tuple[str, ...] = (APP_NAME,)
+CLI_STARTUP_CALLBACK_PANEL_NAME: str = f"{AppIdentity.app_name} global options"
+RESERVED_PLUGIN_NAMES: tuple[str, ...] = (AppIdentity.app_name,)
 INTERNAL_PLUGIN_NAME_REGISTRY: dict = {}
 EXTERNAL_LOCAL_PLUGIN_NAME_REGISTRY: dict = {}
 
@@ -107,7 +107,7 @@ OVERRIDE_CONFIG_OPTION_NAME: str = (
 
 
 def prettify() -> None:
-    logger.debug(f"{APP_NAME} has started.")
+    logger.debug(f"{AppIdentity.app_name} has started.")
     try:
         while True:
             line = sys.stdin.readline()
@@ -136,19 +136,16 @@ def cli_startup(
     # Notice GlobalCLICallback is run before configuration validation (reinitiate_config)
     # However, PluginConfigurationValidator is always run
     # first when development_mode is enabled
-    global_init_callbacks = GlobalCLISuperStartupCallback()
-    if global_init_callbacks.get_callbacks():
+    if global_cli_super_startup_callback.get_callbacks():
         logger.debug(
             f"Running {__package__} controlled callback before anything else: "
-            f"{global_init_callbacks.singleton_subclass_name}"
+            f"{global_cli_super_startup_callback.instance_name}"
         )
-        global_init_callbacks.call_callbacks()
+        global_cli_super_startup_callback.call_callbacks()
 
     def show_aggressive_log_message():
-        messages = MessagesList()
-
-        for log_tuple in messages:
-            message, level, logger_, is_aggressive = log_tuple.items()
+        for log_data in messages_list:
+            message, level, logger_, is_aggressive = log_data
             if is_aggressive is True:
                 logger.log(level, message) if logger_ is None else logger_.log(
                     level, message
@@ -212,19 +209,20 @@ def cli_startup(
             if argv[-1] != (ARG_TO_SKIP := "--help") or ARG_TO_SKIP not in argv:
                 reinitiate_config()
                 show_aggressive_log_message()
-                global_graceful_callbacks = GlobalCLIGracefulCallback()
-                if global_graceful_callbacks.get_callbacks():
+                if global_cli_graceful_callback.get_callbacks():
                     logger.debug(
                         f"Running {__package__} controlled callback "
                         f"after configuration validation: "
-                        f"{global_graceful_callbacks.singleton_subclass_name}"
+                        f"{global_cli_graceful_callback.instance_name}"
                     )
-                    global_graceful_callbacks.call_callbacks()
+                    global_cli_graceful_callback.call_callbacks()
+            else:
+                return
         else:
             if calling_sub_command_name in SENSITIVE_PLUGIN_NAMES:
                 if struct_override_config:
                     print_typer_error(
-                        f"{APP_NAME} command '{calling_sub_command_name}' does not support "
+                        f"{AppIdentity.app_name} command '{calling_sub_command_name}' does not support "
                         f"the override argument {OVERRIDE_CONFIG_OPTION_NAME}."
                     )
                     raise Exit(1)
@@ -241,8 +239,8 @@ def check_result_callback_log_container():
         ResultCallbackHandler.is_store_okay()
         and ResultCallbackHandler.get_client_count() == 0
     ):
-        GlobalLogRecordContainer().data.clear()
-        ResultCallbackHandler.is_store_okay = False
+        global_log_record_container.data.clear()
+        ResultCallbackHandler.is_store_okay = lambda: False
 
 
 def cli_switch_venv_state(state: bool, /) -> None:
@@ -282,7 +280,7 @@ def cli_startup_for_plugins(
     if override_config is not None:
         print_typer_error(
             f"--override-config/--OC can only be passed after "
-            f"the main program name '{APP_NAME}', "
+            f"the main program name '{AppIdentity.app_name}', "
             f"and not after a plugin name."
         )
         raise Exit(1)
@@ -290,7 +288,7 @@ def cli_startup_for_plugins(
     # again before loading each plugin. This is necessary because
     # whatever modifications/additions a plugin made,
     # cli_startup would need to consider them again. E.g., adding a
-    # callback to GlobalGlobalCLIGracefulCallback.
+    # callback to global_cli_graceful_callback.
     cli_startup()
 
 
@@ -298,7 +296,7 @@ def cli_cleanup_for_third_party_plugins(*args, override_config=None):
     cli_switch_venv_state(False)
 
 
-logger.debug(f"{APP_NAME} will load internal plugins.")
+logger.debug(f"{AppIdentity.app_name} will load internal plugins.")
 for inter_app_obj in internal_plugin_typer_apps:
     if inter_app_obj is not None:
         app_name = inter_app_obj.info.name
@@ -345,9 +343,7 @@ def disable_plugin(
 
 
 def messages_panel():
-    messages = MessagesList()
-
-    if messages:
+    if messages_list:
         rich_handler = RichHandler(show_path=False, show_time=False)
         log_record = logging.LogRecord(
             logger.name,
@@ -361,7 +357,7 @@ def messages_panel():
         grid = Table.grid(expand=True, padding=1)
         grid.add_column(style="bold")
         grid.add_column()
-        for i, log_tuple in enumerate(messages, start=1):
+        for i, log_tuple in enumerate(messages_list, start=1):
             message, level, logger_, is_aggressive = astuple(log_tuple)
             file_logger.log(level, message) if logger_ is None else logger_.log(
                 level, message
@@ -381,8 +377,8 @@ def messages_panel():
             grid.add_row(f"{i}.", message)
         grid.add_row(
             "",
-            NoteText(
-                f"{APP_NAME} will continue to work despite "
+            make_noted_text(
+                f"{AppIdentity.app_name} will continue to work despite "
                 f"the above warnings. Set [dim]development_mode: True[/dim] "
                 f"in {CONFIG_FILE_NAME} configuration "
                 "file to debug these errors with Python "
@@ -393,18 +389,19 @@ def messages_panel():
         stderr_console.print(
             Panel(
                 grid,
-                title=f"[yellow]ⓘ Message{'s' if len(messages) > 1 else ''}[/yellow]",
+                title=f"[yellow]ⓘ Message{'s' if len(messages_list) > 1 else ''}[/yellow]",
                 title_align="left",
             )
         )
 
 
+# cli_startup is passed here because --help doesn't trigger cli_startup
 typer.rich_utils.rich_format_help = partial(
-    rich_format_help_with_callback, result_callback=messages_panel
+    rich_format_help_with_callback, result_callback=(cli_startup, messages_panel)
 )
 
 
-@app.command(short_help=f"Initialize {APP_NAME} configuration file.")
+@app.command(short_help=f"Initialize {AppIdentity.app_name} configuration file.")
 def init() -> None:
     """
     A quick and simple command to initialize the pj configuration file.
@@ -426,11 +423,13 @@ def init() -> None:
         sleep(0.5)
         typer.echo()  # mainly for a newline!
         try:
-            validate_local_config_loc = Validate(PathWriteValidator(config_files.user.file))
+            validate_local_config_loc = Validate(
+                PathWriteValidator(config_files.user.file)
+            )
             validate_local_config_loc()
         except ValidationError:
             logger.error(
-                f"{APP_NAME} couldn't validate path '{config_files.user.file}' "
+                f"{AppIdentity.app_name} couldn't validate path '{config_files.user.file}' "
                 f"for writing configuration! "
                 f"Please make sure you have write and read access to "
                 f"'{config_files.user.file}'. "
@@ -450,12 +449,12 @@ def init() -> None:
                         )
                         logger.error("Configuration initialization has failed!")
                         raise Exit(1)
-            except path.PathException as e:
-                if isinstance(e, FileNotFoundError):
+            except path.PathException as path_exc:
+                if isinstance(path_exc, FileNotFoundError):
                     path.create()
                 else:
                     status.stop()
-                    logger.error(e)
+                    logger.error(path_exc)
                     logger.error("Configuration initialization has failed!")
                     raise Exit(1)
             try:
@@ -463,14 +462,14 @@ def init() -> None:
                     _configuration_yaml_text = """development_mode: false
 """
                     f.write(_configuration_yaml_text)
-            except path.PathException as e:
-                logger.error(e)
+            except path.PathException as path_exc:
+                logger.error(path_exc)
                 logger.error("Configuration initialization has failed!")
                 raise Exit(1)
             else:
                 stdout_console.print(
                     "Configuration file has been successfully created! "
-                    f"Run '{APP_NAME} show-config' to see "
+                    f"Run '{AppIdentity.app_name} show-config' to see "
                     f"the configuration path "
                     "and more configuration details.",
                     style="green",
@@ -498,15 +497,12 @@ def version() -> str:
     """
     Show version number.
     """
-    from .. import APP_NAME
-    from ..utils import get_app_version
-
     _version = get_app_version()
-    stdout_console.print(f"{APP_NAME} {_version}", highlight=False)
+    stdout_console.print(f"{AppIdentity.app_name} {_version}", highlight=False)
     return _version
 
 
-logger.debug(f"{APP_NAME} will load external plugins.")
+logger.debug(f"{AppIdentity.app_name} will load external plugins.")
 # Load external plugins
 for plugin_info in external_local_plugin_typer_apps:
     if plugin_info is not None:
@@ -603,7 +599,7 @@ for plugin_info in external_local_plugin_typer_apps:
                             f"uses virtual environment "
                             f"{_venv} whose Python version (major and minor) "
                             f"'{'.'.join(external_plugin_python_version)}' "
-                            f"does not match {APP_NAME}'s own Python version "
+                            f"does not match {AppIdentity.app_name}'s own Python version "
                             f"'{'.'.join(own_python_version)}'. "
                             f"Plugin will be disabled."
                         )

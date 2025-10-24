@@ -8,44 +8,42 @@ from typing import Any, Optional, Self, Union
 
 import yaml
 
-from .. import APP_NAME
-from . import base
+from .._core_utils import generate_pydantic_model_from_abstract_cls
+from ..names import AppIdentity
 
 
 class BaseFormat(ABC):
-    _registry: dict[str, dict[str, type[Self]]] = {base.__package__: {}}
-    _names: dict[str, list[str]] = {base.__package__: []}
-    _conventions: dict[str, list[str]] = {base.__package__: []}
+    _registry: dict[str, dict[str, type[Self]]] = {AppIdentity.app_name: {}}
+    _names: dict[str, list[str]] = {AppIdentity.app_name: []}
+    _conventions: dict[str, list[str]] = {AppIdentity.app_name: []}
 
     # noinspection PyTypeChecker
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
-        if cls.package_identifier not in cls._registry:
-            cls._registry[cls.package_identifier] = {}
-            cls._registry[cls.package_identifier].update(
-                cls._registry[base.__package__]
-            )
-        if cls.package_identifier not in cls._names:
-            cls._names[cls.package_identifier] = []
-            cls._names[cls.package_identifier] += cls._names[
-                base.__package__
-            ]
-        if cls.package_identifier not in cls._conventions:
-            cls._conventions[cls.package_identifier] = []
-            cls._conventions[cls.package_identifier] += cls._conventions[
-                base.__package__
-            ]
+        attrs_cls = generate_pydantic_model_from_abstract_cls(
+            BaseFormat, exclude=("__call__",)
+        )
+        attrs_cls(**cls.__dict__)
+        if cls.plugin_name not in cls._registry:
+            cls._registry[cls.plugin_name] = {}
+            cls._registry[cls.plugin_name].update(cls._registry[AppIdentity.app_name])
+        if cls.plugin_name not in cls._names:
+            cls._names[cls.plugin_name] = []
+            cls._names[cls.plugin_name] += cls._names[AppIdentity.app_name]
+        if cls.plugin_name not in cls._conventions:
+            cls._conventions[cls.plugin_name] = []
+            cls._conventions[cls.plugin_name] += cls._conventions[AppIdentity.app_name]
         if cls.name is None:
-            if cls.package_identifier == base.__package__:
+            if cls.plugin_name == AppIdentity.app_name:
                 raise ValueError(
-                    f"Attribute 'name' cannot be None for when package_identifier "
-                    f"is {base.__package__} as it will "
-                    f"remove {APP_NAME} built-in formats."
+                    f"Attribute 'name' cannot be None for when plugin_name "
+                    f"is {AppIdentity.app_name} as it will "
+                    f"remove {AppIdentity.app_name} built-in formats."
                 )
-            existing_cls = cls._registry[cls.package_identifier].pop(cls.pattern())
+            existing_cls = cls._registry[cls.plugin_name].pop(cls.pattern)
             try:
-                cls._names[cls.package_identifier].remove(existing_cls.name)
-                cls._conventions[cls.package_identifier].remove(existing_cls.convention)
+                cls._names[cls.plugin_name].remove(existing_cls.name)
+                cls._conventions[cls.plugin_name].remove(existing_cls.conventions)
             except ValueError as e:
                 raise KeyError(
                     f"Attribute 'name' is None, which will remove "
@@ -53,11 +51,11 @@ class BaseFormat(ABC):
                     f"but class {cls!r} was never registered before!"
                 ) from e
         else:
-            cls._registry[cls.package_identifier][cls.pattern()] = cls
-            if cls.name not in cls._names[cls.package_identifier]:
-                cls._names[cls.package_identifier].append(cls.name)
-            if cls.convention not in cls._conventions[cls.package_identifier]:
-                cls._conventions[cls.package_identifier].append(cls.convention)
+            cls._registry[cls.plugin_name][cls.pattern] = cls
+            if cls.name not in cls._names[cls.plugin_name]:
+                cls._names[cls.plugin_name].append(cls.name)
+            if cls.conventions not in cls._conventions[cls.plugin_name]:
+                cls._conventions[cls.plugin_name].append(cls.conventions)
 
     @property
     @abstractmethod
@@ -65,35 +63,35 @@ class BaseFormat(ABC):
 
     @property
     @abstractmethod
-    def convention(self) -> Union[str, Iterable[str], None]:
+    def conventions(self) -> Optional[tuple[str, ...]]:
         return self.name
 
-    @convention.setter
-    def convention(self, value): ...
+    @conventions.setter
+    def conventions(self, value): ...
 
     @property
     @abstractmethod
-    def package_identifier(self) -> Optional[str]: ...
+    def plugin_name(self) -> Optional[str]: ...
 
     @classmethod
     def supported_formatters(
-        cls, package_identifier: Optional[str] = None
+        cls, plugin_name: Optional[str] = None
     ) -> dict[str, dict[str, type[Self]]] | dict[str, type[Self]]:
-        if package_identifier is None:
+        if plugin_name is None:
             return cls._registry
-        return cls._registry[package_identifier]
+        return cls._registry[plugin_name]
 
     @classmethod
     def supported_formatter_names(
-        cls, package_identifier: Optional[str] = None
+        cls, plugin_name: Optional[str] = None
     ) -> dict[str, list[str]] | list[str]:
-        if package_identifier is None:
+        if plugin_name is None:
             return cls._names
-        return cls._names[package_identifier]
+        return cls._names[plugin_name]
 
-    @classmethod
+    @property
     @abstractmethod
-    def pattern(cls): ...
+    def pattern(self) -> str: ...
 
     @abstractmethod
     def __call__(self, data: Any): ...
@@ -104,12 +102,9 @@ class FormatError(Exception): ...
 
 class JSONFormat(BaseFormat):
     name: str = "json"
-    convention: str = name
-    package_identifier: str = base.__package__
-
-    @classmethod
-    def pattern(cls) -> str:
-        return r"^json$"
+    conventions: tuple[str] = (name,)
+    pattern: str = r"^json$"
+    plugin_name: str = AppIdentity.app_name
 
     def __call__(self, data: Any) -> str:
         return json.dumps(
@@ -119,12 +114,9 @@ class JSONFormat(BaseFormat):
 
 class YAMLFormat(BaseFormat):
     name: str = "yaml"
-    convention: list[str] = ["yml", "yaml"]
-    package_identifier: str = base.__package__
-
-    @classmethod
-    def pattern(cls) -> str:
-        return r"^ya?ml$"
+    conventions: tuple[str] = ("yml", "yaml")
+    pattern: str = r"^ya?ml$"
+    plugin_name: str = AppIdentity.app_name
 
     def __call__(self, data: Any) -> str:
         return yaml.dump(data, indent=2, allow_unicode=True, sort_keys=False)
@@ -132,12 +124,9 @@ class YAMLFormat(BaseFormat):
 
 class CSVFormat(BaseFormat):
     name: str = "csv"
-    convention: str = name
-    package_identifier: str = base.__package__
-
-    @classmethod
-    def pattern(cls) -> str:
-        return r"^csv$"
+    conventions: tuple[str] = (name,)
+    pattern: str = r"^csv$"
+    plugin_name: str = AppIdentity.app_name
 
     def __call__(self, data: Any) -> str:
         with StringIO() as csv_buffer:
@@ -167,31 +156,28 @@ class CSVFormat(BaseFormat):
 
 class TXTFormat(BaseFormat):
     name: str = "txt"
-    convention: list[str] = ["txt"]
-    package_identifier: str = base.__package__
-
-    @classmethod
-    def pattern(cls) -> str:
-        return r"^txt|text|plaintext$"
+    conventions: tuple[str] = ("txt",)
+    pattern: str = r"^txt|text|plaintext$"
+    plugin_name: str = AppIdentity.app_name
 
     def __call__(self, data: Any) -> str:
         return str(data)
 
 
-class RegisterFormattingLanguage:
-    def __init__(self, language: str, *, package_identifier: str):
-        self.package_identifier = package_identifier
+class FormatInstantiator:
+    def __init__(self, language: str, *, plugin_name: str):
+        self.plugin_name = plugin_name
         self._register = language
 
     @property
-    def package_identifier(self) -> str:
-        return self._package_identifier
+    def plugin_name(self) -> str:
+        return self._plugin_name
 
-    @package_identifier.setter
-    def package_identifier(self, value):
+    @plugin_name.setter
+    def plugin_name(self, value):
         if not isinstance(value, str):
             raise ValueError(f"{value} must be an instance of str.")
-        self._package_identifier = value
+        self._plugin_name = value
 
     @property
     def _register(self):
@@ -203,27 +189,25 @@ class RegisterFormattingLanguage:
     @_register.setter
     def _register(self, value):
         try:
-            supported_formatters = BaseFormat.supported_formatters()[
-                self.package_identifier
-            ]
+            supported_formatters = BaseFormat.supported_formatters()[self.plugin_name]
         except KeyError as e:
             raise KeyError(
-                f"Package identifier '{self.package_identifier}' not found "
+                f"Plugin '{self.plugin_name}' not found "
                 f"in registered supported_formatters dictionary!"
             ) from e
         for pattern, formatter in supported_formatters.items():
-            if re.match(rf"{pattern}", value, flags=re.IGNORECASE):
+            if re.match(rf"{pattern or ''}", value, flags=re.IGNORECASE):
                 self.name: str = formatter.name
-                self.convention: Union[str, Iterable[str]] = formatter.convention
+                self.conventions: Union[str, Iterable[str]] = formatter.conventions
                 self.formatter: type[BaseFormat] = formatter
                 return
         raise FormatError(
             f"'{value}' isn't a supported language format! "
             f"Supported formats are: "
-            f"{BaseFormat.supported_formatter_names(self.package_identifier)}."
+            f"{BaseFormat.supported_formatter_names(self.plugin_name)}."
         )
 
 
-def get_formatter(language: str, /, *, package_identifier: str) -> BaseFormat:
-    lang = RegisterFormattingLanguage(language, package_identifier=package_identifier)
+def get_formatter(language: str, /, *, plugin_name: str) -> BaseFormat:
+    lang = FormatInstantiator(language, plugin_name=plugin_name)
     return lang.formatter()

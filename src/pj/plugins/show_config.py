@@ -9,14 +9,12 @@ from ..configuration import (
     inspect,
     minimal_config_data,
 )
-from ..loggers import LOG_FILE_PATH
-from ..styles import ColorText
+from ..loggers import get_log_file_path
+from ..styles import color_text
 from ..styles.colors import BLUE, LIGHTCYAN, LIGHTGREEN, YELLOW
-from ..utils import Missing
 
 detected_config = minimal_config_data
 detected_config_files = inspect.tagged_config_files
-missing = ColorText(Missing())
 
 
 try:
@@ -50,18 +48,16 @@ def show(no_keys: bool) -> str:
 The following information includes configuration values and their sources as detected by {APP_NAME}. 
 > Name [Key]: Value ← Source
 
-- {ColorText("Log file path").colorize(LIGHTGREEN)}: {LOG_FILE_PATH}
+- {color_text("Log file path", LIGHTGREEN)}: {get_log_file_path()}
 """
         + f"""
-- {ColorText("App data directory").colorize(LIGHTGREEN)}: {APP_DATA_DIR}
-- {ColorText("Third-party plugins directory").colorize(LIGHTCYAN)}: {
-            EXTERNAL_LOCAL_PLUGIN_DIR
-        }
+- {color_text("App data directory", LIGHTGREEN)}: {APP_DATA_DIR}
+- {color_text("Third-party plugins directory", LIGHTCYAN)}: {EXTERNAL_LOCAL_PLUGIN_DIR}
 """
         + "\n"
-        + f"- {ColorText('Development mode').colorize(LIGHTGREEN)}"
+        + f"- {color_text('Development mode', LIGHTGREEN)}"
         + (
-            f" **[{ColorText(KEY_DEVELOPMENT_MODE.lower()).colorize(YELLOW)}]**"
+            f" **[{color_text(KEY_DEVELOPMENT_MODE.lower(), YELLOW)}]**"
             if not no_keys
             else ""
         )
@@ -69,7 +65,7 @@ The following information includes configuration values and their sources as det
         + f"""
 
 
-{ColorText("Detected configuration sources that are in use:").colorize(BLUE)}
+{color_text("Detected configuration sources that are in use:", BLUE)}
 {detected_config_files_formatted}
 """
         + (
@@ -79,16 +75,16 @@ The following information includes configuration values and their sources as det
             if FALLBACK_SOURCE_NAME in (development_mode_source,)
             else ""
         )
-#         + (
-#             f"""
-#
-#
-# **{ColorText("Attention:").colorize(RED)}**
-#     {wrong_ext_warning}
-#     """
-#             if CONFIG_MIS_PATH is not None
-#             else ""
-#         )
+        #         + (
+        #             f"""
+        #
+        #
+        # **{color_text("Attention:", RED)}**
+        #     {wrong_ext_warning}
+        #     """
+        #             if CONFIG_MIS_PATH is not None
+        #             else ""
+        #         )
     )
 
     return _info

@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Union
 
-from ..path import ProperPath
+from properpath import P
 
 VENV_INDICATOR_DIR_NAME: str = "site-packages"
 
@@ -10,7 +10,7 @@ def switch_venv_state(
     state: bool,
     /,
     venv_dir: Path,
-    project_dir: Union[Path, ProperPath],
+    project_dir: Union[Path, P],
 ):
     import sys
 

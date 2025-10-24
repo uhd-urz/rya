@@ -1,15 +1,16 @@
+import logging
 from logging import Handler
 
-from .base import GlobalLogRecordContainer
+from .base import global_log_record_container
 
 
 class ResultCallbackHandler(Handler):
-    _client_count: int = 0
     _store_okay: bool = True
+    _client_count: int = 0
 
     def __init__(self):
         super().__init__()
-        self.log_container = GlobalLogRecordContainer()
+        self.setLevel(logging.INFO)
 
     @classmethod
     def enable_store_okay(cls) -> None:
@@ -27,4 +28,4 @@ class ResultCallbackHandler(Handler):
     def emit(self, record):
         if self._store_okay:
             if record.levelno >= self.level:
-                self.log_container.append(record)
+                global_log_record_container.append(record)

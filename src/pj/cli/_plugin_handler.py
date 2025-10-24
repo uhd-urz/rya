@@ -8,6 +8,7 @@ from typing import Generator, List, Optional, Tuple, Union
 
 import typer
 import yaml
+from properpath import P
 
 from ..configuration import (
     APP_BRAND_NAME,
@@ -34,8 +35,7 @@ from ..configuration.config import (
 )
 from ..core_validators import Validate, ValidationError, Validator
 from ..loggers import get_logger
-from ..path import ProperPath
-from ..plugins import __PACKAGE_IDENTIFIER__ as plugins_sub_package_identifier
+from ..plugins import __PACKAGE_IDENTIFIER__ as plugins_sub_plugin_name
 from ..utils import add_message
 from ._venv_state_manager import switch_venv_state
 
@@ -61,7 +61,7 @@ class InternalPluginHandler:
             )
             module = importlib.util.module_from_spec(spec)
             sys.modules[spec.name] = module
-            module.__package__ = f"{plugins_sub_package_identifier}.{plugin_name}"  # Python will find module relative to __package__ path,
+            module.__package__ = f"{plugins_sub_plugin_name}.{plugin_name}"  # Python will find module relative to __package__ path,
             # without this module.__package__ change Python will throw an ImportError.
             spec.loader.exec_module(module)
             try:
@@ -71,7 +71,7 @@ class InternalPluginHandler:
 
 
 class ExternalPluginLocationValidator(Validator):
-    def __init__(self, location: Union[str, Path, ProperPath], /):
+    def __init__(self, location: Union[str, Path, P], /):
         self.location = location
 
     @property
@@ -80,9 +80,9 @@ class ExternalPluginLocationValidator(Validator):
 
     @location.setter
     def location(self, value):
-        if not isinstance(value, ProperPath):
+        if not isinstance(value, P):
             try:
-                value = ProperPath(value)
+                value = P(value)
             except ValueError as e:
                 raise ValueError(
                     f"'location' attribute for class {self.__class__.__class__} "
@@ -126,7 +126,7 @@ class ExternalPluginLocationValidator(Validator):
                 parsed_metadata[EXTERNAL_LOCAL_PLUGIN_METADATA_FILE_KEY_FILE_EXISTS] = (
                     True
                 )
-                with ProperPath(plugin_metadata_file).open(mode="r") as f:
+                with P(plugin_metadata_file).open(mode="r") as f:
                     try:
                         plugin_metadata = yaml.safe_load(f)
                     except yaml.YAMLError as e:
@@ -152,7 +152,7 @@ class ExternalPluginLocationValidator(Validator):
                                 ] = external_local_plugin_typer_app_file
                         else:
                             try:
-                                CLI_SCRIPT_PATH = ProperPath(CLI_SCRIPT_PATH)
+                                CLI_SCRIPT_PATH = P(CLI_SCRIPT_PATH)
                             except (TypeError, ValueError):
                                 raise ValidationError(
                                     f"Key '{EXTERNAL_LOCAL_PLUGIN_METADATA_FILE_KEY_CLI_SCRIPT_PATH}' "
@@ -180,7 +180,7 @@ class ExternalPluginLocationValidator(Validator):
                             ] = None
                         else:
                             try:
-                                VENV_PATH = ProperPath(VENV_PATH)
+                                VENV_PATH = P(VENV_PATH)
                             except (TypeError, ValueError):
                                 raise ValidationError(
                                     f"Key '{EXTERNAL_LOCAL_PLUGIN_METADATA_FILE_KEY_VENV_PATH}' "
@@ -208,7 +208,7 @@ class ExternalPluginLocationValidator(Validator):
                             ] = CLI_SCRIPT_PATH.parent
                         else:
                             try:
-                                PROJECT_PATH = ProperPath(PROJECT_PATH)
+                                PROJECT_PATH = P(PROJECT_PATH)
                             except (TypeError, ValueError):
                                 raise ValidationError(
                                     f"Key '{EXTERNAL_LOCAL_PLUGIN_METADATA_FILE_KEY_PROJECT_PATH}' "

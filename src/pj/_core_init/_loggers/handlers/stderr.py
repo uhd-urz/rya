@@ -1,78 +1,58 @@
 import logging
-from hashlib import md5
-from types import NoneType
-from typing import Optional
+from types import ModuleType
+from typing import List, Optional, Self
 
+from pydantic import BaseModel, ConfigDict, model_validator
+
+# noinspection PyProtectedMember
+from rich._log_render import FormatTimeCallable
 from rich.console import Console
+from rich.highlighter import Highlighter
 from rich.logging import RichHandler
 from rich.theme import Theme
 
-from ....styles import stderr_console
-from .base import BaseHandlerMaker
 
+class AppRichHandlerArgs(BaseModel, validate_assignment=True):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    level: int | str = logging.INFO  # Modified
+    console: Optional[Console] = None
+    show_time: bool = False  # Modified
+    omit_repeated_times: bool = True
+    show_level: bool = True
+    show_path: bool = True
+    enable_link_path: bool = False  # Modified
+    highlighter: Optional[Highlighter] = None
+    markup: bool = False
+    rich_tracebacks: bool = False
+    tracebacks_width: Optional[int] = None
+    tracebacks_code_width: Optional[int] = 88
+    tracebacks_extra_lines: int = 3
+    tracebacks_theme: Optional[str] = None
+    tracebacks_word_wrap: bool = True
+    tracebacks_show_locals: bool = False
+    tracebacks_suppress: tuple[str | ModuleType] = ()
+    tracebacks_max_frames: int = 100
+    locals_max_length: int = 10
+    locals_max_string: int = 80
+    log_time_format: str | FormatTimeCallable = "[%x %X]"
+    keywords: Optional[List[str]] = None
+    level_colors: Optional[dict] = None  # New
 
-class STDERRBaseHandlerMaker(BaseHandlerMaker):
-    def __init__(
-        self,
-        formatter: logging.Formatter = logging.Formatter("%(name)s: %(message)s"),
-        rich_level_colors: Optional[dict] = None,
-    ):
-        self.formatter: logging.Formatter = formatter
-        self.rich_level_colors = rich_level_colors
-
-    def __eq__(self, other) -> bool:
-        return super().__eq__(other)
-
-    def __hash__(self) -> int:
-        unique = self.formatter.__dict__.copy()
-        unique.pop("_style")
-        return int(md5(str(unique).encode("utf-8")).hexdigest(), base=16)
-
-    @property
-    def formatter(self) -> logging.Formatter:
-        return self._formatter
-
-    @formatter.setter
-    def formatter(self, value=None):
-        if not isinstance(value, logging.Formatter):
-            raise ValueError("formatter must be a 'logging.Formatter' instance!")
-        self._formatter = value
-
-    @property
-    def rich_level_colors(self) -> dict[str, str]:
-        return self._rich_level_colors
-
-    @rich_level_colors.setter
-    def rich_level_colors(self, value):
-        if not isinstance(value, (NoneType, dict)):
-            raise TypeError(
-                "rich_level_colors must be None or a dictionary of log level "
-                "names as keys and respective colors as values."
-            )
-        self._rich_level_colors = value
-
-    def _get_rich_console(self) -> Console:
-        if self.rich_level_colors is None:
-            return stderr_console
-        _rich_level_colors_for_console: dict = {}
-        for level_name, color_name in self.rich_level_colors.items():
-            _rich_level_colors_for_console[f"logging.level.{level_name}"] = color_name
+    @model_validator(mode="after")
+    def console_with_level_colors(self) -> Self:
+        if self.level_colors is None:
+            self.__dict__["console"] = self.console
+            return self
+        rich_level_colors: dict = {}
+        for level_name, color_name in self.level_colors.items():
+            rich_level_colors[f"logging.level.{level_name}"] = color_name
         # Rich handler with colored level support:
         # https://github.com/Textualize/rich/issues/1161#issuecomment-813882224
-        console = Console(theme=Theme(_rich_level_colors_for_console), stderr=True)
-        return console
+        self.__dict__["console"] = Console(theme=Theme(rich_level_colors), stderr=True)
+        return self
 
-    @property
-    def handler(self) -> logging.Handler:
-        handler = RichHandler(
-            show_time=False,
-            enable_link_path=False,
-            console=self._get_rich_console(),
-        )
-        handler.setFormatter(self.formatter)
-        handler.setLevel(logging.INFO)
-        return handler
 
-    @handler.setter
-    def handler(self, value):
-        raise AttributeError("'handler' cannot be modified!")
+class AppRichHandler(RichHandler):
+    def __init__(self, args: AppRichHandlerArgs):
+        super().__init__(**args.model_dump(exclude={"level_colors"}))
+        self.setFormatter(logging.Formatter("%(name)s: %(message)s"))

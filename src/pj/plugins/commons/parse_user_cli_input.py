@@ -1,13 +1,12 @@
 import json
 from pathlib import Path
-from typing import Union
 
 import yaml
+from properpath import P
 
 from ...core_validators import Exit, Validate, ValidationError, Validator
 from ...loggers import get_file_logger
-from ...path import ProperPath
-from ...styles import NoteText, print_typer_error, stdout_console
+from ...styles import make_noted_text, print_typer_error, stdout_console
 
 file_logger = get_file_logger()
 
@@ -15,20 +14,18 @@ file_logger = get_file_logger()
 class ValidateCLIJSONFile(Validator):
     FILE_EXTENSION: str = "json"
 
-    def __init__(
-        self, json_file_path: Union[str, ProperPath, Path], /, option_name: str
-    ):
+    def __init__(self, json_file_path: str | P | Path, /, option_name: str):
         self.json_file_path = json_file_path
         self.option_name = option_name
 
     @property
-    def json_file_path(self) -> ProperPath:
+    def json_file_path(self) -> P:
         return self._json_file_path
 
     @json_file_path.setter
     def json_file_path(self, value):
         try:
-            value = ProperPath(value)
+            value = P(value)
         except ValueError:
             raise ValidationError(
                 f"{self.option_name} was passed a string '{value}'"
@@ -66,20 +63,18 @@ class ValidateCLIJSONFile(Validator):
 class ValidateCLIYAMLFile(Validator):
     FILE_EXTENSION: str = "yml"
 
-    def __init__(
-        self, yaml_file_path: Union[str, ProperPath, Path], /, option_name: str
-    ):
+    def __init__(self, yaml_file_path: str | P | Path, /, option_name: str):
         self.yaml_file_path = yaml_file_path
         self.option_name = option_name
 
     @property
-    def yaml_file_path(self) -> ProperPath:
+    def yaml_file_path(self) -> P:
         return self._yaml_file_path
 
     @yaml_file_path.setter
     def yaml_file_path(self, value):
         try:
-            value = ProperPath(value)
+            value = P(value)
         except ValueError:
             raise ValueError(
                 f"{self.option_name} was passed a string '{value}'"
@@ -116,10 +111,10 @@ def get_structured_data(
 ) -> dict:
     from ...styles.formats import JSONFormat, YAMLFormat
 
-    SUPPORTED_INPUT_FORMAT: str = "JSON"
+    supported_input_format: str = "JSON"
 
     def get_data_from_file():
-        if input_.endswith(JSONFormat.convention):
+        if input_.endswith(JSONFormat.conventions[0]):
             try:
                 items = Validate(ValidateCLIJSONFile(input_, option_name)).get()
             except ValueError as e:
@@ -130,24 +125,25 @@ def get_structured_data(
                 raise ValueError from e
             else:
                 return items
-        elif input_.endswith(tuple(YAMLFormat.convention)):
+        elif input_.endswith(tuple(YAMLFormat.conventions[0])):
             try:
                 items = Validate(ValidateCLIYAMLFile(input_, option_name)).get()
             except ValueError as e:
-                print_typer_error(f"{e}")
+                print_typer_error(str(e))
                 raise ValueError from e
             except ValidationError as e:
-                print_typer_error(f"{e}")
+                print_typer_error(str(e))
                 raise ValueError from e
             else:
                 return items
         print_typer_error(
-            f"Valid {SUPPORTED_INPUT_FORMAT.upper()} format to {option_name} was passed, "
-            f"but it could not be understood as {SUPPORTED_INPUT_FORMAT.upper()} nor a file path."
+            f"Valid {supported_input_format.upper()} format to {option_name} was passed, "
+            f"but it could not be understood as a {supported_input_format.upper()} string "
+            f"nor as a file path."
         )
         if show_note:
             stdout_console.print(
-                NoteText(
+                make_noted_text(
                     f"See --help for how to use {option_name}.",
                     stem="Note",
                 )
@@ -157,11 +153,11 @@ def get_structured_data(
     try:
         data: dict = json.loads(input_)
     except (SyntaxError, ValueError):
-        if input_.endswith((JSONFormat.convention, *YAMLFormat.convention)):
+        if input_.endswith((JSONFormat.conventions[0], *YAMLFormat.conventions[0])):
             return get_data_from_file()
         print_typer_error(
             f"{option_name} value has caused a syntax error. "
-            f"It only supports {SUPPORTED_INPUT_FORMAT} syntax."
+            f"It only supports {supported_input_format} syntax."
         )
         raise Exit(1)
     else:

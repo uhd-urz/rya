@@ -1,14 +1,18 @@
+import json
+from datetime import datetime
 from pathlib import Path
 from typing import Callable, Optional
 
-from .._names import VERSION_FILE_NAME
+from pydantic import ValidationError
+
+from ..names import AppIdentity, CacheFileProperties, CacheModel, cache_path
 
 __all__ = [
     "get_app_version",
-    "GlobalCLIResultCallback",
+    "global_cli_result_callback",
     "PatternNotFoundError",
-    "GlobalCLISuperStartupCallback",
-    "GlobalCLIGracefulCallback",
+    "global_cli_super_startup_callback",
+    "global_cli_graceful_callback",
 ]
 from ._loggers import get_logger
 
@@ -19,13 +23,18 @@ class PatternNotFoundError(Exception): ...
 
 
 def get_app_version() -> str:
-    return Path(f"{__file__}/../../{VERSION_FILE_NAME}").resolve().read_text().strip()
+    return (
+        Path(f"{__file__}/../../{AppIdentity.version_file_name}")
+        .resolve()
+        .read_text()
+        .strip()
+    )
 
 
 class _Callback:
-    def __init__(self, singleton_subclass_name: str):
+    def __init__(self, instance_name: str, /):
         self._callbacks: Optional[list[Callable]] = None
-        self.singleton_subclass_name = singleton_subclass_name
+        self.instance_name = instance_name
         self.in_a_call = False
 
     def _invalid_callback_type_exception(self):
@@ -59,7 +68,7 @@ class _Callback:
                 if not isinstance(self._callbacks, list):
                     raise self._invalid_callback_type_exception()
                 logger.debug(
-                    f"Calling {self.singleton_subclass_name} registered functions: "
+                    f"Calling {self.instance_name} registered functions: "
                     f"{', '.join(map(str, self._callbacks))}"
                 )
                 for func in self._callbacks:
@@ -78,35 +87,43 @@ class _Callback:
         return self._callbacks
 
 
-# Inheriting _Callback is not necessary for GlobalCLI* singletons to work as intended.
-# But the inheritance is added to make type checker mypy happy about
-# class methods' availability.
-# Also, super(GlobalCLI*, cls).__new__(cls) cannot be used because
-# if a class has custom __new__ in its MRO, calling object.__new__()
-# with more than 1 argument raises TypeError: object.__new__() takes exactly one
-# argument (the type to instantiate). See details: https://stackoverflow.com/a/65862579/7696241
-class GlobalCLIResultCallback(_Callback):
-    _instance = None
-
-    def __new__(cls, *args, **kwargs):
-        if cls._instance is None:
-            cls._instance = _Callback(cls.__name__)
-        return cls._instance
+global_cli_result_callback = _Callback("global_cli_result_callback")
+global_cli_super_startup_callback = _Callback("global_cli_super_startup_callback")
+global_cli_graceful_callback = _Callback("global_cli_graceful_callback")
 
 
-class GlobalCLISuperStartupCallback(_Callback):
-    _instance = None
+def get_cached_data() -> CacheModel:
+    def _new_cache() -> CacheModel:
+        cache_ = CacheModel(date=datetime.now())
+        update_cache(cache_)
+        return cache_
 
-    def __new__(cls, *args, **kwargs):
-        if cls._instance is None:
-            cls._instance = _Callback(cls.__name__)
-        return cls._instance
+    raw_cache = json.loads(
+        cache_path.get_text(encoding=CacheFileProperties.encoding, default="{}")
+    )
+    try:
+        cache = CacheModel(**raw_cache)
+    except ValidationError:
+        logger.debug(
+            f"Cache found in '{cache_path}' is either empty or invalid. "
+            f"New cache will be created."
+        )
+        return _new_cache()
+    else:
+        if (datetime.now() - cache.date).days > CacheFileProperties.expires_in_days:
+            logger.debug(
+                f"Cache found in '{cache_path}' is older than "
+                f"{CacheFileProperties.expires_in_days} days. "
+                f"New cache will be created."
+            )
+            return _new_cache()
+        else:
+            return cache
 
 
-class GlobalCLIGracefulCallback(_Callback):
-    _instance = None
-
-    def __new__(cls, *args, **kwargs):
-        if cls._instance is None:
-            cls._instance = _Callback(cls.__name__)
-        return cls._instance
+def update_cache(cache: CacheModel) -> None:
+    cache.date = datetime.now()
+    cache_path.write_text(
+        cache.model_dump_json(indent=CacheFileProperties.indent),
+        encoding=CacheFileProperties.encoding,
+    )

@@ -9,6 +9,8 @@ __all__ = [
     "PathValidationError",
 ]
 
+from properpath.validators import PathValidationError, PathWriteValidator
+
 from .base import (
     CriticalValidationError,
     Exit,
@@ -17,4 +19,3 @@ from .base import (
     ValidationError,
     Validator,
 )
-from .path import PathValidationError, PathWriteValidator

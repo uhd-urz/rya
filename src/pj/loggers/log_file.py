@@ -1,27 +1,38 @@
-from dataclasses import asdict
+from functools import cache
 from pathlib import Path
+from typing import Generator
 
-from .._core_init import get_logger
-from .._names import APP_NAME, log_files
+from properpath import P
+
+from .._core_init import get_cached_data, get_logger, update_cache
+from .._names import APP_NAME
 from ..core_validators import (
-    CriticalValidationError,
     PathWriteValidator,
     Validate,
     ValidationError,
 )
-from ..path import ProperPath
+from ..names import log_file_sinks
 
 logger = get_logger()
 
-log_store_paths: list[Path | ProperPath]
-log_store_paths = [file for file, _ in asdict(log_files).values()]
-validate_path = Validate(PathWriteValidator(log_store_paths))
-try:
-    LOG_FILE_PATH = validate_path.get()
-except ValidationError as e:
-    logger.critical(
-        f"{APP_NAME} couldn't validate fallback path "
-        f"{log_store_paths[-1]} to write logs! This is a "
-        f"critical error. {APP_NAME} will not run!"
-    )
-    raise CriticalValidationError from e
+
+@cache
+def get_log_file_path() -> P:
+    cached_data = get_cached_data()
+    if cached_data.log_file_path:
+        return cached_data.log_file_path
+    log_store_paths: Generator[Path | P]
+    log_store_paths = (log_file_tuple.path for log_file_tuple in log_file_sinks)
+    validate_path = Validate(PathWriteValidator(log_store_paths, err_logger=logger))
+    try:
+        log_file_path = validate_path.get()
+    except ValidationError as e:
+        logger.critical(
+            f"{APP_NAME} couldn't validate any given log file paths: "
+            f"{', '.join(map(str, log_store_paths))} to write logs."
+        )
+        raise e
+    else:
+        cached_data.log_file_path = log_file_path
+        update_cache(cached_data)
+        return log_file_path

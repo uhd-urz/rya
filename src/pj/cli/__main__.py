@@ -1,4 +1,4 @@
+from ..names import AppIdentity
 from .pj import app
-from .. import APP_NAME
 
-app(prog_name=APP_NAME)
+app(prog_name=AppIdentity.app_name)

@@ -1,66 +1,39 @@
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Iterable, Optional, Union
+from typing import Any, ClassVar, Iterable, Optional, Self, Union
 
-from ...configuration import APP_NAME
+from properpath import P
+from pydantic import BaseModel, computed_field, model_validator
+
 from ...core_validators import PathValidationError, PathWriteValidator, ValidationError
 from ...loggers import get_logger
-from ...path import ProperPath
-from ...styles import NoteText, stdout_console
 
 logger = get_logger()
 
 
-class Export:
-    EXPORT_DATE_FORMAT: str = "%Y-%m-%d"
-    EXPORT_TIME_FORMAT: str = "%H%M%S"
-    EXPORT_FILE_NAME_PREFIX_FORMAT: str = f"{EXPORT_DATE_FORMAT}_{EXPORT_TIME_FORMAT}"
-    __slots__ = (
-        "file_extension",
-        "format_name",
-        "file_name_stub",
-        "_file_name",
-        "_destination",
-    )
+class Export(BaseModel):
+    file_name_date_format: ClassVar[str] = "%Y-%m-%d"
+    file_name_time_format: ClassVar[str] = "%H%M%S"
+    destination: Union[P, Path, str]
+    file_name_stub: str
+    file_extension: str
 
-    def __init__(
-        self,
-        destination: Union[ProperPath, Path, str],
-        /,
-        file_name_stub: str,
-        file_extension: str,
-        format_name: str,
-    ):
-        self.file_extension = file_extension.lower()
-        self.format_name = format_name.upper()
-        self.file = self.file_name_stub = file_name_stub
-        self.destination = destination
-
+    @computed_field
     @property
-    def file(self) -> str:
-        return self._file_name
-
-    @file.setter
-    def file(self, value):
+    def file_name(self) -> str:
         date = datetime.now()
         file_name_prefix: str = (
-            f"{date.strftime(Export.EXPORT_DATE_FORMAT)}_"
-            f"{date.strftime(Export.EXPORT_TIME_FORMAT)}"
+            f"{date.strftime(Export.file_name_date_format)}_"
+            f"{date.strftime(Export.file_name_time_format)}"
         )
-        self._file_name = f"{file_name_prefix}_{value}.{self.file_extension}"
+        return f"{file_name_prefix}_{self.file_name_stub}.{self.file_extension}"
 
-    @property
-    def destination(self) -> ProperPath:
-        return self._destination
-
-    @destination.setter
-    def destination(self, value):
-        if not isinstance(value, ProperPath):
-            try:
-                value = ProperPath(value, err_logger=logger)
-            except (TypeError, ValueError) as e:
-                raise ValueError("Export path is not valid!") from e
-        self._destination = value / (self.file if value.kind == "dir" else "")
+    @model_validator(mode="after")
+    def fix_destination(self) -> Self:
+        self.destination = self.destination / (
+            self.file_name if self.destination.kind == "dir" else ""
+        )
+        return self
 
     def __call__(
         self,
@@ -77,8 +50,8 @@ class Export:
             file.write(data)
         if verbose:
             logger.info(
-                f"{self.file_name_stub} data successfully exported to {self.destination} "
-                f"in {self.format_name} format."
+                f"{self.file_name_stub} data successfully exported to "
+                f"{self.destination}."
             )
 
 
@@ -86,7 +59,7 @@ class ExportPathWriteValidator(PathWriteValidator):
     def __init__(
         self,
         /,
-        export_path: Union[Iterable, Union[None, str, ProperPath, Path]],
+        export_path: Union[Iterable, Union[str, P, Path]],
         can_overwrite: bool = False,
     ):
         self.export_path = export_path
@@ -103,14 +76,12 @@ class ExportPathWriteValidator(PathWriteValidator):
             raise ValueError("can_overwrite attribute must be a boolean!")
         self._can_overwrite = value
 
-    def validate(self) -> ProperPath:
+    def validate(self) -> P:
         try:
-            path = ProperPath(super().validate(), err_logger=logger)
-        except ValidationError:
-            logger.warning(
-                f"--export path '{self.export_path}' couldn't be validated! "
-                f"{APP_NAME} will use fallback export location."
-            )
+            path = P(super().validate(), err_logger=logger)
+        except ValidationError as e:
+            logger.warning(f"Export path '{self.export_path}' couldn't be validated!")
+            raise PathValidationError from e
         else:
             if (
                 path.kind == "file"
@@ -119,16 +90,8 @@ class ExportPathWriteValidator(PathWriteValidator):
                 and not self.can_overwrite
             ):
                 logger.warning(
-                    f"--export path '{self.export_path}' already exists! "
-                    f"{APP_NAME} will use fallback export location."
-                )
-                stdout_console.print(
-                    NoteText(
-                        "Use '--overwrite' to force '--export' to write "
-                        "to an existing file.\n",
-                        stem="Note",
-                    )
+                    f"Export path '{self.export_path}' already exists! "
+                    f"The file will not be overwritten unless explicitly specified."
                 )
                 raise PathValidationError
             return path
-        raise PathValidationError

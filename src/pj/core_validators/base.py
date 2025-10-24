@@ -1,39 +1,12 @@
-import sys
 from abc import ABC, abstractmethod
-from typing import Any, Self
+from typing import Any
 
-from .._core_init import GlobalCLIResultCallback
-from .path import PathWriteValidator
+from properpath.validators import PathWriteValidator
+
+from .._core_init import Exit
 
 
 class ValidationError(Exception): ...
-
-
-class BaseExit(BaseException, ABC): ...
-
-
-class Exit(BaseExit):
-    SYSTEM_EXIT: bool
-    if (
-        hasattr(sys, "ps1")
-        or hasattr(sys, "ps2")
-        or sys.modules.get(
-            "ptpython", False
-        )  # hasattr(sys, "ps1") doesn't work with ptpython.
-        or sys.modules.get("bpython", False)
-    ):
-        SYSTEM_EXIT = False
-    else:
-        SYSTEM_EXIT = True
-
-    def __new__(cls, *args, **kwargs) -> SystemExit | Self:  # type: ignore
-        GlobalCLIResultCallback().call_callbacks()
-        if cls.SYSTEM_EXIT:
-            return SystemExit(*args)
-        return super().__new__(cls, *args, **kwargs)  # cls == CriticalValidationError
-
-
-BaseExit.register(SystemExit)
 
 
 class RuntimeValidationError(Exit, ValidationError):
