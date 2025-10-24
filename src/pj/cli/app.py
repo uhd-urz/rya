@@ -57,7 +57,7 @@ from ._plugin_handler import (
     external_local_plugin_typer_apps,
     internal_plugin_typer_apps,
 )
-from .doc import __PARAMETERS__doc__ as docs
+from .doc import MainAppCLIDoc
 
 logger = get_logger()
 file_logger = get_file_logger()
@@ -127,7 +127,7 @@ def cli_startup(
         typer.Option(
             OVERRIDE_CONFIG_OPTION_NAME_LONG,
             OVERRIDE_CONFIG_OPTION_NAME_SHORT,
-            help=docs["cli_startup"],
+            help=MainAppCLIDoc.cli_startup,
             show_default=False,
             rich_help_panel=CLI_STARTUP_CALLBACK_PANEL_NAME,
         ),
@@ -268,7 +268,7 @@ def cli_startup_for_plugins(
         typer.Option(
             "--override-config",
             "--OC",
-            help=docs["cli_startup"],
+            help=MainAppCLIDoc.cli_startup,
             show_default=False,
             rich_help_panel=CLI_STARTUP_CALLBACK_PANEL_NAME,
         ),
@@ -480,7 +480,7 @@ def init() -> None:
 def show_config(
     no_keys: Annotated[
         bool,
-        typer.Option("--no-keys", help=docs["no_keys"], show_default=True),
+        typer.Option("--no-keys", help=MainAppCLIDoc.no_keys, show_default=True),
     ] = False,
 ) -> None:
     """
