@@ -1,4 +1,3 @@
-from .configuration.validators import MainConfigurationValidator
 from .core_validators import (
     CriticalValidationError,
     Exit,
@@ -11,7 +10,6 @@ from .core_validators import (
 )
 
 __all__ = [
-    "MainConfigurationValidator",
     "Validator",
     "Validate",
     "Exit",

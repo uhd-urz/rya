@@ -1,10 +1,6 @@
-from copy import deepcopy
-from dataclasses import asdict
 from pathlib import Path
-from typing import Optional
 
-from dynaconf import Dynaconf
-from dynaconf.vendor.ruamel.yaml.scanner import ScannerError
+from properpath import P
 
 from .._names import (
     APP_BRAND_NAME,
@@ -16,22 +12,6 @@ from .._names import (
     KEY_PLUGIN_KEY_NAME,
     VERSION_FILE_NAME,
     app_dirs,
-    config_files,
-)
-from ..core_validators import (
-    CriticalValidationError,
-    Exit,
-    PathWriteValidator,
-    Validate,
-    ValidationError,
-)
-from ..loggers import get_logger
-from ..utils import Missing
-from ._config_history import (
-    ConfigHistory,
-    ConfigIdentity,
-    InspectConfigHistory,
-    minimal_config_data,
 )
 
 __all__ = [
@@ -42,14 +22,7 @@ __all__ = [
     "DEFAULT_EXPORT_DATA_FORMAT",
     "KEY_DEVELOPMENT_MODE",
     "KEY_PLUGIN_KEY_NAME",
-    "settings",
-    "history",
-    "inspect",
-    "minimal_config_data",
-    "DEVELOPMENT_MODE_DEFAULT_VAL",
-    "PLUGIN_DEFAULT_VALUE",
     "VERSION_FILE_NAME",
-    "DEVELOPMENT_MODE",
     "EXTERNAL_LOCAL_PLUGIN_DIR",
     "EXTERNAL_LOCAL_PLUGIN_DIRECTORY_NAME",
     "EXTERNAL_LOCAL_PLUGIN_METADATA_FILE_KEY_CLI_SCRIPT_PATH",
@@ -62,89 +35,12 @@ __all__ = [
     "EXTERNAL_LOCAL_PLUGIN_METADATA_KEY_PLUGIN_ROOT_DIR",
     "EXTERNAL_LOCAL_PLUGIN_TYPER_APP_FILE_NAME",
     "EXTERNAL_LOCAL_PLUGIN_TYPER_APP_VAR_NAME",
-    "FALLBACK_SOURCE_NAME",
-    "PLUGIN",
-    "NON_CANON_YAML_EXTENSION",
-    "APP_DATA_DIR",
+    "EXTERNAL_LOCAL_PLUGIN_METADATA_FILE_EXT",
     "INTERNAL_PLUGIN_DIRECTORY_NAME",
     "INTERNAL_PLUGIN_TYPER_APP_FILE_NAME",
     "INTERNAL_PLUGIN_TYPER_APP_VAR_NAME",
     "ROOT_INSTALLATION_DIR",
-    "_NON_CANON_CONFIG_FILE_NAME",
-    "CONFIG_MIS_PATH",
 ]
-
-logger = get_logger()
-
-FALLBACK_SOURCE_NAME: str = f"{APP_BRAND_NAME} DEFAULT"
-
-NON_CANON_YAML_EXTENSION: str = "yaml"
-_NON_CANON_CONFIG_FILE_NAME: str = f"{APP_NAME}.{NON_CANON_YAML_EXTENSION}"
-CONFIG_MIS_PATH: Optional[Path] = None
-# for path in [
-#     SYSTEM_CONFIG_LOC.parent / _NON_CANON_CONFIG_FILE_NAME,
-#     LOCAL_CONFIG_LOC.parent / _NON_CANON_CONFIG_FILE_NAME,
-#     PROJECT_CONFIG_LOC.parent / _NON_CANON_CONFIG_FILE_NAME,
-# ]:
-#     if path.exists():
-#         CONFIG_MIS_PATH = path
-#         message = (
-#             f"You have a message marked as 'Attention' waiting for you. "
-#             f"Please run '{APP_NAME} show-config' to see it."
-#         )
-#         add_message(message, logging.INFO)
-#         break
-settings = Dynaconf(
-    core_loaders=["YAML"],  # will not read any file extensions except YAML
-    yaml_loader="safe_load",  # safe load doesn't execute arbitrary Python code in YAML files
-    settings_files=[file for file, _ in asdict(config_files).values()],
-    # Order of the "settings_files" list is the overwrite priority order.
-)
-try:
-    original_history = ConfigHistory(settings)
-except ScannerError as e:
-    logger.critical(
-        f"There was an error reading configuration file. Exception details: {e}"
-    )
-    raise Exit(1)
-history = deepcopy(original_history)
-
-# App internal data location
-validate_app_dir = Validate(PathWriteValidator(app_dirs.user_data_dir))
-try:
-    APP_DATA_DIR = validate_app_dir.get()
-except ValidationError:
-    logger.critical(
-        f"{APP_NAME} couldn't validate {app_dirs.user_data_dir} "
-        f"to store {APP_NAME} "
-        f"internal application data. {APP_NAME} will not run!"
-    )
-    raise CriticalValidationError
-
-# The history is ready to be inspected
-inspect = InspectConfigHistory(history, config_files=config_files)
-
-# DEVELOPMENT_MODE falls back to false if not defined in the configuration
-DEVELOPMENT_MODE_DEFAULT_VAL: bool = False
-DEVELOPMENT_MODE = settings.get(KEY_DEVELOPMENT_MODE, None)
-
-# Plugins
-PLUGIN_DEFAULT_VALUE: dict = {}
-PLUGIN = settings.get(KEY_PLUGIN_KEY_NAME, None)
-
-
-for key_name, key_val in [
-    (KEY_DEVELOPMENT_MODE, DEVELOPMENT_MODE),
-    (KEY_PLUGIN_KEY_NAME, PLUGIN),
-]:
-    try:
-        history.patch(key_name, key_val)
-    except KeyError:
-        minimal_config_data[key_name] = ConfigIdentity(Missing(), None)
-    else:
-        minimal_config_data[key_name] = InspectConfigHistory(
-            history, config_files=config_files
-        ).config_data[key_name]
 
 
 # Plugin file definitions and locations
@@ -157,14 +53,16 @@ INTERNAL_PLUGIN_TYPER_APP_FILE_NAME: str = (
 INTERNAL_PLUGIN_TYPER_APP_VAR_NAME: str = "app"
 # Local external/3rd-party plugin definitions
 EXTERNAL_LOCAL_PLUGIN_DIRECTORY_NAME: str = INTERNAL_PLUGIN_DIRECTORY_NAME
-EXTERNAL_LOCAL_PLUGIN_DIR: Path = APP_DATA_DIR / EXTERNAL_LOCAL_PLUGIN_DIRECTORY_NAME
+EXTERNAL_LOCAL_PLUGIN_DIR: P = (
+    app_dirs.user_data_dir / EXTERNAL_LOCAL_PLUGIN_DIRECTORY_NAME
+)
 EXTERNAL_LOCAL_PLUGIN_TYPER_APP_FILE_NAME_PREFIX: str = (
     INTERNAL_PLUGIN_TYPER_APP_FILE_NAME_PREFIX
 )
 EXTERNAL_LOCAL_PLUGIN_TYPER_APP_FILE_NAME: str = INTERNAL_PLUGIN_TYPER_APP_FILE_NAME
 EXTERNAL_LOCAL_PLUGIN_TYPER_APP_VAR_NAME: str = INTERNAL_PLUGIN_TYPER_APP_VAR_NAME
-EXTERNAL_LOCAL_PLUGIN_METADATA_FILE_NAME_PREFIX: str = f"{APP_NAME}_plugin_metadata"
-EXTERNAL_LOCAL_PLUGIN_METADATA_FILE_EXT: str = CONFIG_FILE_EXTENSION
+EXTERNAL_LOCAL_PLUGIN_METADATA_FILE_NAME_PREFIX: str = "plugin_metadata"
+EXTERNAL_LOCAL_PLUGIN_METADATA_FILE_EXT: str = "toml"
 EXTERNAL_LOCAL_PLUGIN_METADATA_FILE_NAME: str = (
     f"{EXTERNAL_LOCAL_PLUGIN_METADATA_FILE_NAME_PREFIX}."
     f"{EXTERNAL_LOCAL_PLUGIN_METADATA_FILE_EXT}"

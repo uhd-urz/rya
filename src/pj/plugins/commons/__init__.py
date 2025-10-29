@@ -4,9 +4,12 @@ __all__ = [
     "Export",
     "ExportPathWriteValidator",
     "get_structured_data",
+    "typer_args",
 ]
 
 
-from .cli_helpers import Typer, detected_click_feedback
+from .cli_helpers import Typer, detected_click_feedback, TyperArgs
 from .export import Export, ExportPathWriteValidator
 from .parse_user_cli_input import get_structured_data
+
+typer_args = TyperArgs()

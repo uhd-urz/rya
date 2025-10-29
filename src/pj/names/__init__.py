@@ -2,6 +2,8 @@ from .names import (
     AppIdentity,
     CacheFileProperties,
     CacheModel,
+    ConfigFileTuple,
+    LogFileTuple,
     app_dirs,
     cache_path,
     config_file_sources,
@@ -16,4 +18,6 @@ __all__ = [
     "cache_path",
     "config_file_sources",
     "log_file_sinks",
+    "ConfigFileTuple",
+    "LogFileTuple",
 ]

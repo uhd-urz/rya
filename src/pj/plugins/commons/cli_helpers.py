@@ -1,16 +1,15 @@
 from collections.abc import Iterable
 from dataclasses import dataclass
 from functools import wraps
-from typing import Callable, Literal, Optional, Type
+from typing import Any, Callable, Optional, Type
 
 import click
 import typer
-from typer.core import TyperGroup
+from pydantic import BaseModel, ConfigDict
+from typer.core import MarkupMode, TyperGroup
 from typer.models import CommandFunctionType
 
-from ...configuration import APP_NAME
 from ...loggers import get_logger
-from ...utils import check_reserved_keyword
 
 logger = get_logger()
 
@@ -37,27 +36,40 @@ class OrderedCommands(TyperGroup):
         return self.commands.keys()
 
 
+class TyperArgs(BaseModel, validate_assignment=True):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    name: Optional[str] = None
+    cls: Optional[Type[TyperGroup]] = OrderedCommands  # Modified
+    invoke_without_command: bool = False
+    no_args_is_help: bool = True  # Modified
+    subcommand_metavar: Optional[str] = None
+    chain: bool = False
+    result_callback: Optional[Callable[..., Any]] = None
+    # Command
+    context_settings: Optional[dict[Any, Any]] = None
+    callback: Optional[Callable[..., Any]] = None
+    help: Optional[str] = None
+    epilog: Optional[str] = None
+    short_help: Optional[str] = None
+    options_metavar: str = "[OPTIONS]"
+    add_help_option: bool = True
+    hidden: bool = False
+    deprecated: bool = False
+    add_completion: bool = True
+    # Rich settings
+    rich_markup_mode: MarkupMode = "markdown"  # Modified
+    rich_help_panel: str | None = None
+    suggest_commands: bool = True
+    pretty_exceptions_enable: bool = True
+    pretty_exceptions_show_locals: bool = False
+    pretty_exceptions_short: bool = True
+
+
 class Typer(typer.Typer):
-    def __init__(
-        self,
-        rich_markup_mode: Literal["markdown", "rich"] = "markdown",
-        cls_: Optional[Type[TyperGroup]] = OrderedCommands,
-        **kwargs,
-    ):
-        try:
-            super().__init__(
-                pretty_exceptions_show_locals=False,
-                rich_markup_mode=rich_markup_mode,
-                cls=cls_,
-                **kwargs,
-            )
-        except TypeError as e:
-            check_reserved_keyword(
-                e,
-                what=f"{APP_NAME} overloaded class '{__package__}.{Typer.__name__}'",
-                against=f"{typer.Typer.__name__} class",
-            )
-            raise e
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.commands_skip_cli_startup: list[str] = []
+        self.no_arg_command: Optional[Callable] = None
 
     @staticmethod
     def _preload_ctx_feedback(ctx: typer.Context) -> None:
@@ -70,8 +82,15 @@ class Typer(typer.Typer):
         detected_click_feedback.context = ctx
 
     def command(
-        self, *args, **kwargs
+        self, *args, skip_cli_startup: bool = False, **kwargs
     ) -> Callable[[CommandFunctionType], CommandFunctionType]:
+        if skip_cli_startup is True:
+            try:
+                self.commands_skip_cli_startup.append(kwargs["name"])
+            except KeyError as e:
+                raise ValueError(
+                    "If 'skip_cli_startup' is True, 'name' must be provided."
+                ) from e
         original_decorator = super().command(*args, **kwargs)
 
         def custom_decorator(func):

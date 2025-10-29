@@ -1,20 +1,12 @@
-from ..loggers import LOG_FILE_PATH
-from ._config_history import ConfigIdentity, FieldValueWithKey
-from ._developement_mode import DevelopmentState
-from ._overload_history import (
-    PatchConfigHistory,
-    preventive_missing_warning,
-    reinitiate_config,
-    validate_configuration,
-)
+from ..loggers import get_log_file_path
+from ._config_handler import AppConfig, dynaconf_args
+from ._dynaconf_handler import DynaConfArgs
 from .config import (
     APP_BRAND_NAME,
-    APP_DATA_DIR,
     APP_NAME,
     CONFIG_FILE_EXTENSION,
     CONFIG_FILE_NAME,
     DEFAULT_EXPORT_DATA_FORMAT,
-    DEVELOPMENT_MODE,
     EXTERNAL_LOCAL_PLUGIN_DIR,
     EXTERNAL_LOCAL_PLUGIN_DIRECTORY_NAME,
     EXTERNAL_LOCAL_PLUGIN_METADATA_FILE_KEY_CLI_SCRIPT_PATH,
@@ -27,44 +19,18 @@ from .config import (
     EXTERNAL_LOCAL_PLUGIN_METADATA_KEY_PLUGIN_ROOT_DIR,
     EXTERNAL_LOCAL_PLUGIN_TYPER_APP_FILE_NAME,
     EXTERNAL_LOCAL_PLUGIN_TYPER_APP_VAR_NAME,
-    FALLBACK_SOURCE_NAME,
     KEY_DEVELOPMENT_MODE,
     KEY_PLUGIN_KEY_NAME,
-    NON_CANON_YAML_EXTENSION,
-    PLUGIN,
     VERSION_FILE_NAME,
-    history,
-    inspect,
-    minimal_config_data,
-    settings,
 )
-from .overridable_vars import (
-    get_development_mode,
-    get_plugin_configs,
-)
-from .validators import ConfigurationValidation
-from .validators import PluginConfigurationValidator as _PluginConfigurationValidator
-
-if get_development_mode(skip_validation=True) is False:
-    validate_configuration(limited_to=[_PluginConfigurationValidator])
-
-
+from ._dynaconf_handler import get_dynaconf_core_loader, get_dynaconf_settings
 __all__ = [
-    "LOG_FILE_PATH",
-    "ConfigIdentity",
-    "FieldValueWithKey",
-    "PatchConfigHistory",
-    "preventive_missing_warning",
-    "reinitiate_config",
-    "validate_configuration",
+    "get_log_file_path",
     "APP_BRAND_NAME",
-    "APP_DATA_DIR",
     "APP_NAME",
-    "NON_CANON_YAML_EXTENSION",
     "CONFIG_FILE_EXTENSION",
     "CONFIG_FILE_NAME",
     "DEFAULT_EXPORT_DATA_FORMAT",
-    "DEVELOPMENT_MODE",
     "EXTERNAL_LOCAL_PLUGIN_DIR",
     "EXTERNAL_LOCAL_PLUGIN_DIRECTORY_NAME",
     "EXTERNAL_LOCAL_PLUGIN_METADATA_FILE_KEY_CLI_SCRIPT_PATH",
@@ -77,17 +43,12 @@ __all__ = [
     "EXTERNAL_LOCAL_PLUGIN_METADATA_KEY_PLUGIN_ROOT_DIR",
     "EXTERNAL_LOCAL_PLUGIN_TYPER_APP_FILE_NAME",
     "EXTERNAL_LOCAL_PLUGIN_TYPER_APP_VAR_NAME",
-    "FALLBACK_SOURCE_NAME",
     "KEY_DEVELOPMENT_MODE",
     "KEY_PLUGIN_KEY_NAME",
-    "PLUGIN",
     "VERSION_FILE_NAME",
-    "history",
-    "inspect",
-    "settings",
-    "minimal_config_data",
-    "get_plugin_configs",
-    "get_development_mode",
-    "ConfigurationValidation",
-    "DevelopmentState",
+    "DynaConfArgs",
+    "dynaconf_args",
+    "AppConfig",
+    "get_dynaconf_core_loader",
+    "get_dynaconf_settings"
 ]
