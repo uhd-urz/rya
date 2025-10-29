@@ -265,11 +265,6 @@ dependencies = [
     { name = "typer" },
 ]
 
-[package.dev-dependencies]
-dev = [
-    { name = "rya" },
-]
-
 [package.metadata]
 requires-dist = [
     { name = "click", specifier = ">=8.1.8,<8.2" },
@@ -284,7 +279,7 @@ requires-dist = [
 ]
 
 [package.metadata.requires-dev]
-dev = [{ name = "rya", editable = "." }]
+dev = []
 
 [[package]]
 name = "shellingham"
