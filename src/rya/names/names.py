@@ -7,7 +7,7 @@ from typing import Optional
 from properpath import P
 from pydantic import BaseModel
 
-from .._core_utils import is_platform_unix
+from .._core_utils import LayerLoader, is_platform_unix
 from .helpers import ConfigFileTuple, FileTupleContainer, LogFileTuple
 
 
@@ -84,3 +84,6 @@ class CacheFileProperties:
 
 
 cache_path: P = app_dirs.user_cache_dir / f"{AppIdentity.app_name}.json"
+
+if LayerLoader.is_bootstrap_mode():
+    LayerLoader.load_layers(globals(), layer_names=("names",))

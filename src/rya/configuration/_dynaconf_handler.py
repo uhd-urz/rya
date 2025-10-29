@@ -1,6 +1,3 @@
-from dataclasses import dataclass
-from typing import Any, Optional
-
 from dynaconf import Dynaconf
 
 from .names import DynaConfArgs, SupportedDynaconfCoreLoaders
@@ -22,11 +19,3 @@ def get_dynaconf_core_loader(
 
 def get_dynaconf_settings(dynaconf_args: DynaConfArgs, /) -> Dynaconf:
     return Dynaconf(**dynaconf_args.model_dump())
-
-
-@dataclass
-class ConfigMeta:
-    title: str
-    unit: Optional[str]
-    default: Optional[Any]
-    wrapper: Optional[type]

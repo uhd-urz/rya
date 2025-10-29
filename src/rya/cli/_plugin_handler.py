@@ -4,13 +4,14 @@ import os
 import sys
 from collections import namedtuple
 from pathlib import Path
-from typing import Generator, List, Optional, Tuple, Union
+from typing import Generator, List, Optional, Tuple
 
 import typer
 from dynaconf.vendor.ruamel.yaml.scanner import ScannerError
 from dynaconf.vendor.tomllib import TOMLDecodeError
 from properpath import P
 
+from .. import LayerLoader
 from ..configuration import (
     DynaConfArgs,
     ExternalPluginLoaderDefinitions,
@@ -21,7 +22,6 @@ from ..configuration import (
 )
 from ..core_validators import Validate, ValidationError, Validator
 from ..loggers import get_logger
-from ..plugins import __PACKAGE_IDENTIFIER__ as PLUGIN_PACKAGE
 from ..utils import add_message
 from ._venv_state_manager import switch_venv_state
 
@@ -32,14 +32,22 @@ ext_plugin_def = ExternalPluginLoaderDefinitions()
 ext_plugin_meta = ExternalPluginMetadataDefinitions()
 
 
+if LayerLoader.is_bootstrap_mode():
+    LayerLoader.load_layers(
+        globals(), layer_names=("names", "core_validators", "configuration")
+    )
+
+
 class InternalPluginHandler:
+    _current_layer_name: str = P(__file__).parent.name
+
     @classmethod
     def get_plugin_locations(cls) -> List[Tuple[str, Path]]:
         _paths = []
         for path in (
             int_plugin_def.root_installation_dir / int_plugin_def.directory_name
         ).iterdir():
-            if path.is_dir():
+            if path.kind == "dir":
                 if (path / int_plugin_def.typer_app_file_name).exists():
                     _paths.append((path.name, path))
         return _paths
@@ -53,9 +61,15 @@ class InternalPluginHandler:
             )
             module = importlib.util.module_from_spec(spec)
             sys.modules[spec.name] = module
-            module.__package__ = f"{PLUGIN_PACKAGE}.{plugin_name}"
-            # Python will find the module relative to the __package__ path,
-            # without this module.__package__ modification, Python will throw an ImportError.
+            module.__package__ = f"{
+                __package__.replace(
+                    cls._current_layer_name, int_plugin_def.directory_name
+                )
+            }.{plugin_name}"
+            # Since we use relative imports, Python will try to find the module
+            # relative to the __package__ path. Without this module.__package__
+            # modification, Python will throw an ImportError:
+            # ImportError: attempted relative import with no known parent package
             spec.loader.exec_module(module)
             try:
                 yield getattr(module, int_plugin_def.typer_app_var_name)
@@ -64,7 +78,7 @@ class InternalPluginHandler:
 
 
 class ExternalPluginLocationValidator(Validator):
-    def __init__(self, location: Union[str, Path, P], /):
+    def __init__(self, location: str | Path | P, /):
         self.location = location
 
     @property

@@ -1,10 +1,10 @@
 from enum import StrEnum
-from pathlib import Path
 from typing import ClassVar, Optional
 
 from properpath import P
 from pydantic import BaseModel
 
+from .._core_utils import LayerLoader
 from ..names import AppIdentity, app_dirs
 
 
@@ -66,7 +66,7 @@ class DynaConfArgs(BaseModel, validate_assignment=True):
 
 
 class InternalPluginLoaderDefinitions(BaseModel, validate_assignment=True):
-    root_installation_dir: ClassVar[Path] = P(__file__).parent.parent
+    root_installation_dir: ClassVar[P] = P(__file__).parent.parent
     directory_name: ClassVar[str] = "plugins"
     typer_app_file_name_prefix: ClassVar[str] = "cli"
     typer_app_file_name: ClassVar[str] = f"{typer_app_file_name_prefix}.py"
@@ -97,3 +97,7 @@ class ExternalPluginMetadataDefinitions(BaseModel, validate_assignment=True):
     venv_path: ClassVar[str] = "venv_dir"
     project_path: ClassVar[str] = "project_dir"
     plugin_root_dir: ClassVar[str] = "plugin_root_dir"
+
+
+if LayerLoader.is_bootstrap_mode():
+    LayerLoader.load_layers(globals(), layer_names=("configuration", "names"))
