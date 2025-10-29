@@ -6,7 +6,7 @@ from .._core_init import (
     ResultCallbackHandler,
     app_rich_handler_args,
 )
-from .._names import AppIdentity
+from ..names import AppIdentity
 from .handlers.file import AppFileHandler, AppFileHandlerArgs
 from .log_file import get_log_file_path
 

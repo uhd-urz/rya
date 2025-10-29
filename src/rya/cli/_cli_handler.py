@@ -63,7 +63,6 @@ def result_callback_wrapper(_, **kwargs):
 
 
 typer_args.result_callback = result_callback_wrapper
-typer_args.no_args_is_help = False
 app = Typer(**typer_args.model_dump())
 
 plugin_loader = PluginLoader(

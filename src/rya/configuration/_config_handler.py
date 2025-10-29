@@ -88,7 +88,7 @@ class AppConfig:
         try:
             validated_main_model = cls.main_validate(errors=errors, reload=reload)
         except NoConfigModelRegistrationFound as e:
-            logger.debug(str(e).replace('"', ''))
+            logger.debug(str(e).replace('"', ""))
             validated_main_model = create_model(
                 cls.ConfigModel.__name__, __base__=cls.ConfigModel
             )()
@@ -97,7 +97,7 @@ class AppConfig:
                 errors=errors, reload=reload
             )
         except NoConfigModelRegistrationFound as e:
-            logger.debug(str(e).replace('"', ''))
+            logger.debug(str(e).replace('"', ""))
             cls.validated = validated_main_model
             return cls.validated
         else:

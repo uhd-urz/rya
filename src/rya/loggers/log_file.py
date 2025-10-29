@@ -5,13 +5,12 @@ from typing import Generator
 from properpath import P
 
 from .._core_init import get_cached_data, get_logger, update_cache
-from .._names import APP_NAME
 from ..core_validators import (
     PathWriteValidator,
     Validate,
     ValidationError,
 )
-from ..names import log_file_sinks
+from ..names import AppIdentity, log_file_sinks
 
 logger = get_logger()
 
@@ -28,7 +27,7 @@ def get_log_file_path() -> P:
         log_file_path = validate_path.get()
     except ValidationError as e:
         logger.critical(
-            f"{APP_NAME} couldn't validate any given log file paths: "
+            f"{AppIdentity.app_name} couldn't validate any given log file paths: "
             f"{', '.join(map(str, log_store_paths))} to write logs."
         )
         raise e

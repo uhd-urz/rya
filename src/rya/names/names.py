@@ -12,8 +12,8 @@ from .helpers import ConfigFileTuple, FileTupleContainer, LogFileTuple
 
 
 class AppIdentity(StrEnum):
-    app_name = "pj"
-    app_fancy_name = "pj"
+    app_name = "rya"
+    app_fancy_name = "rya"
     log_file_name = f"{app_name}.log"
     config_file_extension = "yml"
     user_config_file_name = f"config.{config_file_extension}"

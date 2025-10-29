@@ -1,4 +1,3 @@
-import sys
 from time import sleep
 
 import typer
@@ -14,23 +13,6 @@ from ._cli_handler import app
 logger = get_logger()
 
 
-def prettify() -> None:
-    logger.debug(f"{AppIdentity.app_name} has started.")
-    try:
-        while True:
-            line = sys.stdin.readline()
-            if not line:
-                break
-            stdout_console.print(line, end="")
-    except KeyboardInterrupt:
-        raise Exit(1)
-    finally:
-        stdout_console.print("\n[green]Command finished.[/green]")
-
-
-app.no_arg_command = prettify
-
-
 @app.command(
     name="init",
     short_help=f"Initialize {AppIdentity.app_name} configuration file.",
@@ -38,18 +20,18 @@ app.no_arg_command = prettify
 )
 def init() -> None:
     """
-    A quick and simple command to initialize the pj configuration file.
-    pj supports multiple configuration files
+    A quick and simple command to initialize the rya configuration file.
+    rya supports multiple configuration files
     that follow a priority hierarchy. This command is meant to be user-friendly and
     only creates one configuration file in the user's home directory.
-    See [README](https://pypi.org/project/pj-cli/) for use-cases of advanced configuration files.
+    See [README](https://pypi.org/project/rya-cli/) for use-cases of advanced configuration files.
 
-    'pj init' can be run with or without any arguments. When it is run without arguments, a user prompt is shown
+    'rya init' can be run with or without any arguments. When it is run without arguments, a user prompt is shown
     asking for the required values.
 
-    Without arguments: `pj init`
+    Without arguments: `rya init`
 
-    With arguments: `pj init --development_mode <value>`
+    With arguments: `rya init --development_mode <value>`
     """
     for config_file in config_file_sources:
         if config_file.init_cmd_default:

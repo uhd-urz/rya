@@ -18,10 +18,10 @@ printf "Removing unnecessary haggis files/folder..."
 printf "\n"
 printf "___________________________________________"
 printf "\n\n"
-find src/pj/_vendor/haggis ! \\( -name 'logs.py' -or -name 'LICENSE' -or -name '__init__.py' \\
+find src/rya/_vendor/haggis ! \\( -name 'logs.py' -or -name 'LICENSE' -or -name '__init__.py' \\
 -or -name 'version.py' \\) -type f -exec rm -f {} +
-rm -rvf src/pj/_vendor/haggis/files src/pj/_vendor/haggis/gui src/pj/_vendor/haggis/tests
-rm src/pj/_vendor/README.md src/pj/_vendor/LICENSE src/pj/_vendor/CHANGELOG
+rm -rvf src/rya/_vendor/haggis/files src/rya/_vendor/haggis/gui src/rya/_vendor/haggis/tests
+rm src/rya/_vendor/README.md src/rya/_vendor/LICENSE src/rya/_vendor/CHANGELOG
 printf "\n"
 printf "Vendor installation is successful."
 """

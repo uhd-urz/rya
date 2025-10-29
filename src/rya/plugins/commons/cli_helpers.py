@@ -66,8 +66,8 @@ class TyperArgs(BaseModel, validate_assignment=True):
 
 
 class Typer(typer.Typer):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.commands_skip_cli_startup: list[str] = []
         self.no_arg_command: Optional[Callable] = None
 

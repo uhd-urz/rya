@@ -1,5 +1,5 @@
 """
-This script includes CLI help documentation for pj.
+This script includes CLI help documentation for rya.
 """
 
 from dataclasses import dataclass

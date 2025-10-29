@@ -1,9 +1,11 @@
 from enum import StrEnum
-from typing import Optional
+from pathlib import Path
+from typing import ClassVar, Optional
 
+from properpath import P
 from pydantic import BaseModel
 
-from ..names import AppIdentity
+from ..names import AppIdentity, app_dirs
 
 
 class SupportedDynaconfCoreLoaders(StrEnum):
@@ -61,3 +63,37 @@ class DynaConfArgs(BaseModel, validate_assignment=True):
     vault_enabled: bool = False
     vault: dict = {}
     yaml_loader: str = "safe_load"  # Modified
+
+
+class InternalPluginLoaderDefinitions(BaseModel, validate_assignment=True):
+    root_installation_dir: ClassVar[Path] = P(__file__).parent.parent
+    directory_name: ClassVar[str] = "plugins"
+    typer_app_file_name_prefix: ClassVar[str] = "cli"
+    typer_app_file_name: ClassVar[str] = f"{typer_app_file_name_prefix}.py"
+    typer_app_var_name: ClassVar[str] = "app"
+
+
+class ExternalPluginLoaderDefinitions(BaseModel, validate_assignment=True):
+    directory_name: ClassVar[str] = InternalPluginLoaderDefinitions.directory_name
+    dir: P = app_dirs.user_data_dir / directory_name
+    typer_app_file_name_prefix: ClassVar[str] = (
+        InternalPluginLoaderDefinitions.typer_app_file_name_prefix
+    )
+    typer_app_file_name: ClassVar[str] = (
+        InternalPluginLoaderDefinitions.typer_app_file_name
+    )
+    typer_app_var_name: ClassVar[str] = (
+        InternalPluginLoaderDefinitions.typer_app_var_name
+    )
+    file_name_prefix: ClassVar[str] = "plugin_metadata"
+    file_ext: ClassVar[str] = "toml"
+    file_name: ClassVar[str] = f"{file_name_prefix}.{file_ext}"
+
+
+class ExternalPluginMetadataDefinitions(BaseModel, validate_assignment=True):
+    file_exists: str = f"{ExternalPluginLoaderDefinitions.file_name_prefix}_exists"
+    plugin_name: ClassVar[str] = "plugin_name"
+    cli_script_path: ClassVar[str] = "cli_script"
+    venv_path: ClassVar[str] = "venv_dir"
+    project_path: ClassVar[str] = "project_dir"
+    plugin_root_dir: ClassVar[str] = "plugin_root_dir"

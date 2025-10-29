@@ -1,3 +1,1 @@
-# pj
-
-pj is a CLI tool.
+# Rya

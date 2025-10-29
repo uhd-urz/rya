@@ -1,8 +1,8 @@
 [project]
-name = "pj-cli"
-version = "0.1.0"
-description = "pj is a CLI tool."
+name = "rya"
+version = "0.2.0"
 requires-python = ">=3.12,<4"
+description = "rya is a Python application bootstrapper."
 dependencies = [
     "rich>=14.1.0,< 14.2.0",
     "dynaconf>=3.2.0,<4",
@@ -11,30 +11,62 @@ dependencies = [
     "click>=8.1.8,<8.2",
     "colorama>=0.4.6",
     "platformdirs>=4.4.0",
-    "pydantic>=2.11.10,<2.13",
+    "pydantic[email]>=2.11.10,<2.13",
     "properpath>=0.2.8",
 ]
 readme = "README.md"
-authors = [{ name = "Mahadi Xion", email = "mhxions@gmail.com" }]
-maintainers = [{ name = "Mahadi Xion", email = "mhxions@gmail.com" }]
-license = "AGPL-3.0-only"
+authors = [{ name = "Alexander Haller, Mahadi Xion", email = "elabftw@uni-heidelberg.de" }]
+maintainers = [{ name = "Mahadi Xion", email = "mahadi.xion@urz.uni-heidelberg.de" }]
+license-files = [
+    "LICENSE",
+    "src/rya/_vendor/*/LICENSE"
+]
 keywords = [
     "cli",
-    "ai",
+    "bootstrap",
 ]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Framework :: AnyIO",
+    "Framework :: AsyncIO",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: System :: Systems Administration",
+    "Topic :: Utilities",
+]
+
+[project.urls]
+Homepage = "https://www.urz.uni-heidelberg.de/"
+Repository = "https://github.com/uhd-urz/rya.git"
+Issues = "https://github.com/uhd-urz/rya/issues"
+Changelog = "https://github.com/uhd-urz/rya/blob/main/CHANGELOG.md"
+
+
 [tool.uv.build-backend]
-module-name = "pj"
+module-name = "rya"
 module-root = "src"
 
+[tool.uv.sources]
+rya = { workspace = true }
+
 [project.scripts]
-pj = "pj.cli.app:app"
+rya = "rya.cli.app:app"
 
 [build-system]
 requires = ["uv_build>=0.7.19,<0.8.0"]
 build-backend = "uv_build"
 
+[dependency-groups]
+dev = [
+    "rya",
+]
+
 [tool.vendy]
-target = 'src/pj/'  # vendy will auto-crate src/pj/_vendor
+target = 'src/rya/'  # vendy will auto-crate src/rya/_vendor
 packages = [
     "haggis==0.14.1",
 ]
