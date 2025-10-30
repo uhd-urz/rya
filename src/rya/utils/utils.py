@@ -1,6 +1,5 @@
 import re
 import subprocess
-from enum import StrEnum
 from pathlib import Path
 from typing import Tuple
 
@@ -89,24 +88,3 @@ def get_external_python_version(venv_dir: Path) -> Tuple[str, str, str]:
         raise PythonVersionCheckFailed(
             "Matching Python version not found in output string"
         )
-
-
-def get_dynaconf_core_loader(
-    config_file_extension: str,
-) -> tuple[str]:
-    class SupportedDynaconfCoreLoaders(StrEnum):
-        YAML = "YAML"
-        YML = "YAML"
-        TOML = "TOML"
-        JSON = "JSON"
-        INI = "INI"
-
-    supported_core_loaders = SupportedDynaconfCoreLoaders.__members__
-    for e in supported_core_loaders:
-        if e == config_file_extension.upper():
-            return (str(supported_core_loaders[e]),)
-    raise ValueError(
-        f"Unsupported config file extension: '{config_file_extension}'. "
-        f"Supported configuration extensions are: "
-        f"{', '.join(supported_core_loaders)}."
-    )

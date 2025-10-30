@@ -1,6 +1,7 @@
 import inspect
 import sys
 from abc import ABC
+from enum import StrEnum
 from types import ModuleType
 from typing import Callable, Optional, get_type_hints
 
@@ -59,3 +60,24 @@ def get_local_imports(
                     continue
                 local_imports[module.__name__][name] = obj
     return local_imports
+
+
+def get_dynaconf_core_loader(
+    config_file_extension: str,
+) -> tuple[str]:
+    class SupportedDynaconfCoreLoaders(StrEnum):
+        YAML = "YAML"
+        YML = "YAML"
+        TOML = "TOML"
+        JSON = "JSON"
+        INI = "INI"
+
+    supported_core_loaders = SupportedDynaconfCoreLoaders.__members__
+    for e in supported_core_loaders:
+        if e == config_file_extension.upper():
+            return (str(supported_core_loaders[e]),)
+    raise ValueError(
+        f"Unsupported config file extension: '{config_file_extension}'. "
+        f"Supported configuration extensions are: "
+        f"{', '.join(supported_core_loaders)}."
+    )

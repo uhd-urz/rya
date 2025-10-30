@@ -3,12 +3,12 @@ from time import sleep
 import typer
 from properpath.validators import PathWriteValidator
 
-from ..pre_init import get_app_version
 from ..core_validators import Exit, Validate, ValidationError
 from ..loggers import get_logger
 from ..names import AppIdentity, config_file_sources
+from ..pre_init import get_app_version
 from ..styles import stdout_console
-from ._cli_handler import app
+from .cli_handler import app
 
 logger = get_logger()
 

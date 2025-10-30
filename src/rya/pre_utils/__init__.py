@@ -11,6 +11,7 @@ from ._utils import (
     generate_pydantic_model_from_abstract_cls,
     get_local_imports,
     is_platform_unix,
+    get_dynaconf_core_loader
 )
 
 __all__ = [
@@ -24,4 +25,5 @@ __all__ = [
     "ConfigFileTuple",
     "LogFileTuple",
     "FileTuple",
+    "get_dynaconf_core_loader"
 ]

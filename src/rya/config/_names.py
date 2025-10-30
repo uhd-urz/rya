@@ -1,11 +1,11 @@
-from typing import ClassVar, Optional
+from dataclasses import dataclass
+from typing import Optional
 
 from properpath import P
 from pydantic import BaseModel
 
 from ..names import AppIdentity, app_dirs, config_file_sources
-from ..pre_utils import LayerLoader
-from ..utils import get_dynaconf_core_loader
+from ..pre_utils import LayerLoader, get_dynaconf_core_loader
 
 
 class DynaConfArgs(BaseModel, validate_assignment=True):
@@ -61,40 +61,37 @@ class DynaConfArgs(BaseModel, validate_assignment=True):
     yaml_loader: str = "safe_load"  # Modified
 
 
-class InternalPluginLoaderDefinitions(BaseModel, validate_assignment=True):
-    root_installation_dir: ClassVar[P] = P(__file__).parent.parent
-    directory_name: ClassVar[str] = "plugins"
-    typer_app_file_name_prefix: ClassVar[str] = "cli"
-    typer_app_file_name: ClassVar[str] = f"{typer_app_file_name_prefix}.py"
-    typer_app_var_name: ClassVar[str] = "app"
+@dataclass
+class InternalPluginLoaderDefinitions:
+    root_installation_dir: P = P(__file__).parent.parent
+    directory_name: str = "plugins"
+    typer_app_file_name_prefix: str = "cli"
+    typer_app_file_name: str = f"{typer_app_file_name_prefix}.py"
+    typer_app_var_name: str = "app"
 
 
-class ExternalPluginLoaderDefinitions(BaseModel, validate_assignment=True):
-    directory_name: ClassVar[str] = InternalPluginLoaderDefinitions.directory_name
-    dir: ClassVar[P] = app_dirs.user_data_dir / directory_name
-    typer_app_file_name_prefix: ClassVar[str] = (
+@dataclass
+class ExternalPluginLoaderDefinitions:
+    directory_name: str = InternalPluginLoaderDefinitions.directory_name
+    dir: P = app_dirs.user_data_dir / directory_name
+    typer_app_file_name_prefix: str = (
         InternalPluginLoaderDefinitions.typer_app_file_name_prefix
     )
-    typer_app_file_name: ClassVar[str] = (
-        InternalPluginLoaderDefinitions.typer_app_file_name
-    )
-    typer_app_var_name: ClassVar[str] = (
-        InternalPluginLoaderDefinitions.typer_app_var_name
-    )
-    file_name_prefix: ClassVar[str] = "plugin_metadata"
-    file_ext: ClassVar[str] = "toml"
-    file_name: ClassVar[str] = f"{file_name_prefix}.{file_ext}"
+    typer_app_file_name: str = InternalPluginLoaderDefinitions.typer_app_file_name
+    typer_app_var_name: str = InternalPluginLoaderDefinitions.typer_app_var_name
+    file_name_prefix: str = "plugin_metadata"
+    file_ext: str = "toml"
+    file_name: str = f"{file_name_prefix}.{file_ext}"
 
 
-class ExternalPluginMetadataDefinitions(BaseModel, validate_assignment=True):
-    file_exists: ClassVar[str] = (
-        f"{ExternalPluginLoaderDefinitions.file_name_prefix}_exists"
-    )
-    plugin_name: ClassVar[str] = "plugin_name"
-    cli_script_path: ClassVar[str] = "cli_script"
-    venv_path: ClassVar[str] = "venv_dir"
-    project_path: ClassVar[str] = "project_dir"
-    plugin_root_dir: ClassVar[str] = "plugin_root_dir"
+@dataclass
+class ExternalPluginMetadataDefinitions:
+    file_exists: str = f"{ExternalPluginLoaderDefinitions.file_name_prefix}_exists"
+    plugin_name: str = "plugin_name"
+    cli_script_path: str = "cli_script"
+    venv_path: str = "venv_dir"
+    project_path: str = "project_dir"
+    plugin_root_dir: str = "plugin_root_dir"
 
 
 if LayerLoader.is_bootstrap_mode():

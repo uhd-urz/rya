@@ -7,10 +7,7 @@ import typer
 from properpath import P
 from typing_extensions import Annotated
 
-from ..pre_utils import ConfigFileTuple
-from ..config import (
-    AppConfig,
-)
+from ..config import AppConfig
 from ..core_validators import Exit
 from ..loggers import (
     ResultCallbackHandler,
@@ -18,7 +15,11 @@ from ..loggers import (
     global_log_record_container,
 )
 from ..names import AppIdentity, config_file_sources
-from ..plugins.commons import Typer, typer_args
+from ..plugins.commons import Typer
+
+# noinspection PyProtectedMember
+from ..plugins.commons._names import TyperArgs, TyperGlobalOptions, TyperRichPanelNames
+from ..pre_utils import ConfigFileTuple
 from ..styles import (
     print_typer_error,
     rich_format_help_with_callback,
@@ -35,12 +36,6 @@ from ._plugin_loader import PluginLoader
 from ._venv_state_manager import switch_venv_state
 from .doc import MainAppCLIDoc
 
-CLI_STARTUP_CALLBACK_PANEL_NAME: str = f"{AppIdentity.app_name} global options"
-OVERRIDE_CONFIG_OPTION_NAME_LONG: str = "--config-file"
-OVERRIDE_CONFIG_OPTION_NAME_SHORT: str = "--C"
-OVERRIDE_CONFIG_OPTION_NAME: str = (
-    f"{OVERRIDE_CONFIG_OPTION_NAME_LONG}/{OVERRIDE_CONFIG_OPTION_NAME_SHORT}"
-)
 logger = get_logger()
 
 load_debug_mode()
@@ -50,6 +45,7 @@ def result_callback_wrapper(_, **kwargs):
     should_skip, _ = should_skip_cli_startup()
     if should_skip:
         return
+    user_result_callback()
     ctx = click.get_current_context()
     if ctx.command.name != ctx.invoked_subcommand:
         if argv[-1] != (ARG_TO_SKIP := "--help") or ARG_TO_SKIP not in argv:
@@ -62,14 +58,18 @@ def result_callback_wrapper(_, **kwargs):
                 global_cli_result_callback.call_callbacks()
 
 
+typer_args = TyperArgs()
+user_result_callback = typer_args.result_callback or (lambda: None)
+user_callback = typer_args.callback or (lambda: None)
 typer_args.result_callback = result_callback_wrapper
 app = Typer(**typer_args.model_dump())
-
+panel_names = TyperRichPanelNames()
 plugin_loader = PluginLoader(
     typer_app=app,
-    internal_plugins_panel_name="Built-in plugins",
-    external_plugins_panel_name="Third-party plugins",
+    internal_plugins_panel_name=panel_names.internal_plugins,
+    external_plugins_panel_name=panel_names.external_plugins,
 )
+typer_global_options = TyperGlobalOptions()
 
 
 @app.callback(invoke_without_command=True)
@@ -77,17 +77,18 @@ def cli_startup(
     config_file: Annotated[
         Optional[str],
         typer.Option(
-            OVERRIDE_CONFIG_OPTION_NAME_LONG,
-            OVERRIDE_CONFIG_OPTION_NAME_SHORT,
+            typer_global_options.config_file[0],
+            typer_global_options.config_file[1],
             help=MainAppCLIDoc.cli_startup,
             show_default=False,
-            rich_help_panel=CLI_STARTUP_CALLBACK_PANEL_NAME,
+            rich_help_panel=panel_names.callback,
         ),
     ] = None,
 ) -> None:
     should_skip, _ = should_skip_cli_startup()
     if should_skip:
         return
+    user_callback()
     # GlobalCLICallback is run before configuration validation
     if global_cli_super_startup_callback.get_callbacks():
         logger.debug(
@@ -173,7 +174,7 @@ def cli_startup_for_plugins(
             "--C",
             help=MainAppCLIDoc.cli_startup,
             show_default=False,
-            rich_help_panel=CLI_STARTUP_CALLBACK_PANEL_NAME,
+            rich_help_panel=panel_names.callback,
         ),
     ] = None,
 ) -> None:

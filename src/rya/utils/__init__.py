@@ -9,6 +9,8 @@ from ..pre_utils import (
     DataObjectList,
     Missing,
     generate_pydantic_model_from_abstract_cls,
+    get_dynaconf_core_loader,
+    get_local_imports,
 )
 from .messages import add_message, messages_list
 from .utils import (
@@ -18,7 +20,6 @@ from .utils import (
     get_external_python_version,
     get_sub_package_name,
     update_kwargs_with_defaults,
-    get_dynaconf_core_loader,
 )
 
 __all__ = [
@@ -38,5 +39,6 @@ __all__ = [
     "Missing",
     "messages_list",
     "generate_pydantic_model_from_abstract_cls",
-    "get_dynaconf_core_loader"
+    "get_dynaconf_core_loader",
+    "get_local_imports",
 ]
