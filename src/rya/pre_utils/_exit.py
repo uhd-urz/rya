@@ -2,7 +2,7 @@ import sys
 from abc import ABC
 from typing import Self
 
-from ._utils import global_cli_result_callback
+from ._callbacks import global_cli_result_callback
 
 
 class BaseExit(BaseException, ABC): ...

@@ -1,5 +1,5 @@
 """
-This script includes CLI help documentation for rya.
+This script includes CLI help documentation for the app.
 """
 
 from dataclasses import dataclass

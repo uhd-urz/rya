@@ -19,7 +19,7 @@ from ..plugins.commons import Typer
 
 # noinspection PyProtectedMember
 from ..plugins.commons._names import TyperArgs, TyperGlobalOptions, TyperRichPanelNames
-from ..pre_utils import ConfigFileTuple
+from ..pre_utils import ConfigFileTuple, load_basic_debug_mode
 from ..styles import (
     print_typer_error,
     rich_format_help_with_callback,
@@ -30,15 +30,13 @@ from ..utils import (
     global_cli_super_startup_callback,
     messages_list,
 )
-from ._debug_mode import load_debug_mode
 from ._message_panel import messages_panel
 from ._plugin_loader import PluginLoader
 from ._venv_state_manager import switch_venv_state
 from .doc import MainAppCLIDoc
 
 logger = get_logger()
-
-load_debug_mode()
+load_basic_debug_mode(AppIdentity.app_name, reload=True)
 
 
 def result_callback_wrapper(_, **kwargs):

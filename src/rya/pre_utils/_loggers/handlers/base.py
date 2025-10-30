@@ -1,6 +1,6 @@
 from logging import LogRecord
 
-from ....pre_utils import DataObjectList
+from ..._data_list import DataObjectList
 
 
 class LogItemList(DataObjectList[LogRecord]): ...

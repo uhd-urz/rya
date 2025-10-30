@@ -26,7 +26,15 @@ from ..utils import add_message, get_dynaconf_core_loader
 from ._venv_state_manager import switch_venv_state
 
 logger = get_logger()
-PluginInfo = namedtuple("PluginInfo", ["plugin_app", "path", "venv", "project_dir"])
+PluginInfo = namedtuple(
+    "PluginInfo",
+    [
+        "plugin_app",
+        "path",
+        "venv",
+        "project_dir",
+    ],
+)
 
 
 int_plugin_def = InternalPluginLoaderDefinitions()
@@ -315,7 +323,7 @@ class ExternalPluginHandler:
                     if loading_errors is True:
                         raise e
                     message: str = (
-                        f"An exception occurred while trying to load a local "
+                        f"An exception occurred while trying to load an external "
                         f"plugin '{plugin_name}' in path {cli_script}. "
                         f"Plugin '{plugin_name}' will be ignored. "
                         f'Exception details: "{e.__class__.__name__}: {e}"'
@@ -345,7 +353,7 @@ class ExternalPluginHandler:
                         switch_venv_state(True, venv_dir, project_dir)
                     except (ValueError, RuntimeError) as e:
                         message: str = (
-                            f"An exception occurred while trying to load a local "
+                            f"An exception occurred while trying to load an external "
                             f"plugin '{plugin_name}' with virtual environment {venv_dir} "
                             f"in path {cli_script}. "
                             f"Plugin '{plugin_name}' will be ignored. "
@@ -362,7 +370,7 @@ class ExternalPluginHandler:
                             if loading_errors is True:
                                 raise e
                             message: str = (
-                                f"An exception occurred while trying to load a local "
+                                f"An exception occurred while trying to load an external "
                                 f"plugin '{plugin_name}' with virtual environment {venv_dir} "
                                 f"in path {cli_script}. "
                                 f"Plugin '{plugin_name}' will be ignored. "
@@ -393,7 +401,7 @@ class ExternalPluginHandler:
                         if loading_errors is True:
                             raise e
                         message: str = (
-                            f"An exception occurred while trying to load a local "
+                            f"An exception occurred while trying to load an external "
                             f"plugin '{plugin_name}' in path {cli_script}. "
                             f"Plugin '{plugin_name}' will be ignored. "
                             f'Exception details: "{e.__class__.__name__}: {e}"'

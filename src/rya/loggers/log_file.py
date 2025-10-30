@@ -4,13 +4,14 @@ from typing import Generator
 
 from properpath import P
 
-from ..pre_init import get_cached_data, get_logger, update_cache
 from ..core_validators import (
     PathWriteValidator,
     Validate,
     ValidationError,
 )
 from ..names import AppIdentity, log_file_sinks
+from ..pre_init import get_cached_data, update_cache
+from ..pre_utils import get_logger
 
 logger = get_logger()
 

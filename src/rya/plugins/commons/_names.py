@@ -54,7 +54,7 @@ class TyperArgs(BaseModel, validate_assignment=True):
 class TyperRichPanelNames:
     internal_plugins: str = "Built-in plugins"
     external_plugins: str = "External plugins"
-    callback = f"{AppIdentity.app_name} global options"
+    callback: str = f"{AppIdentity.app_fancy_name} global options"
 
 
 @dataclass

@@ -1,11 +1,21 @@
 import logging
+from dataclasses import dataclass
 from functools import update_wrapper
 from typing import Optional
 
 from pydantic import BaseModel, ConfigDict
 
-from ...names import AppIdentity
 from .handlers.stderr import AppRichHandler, AppRichHandlerArgs
+
+
+@dataclass
+class DefaultLoggerName:
+    name = "app"
+
+
+@dataclass
+class AppDebugStateName:
+    envvar_suffix = "DEBUG"
 
 
 class LogMessageData(BaseModel):
@@ -78,7 +88,7 @@ app_rich_handler_args = AppRichHandlerArgs()
 @logger_maker.register_logger_caller()
 def get_simple_logger(name: Optional[str] = None) -> logging.Logger:
     if name is None:
-        name = AppIdentity.app_name
+        name = DefaultLoggerName.name
     logger = logger_maker.get_registered_logger(get_simple_logger.__name__, name=name)
     if logger is None:
         logger = logger_maker.create_singleton_logger(

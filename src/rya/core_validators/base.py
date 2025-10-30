@@ -3,7 +3,7 @@ from typing import Any
 
 from properpath.validators import PathWriteValidator
 
-from ..pre_init import Exit
+from ..pre_utils import Exit
 
 
 class ValidationError(Exception): ...

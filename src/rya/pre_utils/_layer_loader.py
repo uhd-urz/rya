@@ -1,5 +1,4 @@
 import inspect
-import logging
 import sys
 from pathlib import Path
 from types import ModuleType
@@ -7,6 +6,7 @@ from typing import ClassVar, Generator, Iterable, Optional
 
 from properpath import P
 
+from ._loggers import get_logger
 from ._utils import get_local_imports
 
 
@@ -16,7 +16,7 @@ class LayerLoader:
     _current_layer_name: ClassVar[str] = "pre_utils"
     _app_name: ClassVar[Optional[str]] = None
     _self_app_name: ClassVar[Optional[str]] = None
-    logger = logging.getLogger(__name__)
+    logger = get_logger(name=__package__)
 
     @classmethod
     def enable_bootstrap_mode(cls, root_installation_dir: P | Path, app_name: str):
@@ -43,8 +43,6 @@ class LayerLoader:
             return False
         if object_ is LayerLoader or isinstance(object_, LayerLoader):
             return False
-        if name == "__app_name":
-            return False
         return True
 
     @classmethod
@@ -70,6 +68,7 @@ class LayerLoader:
     def load_layers(cls, globals_: dict, /, layer_names: Iterable[str]) -> None:
         if isinstance(layer_names, str) or not isinstance(layer_names, Iterable):
             raise TypeError("layer_names must be an iterable of strings.")
+        overloaded_objects: dict[str, str] = {}
         for layer_name in layer_names:
             layer = cls._load_module(layer_name)
             for object_name, object_ in cls.get_self_imported_objects(globals_):
@@ -79,7 +78,8 @@ class LayerLoader:
                     continue
                 else:
                     globals_[object_name] = attr
-                    cls.logger.debug(
-                        f"Attribute'{object_name}' is overloaded "
-                        f"from layer '{layer_name}'."
-                    )
+                    overloaded_objects[layer_name] = object_name
+        cls.logger.debug(
+            f"The following objects have been overloaded "
+            f"('layer name': 'object name'): {overloaded_objects}."
+        )

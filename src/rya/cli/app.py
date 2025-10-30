@@ -19,19 +19,16 @@ logger = get_logger()
     skip_cli_startup=True,
 )
 def init() -> None:
-    """
-    A quick and simple command to initialize the rya configuration file.
-    rya supports multiple configuration files
-    that follow a priority hierarchy. This command is meant to be user-friendly and
-    only creates one configuration file in the user's home directory.
-    See [README](https://pypi.org/project/rya-cli/) for use-cases of advanced configuration files.
+    f"""
+    A quick and simple command to initialize {AppIdentity.app_name} 
+    configuration file. {AppIdentity.app_name} supports multiple 
+    configuration files that follow a priority hierarchy. 
+    This command is meant to be user-friendly and only creates one 
+    configuration file in the user's home directory.
+    See [README](https://github.com/uhd-urz/rya) for advanced configuration usage.
 
-    'rya init' can be run with or without any arguments. When it is run without arguments, a user prompt is shown
-    asking for the required values.
-
-    Without arguments: `rya init`
-
-    With arguments: `rya init --development_mode <value>`
+    'rya init' can be run with or without any arguments. When it is run without arguments, 
+    a user prompt is displayed.
     """
     for config_file in config_file_sources:
         if config_file.init_cmd_default:

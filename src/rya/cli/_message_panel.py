@@ -50,7 +50,8 @@ def messages_panel():
             "",
             make_noted_text(
                 f"{AppIdentity.app_name} will continue to work despite "
-                f"the above warnings. Pass [dim]--debug: c[/dim] "
+                f"the above warnings. Enable environment variable "
+                f"[dim]{AppIdentity.app_name}_DEBUG: f[/dim] "
                 f"to debug these errors with Python traceback (if any).",
                 stem="Note",
             ),
