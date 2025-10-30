@@ -7,9 +7,9 @@ import typer
 from properpath import P
 from typing_extensions import Annotated
 
+from .._core_utils import ConfigFileTuple
 from ..configuration import (
     AppConfig,
-    dynaconf_args,
 )
 from ..core_validators import Exit
 from ..loggers import (
@@ -17,7 +17,7 @@ from ..loggers import (
     get_logger,
     global_log_record_container,
 )
-from ..names import AppIdentity, ConfigFileTuple, config_file_sources
+from ..names import AppIdentity, config_file_sources
 from ..plugins.commons import Typer, typer_args
 from ..styles import (
     print_typer_error,
@@ -117,7 +117,7 @@ def cli_startup(
             )
             if config_file_tuple not in config_file_sources:
                 config_file_sources.append(config_file_tuple)
-            dynaconf_args.settings_files.append(str(cli_config_file))
+            AppConfig.dynaconf_args.settings_files.append(str(cli_config_file))
     ctx = click.get_current_context()
     if ctx.command.name != (calling_sub_command_name := ctx.invoked_subcommand):
         if argv[-1] != (arg_to_skip := "--help") or arg_to_skip not in argv:

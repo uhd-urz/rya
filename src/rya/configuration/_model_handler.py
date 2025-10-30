@@ -1,7 +1,9 @@
 from pydantic import BaseModel
 
+from ..loggers import get_logger
 from ._pydantic_parser import FieldsConfigStructType, get_pydantic_nested_model_fields
 
+logger = get_logger()
 PluginConfigStructType = dict[str, type[BaseModel] | FieldsConfigStructType]
 PluginsConfigStructType = dict[str, PluginConfigStructType]
 MainConfigStructType = dict[str, PluginsConfigStructType | PluginConfigStructType]
@@ -74,7 +76,7 @@ class ConfigMaker:
                 "fields": get_pydantic_nested_model_fields(config_model),
             }
         else:
-            raise ValueError(
+            logger.debug(
                 f"Plugin model '{config_model}' for plugin '{plugin_name}' "
                 f"is already registered."
             )
@@ -89,7 +91,7 @@ class ConfigMaker:
                 "fields": get_pydantic_nested_model_fields(config_model),
             }
         else:
-            raise ValueError(f"Main model '{config_model}' for is already registered.")
+            logger.debug(f"Main model '{config_model}' for is already registered.")
 
     @classmethod
     def add_model(cls, config_model: type[BaseModel], /) -> None:

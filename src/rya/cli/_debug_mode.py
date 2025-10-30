@@ -1,8 +1,8 @@
 import logging
 
-from .. import get_logger
 from .._core_init import Exit, LogState
 from ..configuration import DynaConfArgs, get_dynaconf_settings
+from ..loggers import get_logger
 
 logger = get_logger()
 

@@ -1,26 +1,20 @@
-from enum import StrEnum
 from typing import ClassVar, Optional
 
 from properpath import P
 from pydantic import BaseModel
 
 from .._core_utils import LayerLoader
-from ..names import AppIdentity, app_dirs
-
-
-class SupportedDynaconfCoreLoaders(StrEnum):
-    YAML = "YAML"
-    YML = "YAML"
-    TOML = "TOML"
-    JSON = "JSON"
-    INI = "INI"
+from ..names import AppIdentity, app_dirs, config_file_sources
+from ..utils import get_dynaconf_core_loader
 
 
 class DynaConfArgs(BaseModel, validate_assignment=True):
     apply_default_on_none: bool = False
     auto_cast: bool = True
     commentjson_enabled: bool = False
-    core_loaders: list[str]
+    core_loaders: list[str] = list(
+        get_dynaconf_core_loader(AppIdentity.config_file_extension)
+    )
     default_env: str = "default"  # Controlled by "environments"
     dotenv_override: bool = False  # Controlled by "load_dotenv"
     dotenv_path: str = "."
@@ -52,7 +46,9 @@ class DynaConfArgs(BaseModel, validate_assignment=True):
     redis: dict = {}
     root_path: Optional[str] = None
     secrets: Optional[str] = None
-    settings_files: Optional[str | list[str]]  # Modified
+    settings_files: Optional[str | list[str]] = [
+        str(config_file.path) for config_file in config_file_sources
+    ]  # Modified
     skip_files: Optional[list[str]] = None
     sysenv_fallback: bool | list[str] = False
     validate_on_update: bool | str = False

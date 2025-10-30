@@ -7,8 +7,13 @@ from typing import Optional
 from properpath import P
 from pydantic import BaseModel
 
-from .._core_utils import LayerLoader, is_platform_unix
-from .helpers import ConfigFileTuple, FileTupleContainer, LogFileTuple
+from .._core_utils import (
+    ConfigFileTuple,
+    FileTupleContainer,
+    LayerLoader,
+    LogFileTuple,
+    is_platform_unix,
+)
 
 
 class AppIdentity(StrEnum):
@@ -19,6 +24,10 @@ class AppIdentity(StrEnum):
     user_config_file_name = f"config.{config_file_extension}"
     project_config_file_name = f"{app_name}.{config_file_extension}"
     version_file_name = "VERSION"
+
+
+if LayerLoader.is_bootstrap_mode():
+    LayerLoader.load_layers(globals(), layer_names=("names",))
 
 
 app_dirs = P.platformdirs(
@@ -84,6 +93,3 @@ class CacheFileProperties:
 
 
 cache_path: P = app_dirs.user_cache_dir / f"{AppIdentity.app_name}.json"
-
-if LayerLoader.is_bootstrap_mode():
-    LayerLoader.load_layers(globals(), layer_names=("names",))

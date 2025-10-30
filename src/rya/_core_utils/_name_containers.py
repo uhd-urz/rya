@@ -3,7 +3,7 @@ from typing import Optional
 from properpath import P
 from pydantic import BaseModel
 
-from .._core_utils import DataObjectList
+from ._data_list import DataObjectList
 
 
 class FileTuple(BaseModel):

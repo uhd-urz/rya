@@ -1,4 +1,3 @@
-import importlib.util
 import inspect
 import logging
 import sys
@@ -30,16 +29,6 @@ class LayerLoader:
         cls._app_name = app_name
 
     @classmethod
-    def _get_exs_layer_init_paths(
-        cls, layer_names: Iterable[str]
-    ) -> Generator[tuple[str, P], None, None]:
-        for layer_name in layer_names:
-            if (
-                path := (cls._root_installation_dir / layer_name / "__init__.py")
-            ).exists():
-                yield layer_name, path
-
-    @classmethod
     def disable_bootstrap_mode(cls):
         cls._bootstrap_mode = False
 
@@ -68,25 +57,21 @@ class LayerLoader:
                 yield from filter(cls._filter_object_item, objects.items())
 
     @classmethod
-    def _load_module(cls, path: P, layer_name: str) -> ModuleType:
-        spec = importlib.util.spec_from_file_location(str(path))
-        module = importlib.util.module_from_spec(spec)
-        sys.modules[spec.name] = module
-        module.__package__ = __package__.replace(
-            cls._self_app_name, cls._app_name
-        ).replace(cls._current_layer_name, layer_name)
-        # Since we use relative imports, Python will try to find the module
-        # relative to the __package__ path. Without this module.__package__
-        # modification, Python will throw an ImportError:
-        # ImportError: attempted relative import with no known parent package
-        spec.loader.exec_module(module)
-        cls.logger.debug(f"Loaded layer '{layer_name}' from {path}.")
-        return module
+    def _load_module(cls, layer_name: str) -> ModuleType:
+        module_name = __package__.replace(cls._self_app_name, cls._app_name).replace(
+            cls._current_layer_name, layer_name
+        )
+        imported_module = sys.modules.get(module_name) or sys.modules.get(
+            f"src.{module_name}"
+        )
+        return imported_module
 
     @classmethod
     def load_layers(cls, globals_: dict, /, layer_names: Iterable[str]) -> None:
-        for layer_name, path in cls._get_exs_layer_init_paths(layer_names):
-            layer = cls._load_module(path, layer_name)
+        if not isinstance(layer_names, Iterable) or isinstance(layer_names, str):
+            raise TypeError("layer_names must be an iterable of strings.")
+        for layer_name in layer_names:
+            layer = cls._load_module(layer_name)
             for object_name, object_ in cls.get_self_imported_objects(globals_):
                 try:
                     attr = getattr(layer, object_name)
@@ -95,6 +80,6 @@ class LayerLoader:
                 else:
                     globals_[object_name] = attr
                     cls.logger.debug(
-                        f"Attribute'{object_name}' is overloaded from "
-                        f"layer '{layer_name}' from {path}."
+                        f"Attribute'{object_name}' is overloaded "
+                        f"from layer '{layer_name}'."
                     )

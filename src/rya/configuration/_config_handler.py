@@ -9,10 +9,7 @@ from dynaconf.vendor.ruamel.yaml.scanner import ScannerError
 from dynaconf.vendor.tomllib import TOMLDecodeError
 from pydantic import BaseModel, ValidationError, create_model
 
-from .._core_utils import LayerLoader
 from ..loggers import get_logger
-from ..names import AppIdentity, config_file_sources
-from ._dynaconf_handler import get_dynaconf_core_loader, get_dynaconf_settings
 from ._model_handler import (
     ConfigMaker,
     NoConfigModelRegistrationFound,
@@ -21,13 +18,10 @@ from ._model_handler import (
 from .names import DynaConfArgs
 
 logger = get_logger()
-dynaconf_args = DynaConfArgs(
-    core_loaders=list(get_dynaconf_core_loader(AppIdentity.config_file_extension)),
-    settings_files=[str(config_file.path) for config_file in config_file_sources],
-)
 
-if LayerLoader.is_bootstrap_mode():
-    LayerLoader.load_layers(globals(), layer_names=("names", "configuration"))
+
+def get_dynaconf_settings(dynaconf_args_: DynaConfArgs, /) -> Dynaconf:
+    return Dynaconf(**dynaconf_args_.model_dump())
 
 
 class BadConfigurationFile(Exception): ...
@@ -38,6 +32,7 @@ class ConfigurationValidationError(Exception): ...
 
 class AppConfig:
     _dynaconf_settings: Optional[Dynaconf] = None
+    dynaconf_args: DynaConfArgs = DynaConfArgs()
     validated: BaseModel = None
 
     class PluginConfigModel(BaseModel): ...
@@ -47,7 +42,7 @@ class AppConfig:
     @classmethod
     def load_settings(cls, reload: bool = False) -> None:
         if cls._dynaconf_settings is None or reload is True:
-            cls._dynaconf_settings = get_dynaconf_settings(dynaconf_args)
+            cls._dynaconf_settings = get_dynaconf_settings(cls.dynaconf_args)
             cls._dynaconf_settings.reload()
 
     @classmethod

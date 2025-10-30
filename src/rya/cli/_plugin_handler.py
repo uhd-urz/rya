@@ -11,31 +11,25 @@ from dynaconf.vendor.ruamel.yaml.scanner import ScannerError
 from dynaconf.vendor.tomllib import TOMLDecodeError
 from properpath import P
 
-from .. import LayerLoader
 from ..configuration import (
     DynaConfArgs,
     ExternalPluginLoaderDefinitions,
     ExternalPluginMetadataDefinitions,
     InternalPluginLoaderDefinitions,
-    get_dynaconf_core_loader,
     get_dynaconf_settings,
 )
 from ..core_validators import Validate, ValidationError, Validator
 from ..loggers import get_logger
-from ..utils import add_message
+from ..utils import add_message, get_dynaconf_core_loader
 from ._venv_state_manager import switch_venv_state
 
 logger = get_logger()
 PluginInfo = namedtuple("PluginInfo", ["plugin_app", "path", "venv", "project_dir"])
+
+
 int_plugin_def = InternalPluginLoaderDefinitions()
 ext_plugin_def = ExternalPluginLoaderDefinitions()
 ext_plugin_meta = ExternalPluginMetadataDefinitions()
-
-
-if LayerLoader.is_bootstrap_mode():
-    LayerLoader.load_layers(
-        globals(), layer_names=("names", "core_validators", "configuration")
-    )
 
 
 class InternalPluginHandler:
