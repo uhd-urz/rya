@@ -22,6 +22,6 @@ class LogState:
             if cls._last_state is not None:
                 logger.info(
                     f"Logging level is set to {level}. "
-                    f"The new value will be respected from this point on.l"
+                    f"The new value will be respected from this point on."
                 )
             cls._last_state = level

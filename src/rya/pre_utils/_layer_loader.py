@@ -78,8 +78,8 @@ class LayerLoader:
                     continue
                 else:
                     globals_[object_name] = attr
-                    overloaded_objects[layer_name] = object_name
+                    overloaded_objects[object_name] = layer_name
         cls.logger.debug(
             f"The following objects have been overloaded "
-            f"('layer name': 'object name'): {overloaded_objects}."
+            f"('<object name>': '<layer name>'): {overloaded_objects}."
         )
