@@ -11,12 +11,14 @@ from dynaconf.vendor.ruamel.yaml.scanner import ScannerError
 from dynaconf.vendor.tomllib import TOMLDecodeError
 from properpath import P
 
-from ..config import (
+from ..config import get_dynaconf_settings
+
+# noinspection PyProtectedMember
+from ..config._names import (
     DynaConfArgs,
     ExternalPluginLoaderDefinitions,
     ExternalPluginMetadataDefinitions,
     InternalPluginLoaderDefinitions,
-    get_dynaconf_settings,
 )
 from ..core_validators import Validate, ValidationError, Validator
 from ..loggers import get_logger

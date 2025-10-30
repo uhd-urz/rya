@@ -68,7 +68,7 @@ class LayerLoader:
 
     @classmethod
     def load_layers(cls, globals_: dict, /, layer_names: Iterable[str]) -> None:
-        if not isinstance(layer_names, Iterable) or isinstance(layer_names, str):
+        if isinstance(layer_names, str) or not isinstance(layer_names, Iterable):
             raise TypeError("layer_names must be an iterable of strings.")
         for layer_name in layer_names:
             layer = cls._load_module(layer_name)

@@ -71,7 +71,7 @@ class InternalPluginLoaderDefinitions(BaseModel, validate_assignment=True):
 
 class ExternalPluginLoaderDefinitions(BaseModel, validate_assignment=True):
     directory_name: ClassVar[str] = InternalPluginLoaderDefinitions.directory_name
-    dir: P = app_dirs.user_data_dir / directory_name
+    dir: ClassVar[P] = app_dirs.user_data_dir / directory_name
     typer_app_file_name_prefix: ClassVar[str] = (
         InternalPluginLoaderDefinitions.typer_app_file_name_prefix
     )
@@ -87,7 +87,9 @@ class ExternalPluginLoaderDefinitions(BaseModel, validate_assignment=True):
 
 
 class ExternalPluginMetadataDefinitions(BaseModel, validate_assignment=True):
-    file_exists: str = f"{ExternalPluginLoaderDefinitions.file_name_prefix}_exists"
+    file_exists: ClassVar[str] = (
+        f"{ExternalPluginLoaderDefinitions.file_name_prefix}_exists"
+    )
     plugin_name: ClassVar[str] = "plugin_name"
     cli_script_path: ClassVar[str] = "cli_script"
     venv_path: ClassVar[str] = "venv_dir"
@@ -96,4 +98,7 @@ class ExternalPluginMetadataDefinitions(BaseModel, validate_assignment=True):
 
 
 if LayerLoader.is_bootstrap_mode():
-    LayerLoader.load_layers(globals(), layer_names=("config", "names"))
+    LayerLoader.load_layers(
+        globals(),
+        layer_names=("names",),
+    )

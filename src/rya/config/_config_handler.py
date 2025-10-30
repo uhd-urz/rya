@@ -15,7 +15,7 @@ from ._model_handler import (
     NoConfigModelRegistrationFound,
     PluginsConfigStructType,
 )
-from .names import DynaConfArgs
+from ._names import DynaConfArgs
 
 logger = get_logger()
 

@@ -1,8 +1,11 @@
 import logging
 
-from ..pre_init import Exit, LogState
-from ..config import DynaConfArgs, get_dynaconf_settings
+from ..config import get_dynaconf_settings
+
+# noinspection PyProtectedMember
+from ..config._names import DynaConfArgs
 from ..loggers import get_logger
+from ..pre_init import Exit, LogState
 
 logger = get_logger()
 
