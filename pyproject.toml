@@ -1,6 +1,6 @@
 [project]
 name = "rya"
-version = "0.2.4"
+version = "0.2.5"
 requires-python = ">=3.12,<4"
 description = "rya is a Python application bootstrapper."
 dependencies = [
