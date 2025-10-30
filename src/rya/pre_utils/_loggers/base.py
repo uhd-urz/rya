@@ -1,7 +1,7 @@
 import logging
 from dataclasses import dataclass
 from functools import update_wrapper
-from typing import Optional
+from typing import ClassVar, Optional
 
 from pydantic import BaseModel, ConfigDict
 
@@ -10,12 +10,12 @@ from .handlers.stderr import AppRichHandler, AppRichHandlerArgs
 
 @dataclass
 class DefaultLoggerName:
-    name = "app"
+    name: ClassVar[str] = "app"
 
 
 @dataclass
 class AppDebugStateName:
-    envvar_suffix = "DEBUG"
+    envvar_suffix: ClassVar[str] = "DEBUG"
 
 
 class LogMessageData(BaseModel):

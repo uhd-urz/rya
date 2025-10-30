@@ -10,16 +10,19 @@ from ._loggers import AppDebugStateName, get_logger
 logger = get_logger()
 
 
-def get_debug_mode(envvar_prefix: str) -> str:
-    return Dynaconf(
+def get_debug_mode_envvar(envvar_prefix: str, reload: bool = False) -> str:
+    settings = Dynaconf(
         core_loaders=[],
         settings_files=[],
         envvar_prefix=envvar_prefix,
-    ).get(AppDebugStateName.envvar_suffix, "o")
+    )
+    if reload is True:
+        settings.reload()
+    return settings.get(AppDebugStateName.envvar_suffix, "o")
 
 
-def load_basic_debug_mode(envvar_prefix: str, reload: bool = False) -> None:
-    match debug_mode := get_debug_mode(envvar_prefix):
+def load_basic_debug_mode(envvar_prefix: str, *, reload: bool = False) -> None:
+    match debug_mode := get_debug_mode_envvar(envvar_prefix, reload):
         case "f":
             Exit.SYSTEM_EXIT = False
             if reload is True:

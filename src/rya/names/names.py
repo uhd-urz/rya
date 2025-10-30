@@ -2,7 +2,7 @@ from collections import UserList
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
-from typing import Optional
+from typing import ClassVar, Optional
 
 from properpath import P
 from pydantic import BaseModel
@@ -13,6 +13,7 @@ from ..pre_utils import (
     FileTupleContainer,
     LayerLoader,
     LogFileTuple,
+    PublicLayerNames,
     is_platform_unix,
 )
 
@@ -28,7 +29,10 @@ class AppIdentity(StrEnum):
 
 
 if LayerLoader.is_bootstrap_mode():
-    LayerLoader.load_layers(globals(), layer_names=("names",))
+    LayerLoader.load_layers(
+        globals(),
+        layer_names=(PublicLayerNames.names,),
+    )
 
 DefaultLoggerName.name = AppIdentity.app_name
 
@@ -89,9 +93,9 @@ class CacheModel(BaseModel):
 
 @dataclass(frozen=True)
 class CacheFileProperties:
-    expires_in_days = 30
-    encoding = "utf-8"
-    indent = 4
+    expires_in_days: ClassVar[int] = 30
+    encoding: ClassVar[str] = "utf-8"
+    indent: ClassVar[int] = 4
 
 
 cache_path: P = app_dirs.user_cache_dir / f"{AppIdentity.app_name}.json"

@@ -7,7 +7,7 @@ from pydantic import BaseModel, ConfigDict
 from typer.core import MarkupMode, TyperGroup
 
 from ...names import AppIdentity
-from ...pre_utils import LayerLoader
+from ...pre_utils import LayerLoader, PublicLayerNames
 
 
 class OrderedCommands(TyperGroup):
@@ -68,5 +68,5 @@ class TyperGlobalOptions:
 if LayerLoader.is_bootstrap_mode():
     LayerLoader.load_layers(
         globals(),
-        layer_names=("names",),
+        layer_names=(PublicLayerNames.names,),
     )

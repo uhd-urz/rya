@@ -5,7 +5,7 @@ from properpath import P
 from pydantic import BaseModel
 
 from ..names import AppIdentity, app_dirs, config_file_sources
-from ..pre_utils import LayerLoader, get_dynaconf_core_loader
+from ..pre_utils import LayerLoader, PublicLayerNames, get_dynaconf_core_loader
 
 
 class DynaConfArgs(BaseModel, validate_assignment=True):
@@ -97,5 +97,5 @@ class ExternalPluginMetadataDefinitions:
 if LayerLoader.is_bootstrap_mode():
     LayerLoader.load_layers(
         globals(),
-        layer_names=("names",),
+        layer_names=(PublicLayerNames.names,),
     )

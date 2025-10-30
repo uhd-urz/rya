@@ -1,5 +1,6 @@
 import inspect
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 from types import ModuleType
 from typing import ClassVar, Generator, Iterable, Optional
@@ -8,6 +9,18 @@ from properpath import P
 
 from ._loggers import get_logger
 from ._utils import get_local_imports
+
+
+@dataclass(order=True)
+class PublicLayerNames:
+    styles: ClassVar[str] = "styles"
+    names: ClassVar[str] = "names"
+    core_validators: ClassVar[str] = "core_validators"
+    loggers: ClassVar[str] = "loggers"
+    utils: ClassVar[str] = "utils"
+    config: ClassVar[str] = "config"
+    plugins: ClassVar[str] = "plugins"
+    cli: ClassVar[str] = "cli"
 
 
 class LayerLoader:

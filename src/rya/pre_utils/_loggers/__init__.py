@@ -11,12 +11,14 @@ __all__ = [
     "AppRichHandlerArgs",
     "DefaultLoggerName",
     "AppDebugStateName",
+    "app_rich_handler_args",
 ]
 from .base import (
     AppDebugStateName,
     DefaultLoggerName,
     LoggerMaker,
     LogMessageData,
+    app_rich_handler_args,
     get_logger,
     get_simple_logger,
 )
