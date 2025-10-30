@@ -38,12 +38,14 @@ class InternalPluginHandler:
     @classmethod
     def get_plugin_locations(cls) -> List[Tuple[str, Path]]:
         _paths = []
-        for path in (
+        plugins_dir = (
             int_plugin_def.root_installation_dir / int_plugin_def.directory_name
-        ).iterdir():
-            if path.kind == "dir":
-                if (path / int_plugin_def.typer_app_file_name).exists():
-                    _paths.append((path.name, path))
+        )
+        if plugins_dir.exists():
+            for path in plugins_dir.iterdir():
+                if path.kind == "dir":
+                    if (path / int_plugin_def.typer_app_file_name).exists():
+                        _paths.append((path.name, path))
         return _paths
 
     @classmethod
@@ -251,11 +253,14 @@ class ExternalPluginHandler:
     def get_plugin_metadata(
         loading_errors: bool = False,
     ) -> Generator[Optional[dict], None, None]:
-        plugin_paths: list[P] = [
-            p
-            for p in ext_plugin_def.dir.iterdir()
-            if not p.name.startswith(".") and p.kind == "dir"
-        ]
+        if ext_plugin_def.dir.exists():
+            plugin_paths: list[P] = [
+                p
+                for p in ext_plugin_def.dir.iterdir()
+                if not p.name.startswith(".") and p.kind == "dir"
+            ]
+        else:
+            plugin_paths = []
         try:
             for path in sorted(plugin_paths, key=lambda x: str(x).lower()):
                 try:
