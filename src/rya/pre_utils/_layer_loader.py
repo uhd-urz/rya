@@ -13,7 +13,7 @@ from ._utils import get_local_imports
 class LayerLoader:
     _bootstrap_mode: ClassVar[bool] = False
     _root_installation_dir: ClassVar[None | P | Path] = None
-    _current_layer_name: ClassVar[str] = "_core_utils"
+    _current_layer_name: ClassVar[str] = "pre_utils"
     _app_name: ClassVar[Optional[str]] = None
     _self_app_name: ClassVar[Optional[str]] = None
     logger = logging.getLogger(__name__)

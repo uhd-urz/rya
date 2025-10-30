@@ -3,8 +3,8 @@ from typing import ClassVar, Optional
 from properpath import P
 from pydantic import BaseModel
 
-from .._core_utils import LayerLoader
 from ..names import AppIdentity, app_dirs, config_file_sources
+from ..pre_utils import LayerLoader
 from ..utils import get_dynaconf_core_loader
 
 
@@ -96,4 +96,4 @@ class ExternalPluginMetadataDefinitions(BaseModel, validate_assignment=True):
 
 
 if LayerLoader.is_bootstrap_mode():
-    LayerLoader.load_layers(globals(), layer_names=("configuration", "names"))
+    LayerLoader.load_layers(globals(), layer_names=("config", "names"))

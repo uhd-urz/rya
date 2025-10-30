@@ -8,7 +8,7 @@ from typing import Any, Optional, Self, Union
 
 import yaml
 
-from .._core_utils import generate_pydantic_model_from_abstract_cls
+from ..pre_utils import generate_pydantic_model_from_abstract_cls
 from ..names import AppIdentity
 
 

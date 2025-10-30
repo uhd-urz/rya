@@ -7,8 +7,8 @@ import typer
 from properpath import P
 from typing_extensions import Annotated
 
-from .._core_utils import ConfigFileTuple
-from ..configuration import (
+from ..pre_utils import ConfigFileTuple
+from ..config import (
     AppConfig,
 )
 from ..core_validators import Exit

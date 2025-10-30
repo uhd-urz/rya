@@ -3,7 +3,7 @@ from time import sleep
 import typer
 from properpath.validators import PathWriteValidator
 
-from .._core_init import get_app_version
+from ..pre_init import get_app_version
 from ..core_validators import Exit, Validate, ValidationError
 from ..loggers import get_logger
 from ..names import AppIdentity, config_file_sources

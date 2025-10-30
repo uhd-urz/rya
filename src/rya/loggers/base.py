@@ -1,6 +1,6 @@
 from typing import Optional
 
-from .._core_init import (
+from ..pre_init import (
     AppRichHandler,
     LoggerMaker,
     ResultCallbackHandler,

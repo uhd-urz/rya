@@ -4,7 +4,7 @@ from typing import Generator
 
 from properpath import P
 
-from .._core_init import get_cached_data, get_logger, update_cache
+from ..pre_init import get_cached_data, get_logger, update_cache
 from ..core_validators import (
     PathWriteValidator,
     Validate,

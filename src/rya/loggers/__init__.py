@@ -19,7 +19,7 @@ __all__ = [
 ]
 
 
-from .._core_init import (
+from ..pre_init import (
     AppRichHandler,
     AppRichHandlerArgs,
     LoggerMaker,

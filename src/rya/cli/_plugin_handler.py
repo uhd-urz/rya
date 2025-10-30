@@ -11,7 +11,7 @@ from dynaconf.vendor.ruamel.yaml.scanner import ScannerError
 from dynaconf.vendor.tomllib import TOMLDecodeError
 from properpath import P
 
-from ..configuration import (
+from ..config import (
     DynaConfArgs,
     ExternalPluginLoaderDefinitions,
     ExternalPluginMetadataDefinitions,

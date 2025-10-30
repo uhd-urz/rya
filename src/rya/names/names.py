@@ -7,7 +7,7 @@ from typing import Optional
 from properpath import P
 from pydantic import BaseModel
 
-from .._core_utils import (
+from ..pre_utils import (
     ConfigFileTuple,
     FileTupleContainer,
     LayerLoader,

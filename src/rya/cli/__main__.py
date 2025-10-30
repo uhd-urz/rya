@@ -1,5 +1,5 @@
-from .._core_init import get_logger
-from .._core_utils import LayerLoader
+from ..pre_init import get_logger
+from ..pre_utils import LayerLoader
 from ..names import AppIdentity
 
 LayerLoader._self_app_name = LayerLoader._app_name = AppIdentity.app_name
