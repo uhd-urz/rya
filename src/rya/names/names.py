@@ -102,3 +102,9 @@ class CacheFileProperties:
 
 
 cache_path: P = app_dirs.user_cache_dir / f"{AppIdentity.app_name}.json"
+
+if LayerLoader.is_bootstrap_mode():
+    LayerLoader.load_layers(
+        globals(),
+        layer_names=(PublicLayerNames.names,),
+    )

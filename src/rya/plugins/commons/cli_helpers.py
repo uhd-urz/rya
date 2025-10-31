@@ -8,9 +8,9 @@ from rich_click.patch import patch_typer
 from typer.models import CommandFunctionType
 
 from ...loggers import get_logger
-from ._rich_click import RichClickOptions
+from ._names import TyperArgs
 
-if RichClickOptions.enable_themes:
+if TyperArgs().rich_markup_mode == "rich-click":
     patch_typer()
 
 logger = get_logger()
