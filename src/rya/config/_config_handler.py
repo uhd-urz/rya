@@ -34,6 +34,7 @@ class AppConfig:
     _dynaconf_settings: Optional[Dynaconf] = None
     dynaconf_args: DynaConfArgs = DynaConfArgs()
     validated: BaseModel = None
+    exceptions: list[Exception] = []
 
     class PluginConfigModel(BaseModel): ...
 
@@ -50,8 +51,9 @@ class AppConfig:
         cls.load_settings(reload=reload)
         return cls._dynaconf_settings
 
-    @staticmethod
+    @classmethod
     def _handle_config_errors(
+        cls,
         config_loader_func: Callable,
         source_name: Optional[str],
         errors: Literal["raise", "ignore"] = "raise",
@@ -63,11 +65,14 @@ class AppConfig:
                 f"Configuration file(s) could not be scanned. {source_name} could "
                 f"not be loaded. Exception details: {e}"
             )
+            cls.exceptions.append(e)
             if errors == "raise":
+                cls.exceptions.append(e)
                 raise BadConfigurationFile from e
             elif errors == "ignore":
                 return None
         except ValidationError as e:
+            cls.exceptions.append(e)
             logger.warning(
                 f"{source_name} for validation was unsuccessful. Exception details: {e}"
             )
@@ -87,6 +92,7 @@ class AppConfig:
         try:
             validated_main_model = cls.main_validate(errors=errors, reload=reload)
         except NoConfigModelRegistrationFound as e:
+            cls.exceptions.append(e)
             logger.debug(str(e).replace('"', ""))
             validated_main_model = create_model(
                 cls.ConfigModel.__name__, __base__=cls.ConfigModel
@@ -96,6 +102,7 @@ class AppConfig:
                 errors=errors, reload=reload
             )
         except NoConfigModelRegistrationFound as e:
+            cls.exceptions.append(e)
             logger.debug(str(e).replace('"', ""))
             cls.validated = validated_main_model
             return cls.validated

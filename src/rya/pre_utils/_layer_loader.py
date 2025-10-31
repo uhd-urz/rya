@@ -40,6 +40,10 @@ class LayerLoader:
             raise TypeError("app_name must be an instance of str.")
         cls._root_installation_dir = root_installation_dir
         cls._app_name = app_name
+        cls.logger.debug(
+            f"Bootstrap mode is enabled. {cls._self_app_name} "
+            f"will try to load from '{app_name}'."
+        )
 
     @classmethod
     def disable_bootstrap_mode(cls):
@@ -92,7 +96,5 @@ class LayerLoader:
                 else:
                     globals_[object_name] = attr
                     overloaded_objects[object_name] = layer_name
-        cls.logger.debug(
-            f"The following objects have been overloaded "
-            f"('<object name>': '<layer name>'): {overloaded_objects}."
-        )
+        relations = ", ".join(f"'{v}' -> '{k}'" for k, v in overloaded_objects.items())
+        cls.logger.debug(f"The following objects have been overloaded {relations}.")
