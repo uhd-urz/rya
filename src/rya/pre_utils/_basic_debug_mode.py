@@ -5,7 +5,7 @@ from dynaconf import Dynaconf
 # noinspection PyProtectedMember
 from ._exit import Exit
 from ._log_state import LogState
-from ._loggers import AppDebugStateName, get_logger
+from ._loggers import LoggerDefaults, get_logger
 
 logger = get_logger()
 
@@ -18,7 +18,7 @@ def get_debug_mode_envvar(envvar_prefix: str, reload: bool = False) -> str:
     )
     if reload is True:
         settings.reload()
-    return settings.get(AppDebugStateName.envvar_suffix, "o")
+    return settings.get(LoggerDefaults.debug_envvar_suffix, "o")
 
 
 def load_basic_debug_mode(envvar_prefix: str, *, reload: bool = False) -> None:
@@ -34,6 +34,6 @@ def load_basic_debug_mode(envvar_prefix: str, *, reload: bool = False) -> None:
         case _:
             logger.warning(
                 f"Invalid environment variable value '{debug_mode}' for "
-                f"'{envvar_prefix}_{AppDebugStateName.envvar_suffix}'. "
+                f"'{envvar_prefix}_{LoggerDefaults.debug_envvar_suffix}'. "
                 f"Debug mode will not be updated."
             )

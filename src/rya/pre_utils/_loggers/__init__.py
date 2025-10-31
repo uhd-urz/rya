@@ -9,13 +9,11 @@ __all__ = [
     "LogItemList",
     "get_logger",
     "AppRichHandlerArgs",
-    "DefaultLoggerName",
-    "AppDebugStateName",
+    "LoggerDefaults",
     "app_rich_handler_args",
 ]
 from .base import (
-    AppDebugStateName,
-    DefaultLoggerName,
+    LoggerDefaults,
     LoggerMaker,
     LogMessageData,
     app_rich_handler_args,

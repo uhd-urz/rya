@@ -9,10 +9,10 @@ from pydantic import BaseModel
 
 from ..pre_utils import (
     ConfigFileTuple,
-    DefaultLoggerName,
     FileTupleContainer,
     LayerLoader,
     LogFileTuple,
+    LoggerDefaults,
     PublicLayerNames,
     RunEarlyList,
     is_platform_unix,
@@ -35,7 +35,7 @@ if LayerLoader.is_bootstrap_mode():
         layer_names=(PublicLayerNames.names,),
     )
 
-DefaultLoggerName.name = AppIdentity.app_name
+LoggerDefaults.logger_name = AppIdentity.app_name
 
 app_dirs = P.platformdirs(
     appname=AppIdentity.app_name,

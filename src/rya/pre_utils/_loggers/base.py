@@ -1,21 +1,10 @@
 import logging
 from dataclasses import dataclass
-from functools import update_wrapper
-from typing import ClassVar, Optional
+from typing import Callable, ClassVar, Optional
 
 from pydantic import BaseModel, ConfigDict
 
 from .handlers.stderr import AppRichHandler, AppRichHandlerArgs
-
-
-@dataclass
-class DefaultLoggerName:
-    name: ClassVar[str] = "app"
-
-
-@dataclass
-class AppDebugStateName:
-    envvar_suffix: ClassVar[str] = "DEBUG"
 
 
 class LogMessageData(BaseModel):
@@ -31,7 +20,7 @@ class LoggerMaker:
     _logger_objects: dict[str, dict[str, logging.Logger]] = {}
 
     @classmethod
-    def get_registered_wrapper_class(cls, name: str) -> Optional[type]:
+    def get_registered_caller(cls, name: str) -> Optional[type]:
         return cls._logger_wrapper_callers.get(name)
 
     @classmethod
@@ -47,7 +36,6 @@ class LoggerMaker:
     @classmethod
     def register_logger_caller(cls):
         def decorator(caller):
-            update_wrapper(wrapper=decorator, wrapped=caller)
             if cls._logger_wrapper_callers.get(caller.__name__) is None:
                 cls._logger_wrapper_callers[caller.__name__] = caller
             return cls._logger_wrapper_callers[caller.__name__]
@@ -66,41 +54,63 @@ class LoggerMaker:
 
     @classmethod
     def create_singleton_logger(
-        cls, logger_caller_name: str, *, name: str, level: int = logging.DEBUG
+        cls,
+        logger_caller_name: str,
+        *,
+        register: bool = False,
+        name: str,
+        level: int = logging.DEBUG,
     ):
-        try:
-            cls._logger_objects[logger_caller_name]
-        except KeyError:
-            cls._logger_objects[logger_caller_name] = {}
-        try:
-            cls._logger_objects[logger_caller_name][name]
-        except KeyError:
+        cls._logger_objects.setdefault(logger_caller_name, {})
+        logger = cls._logger_objects[logger_caller_name].get(name)
+        if logger is None:
             logger = logging.Logger(name)
             logger.setLevel(level)
             cls._logger_objects[logger_caller_name][name] = logger
-        return cls._logger_objects[logger_caller_name][name]
+            if register:
+                logging.root.manager.loggerDict[str(name)] = logger
+        return logger
 
 
-logger_maker = LoggerMaker()
 app_rich_handler_args = AppRichHandlerArgs()
 
 
-@logger_maker.register_logger_caller()
+@LoggerMaker.register_logger_caller()
 def get_simple_logger(name: Optional[str] = None) -> logging.Logger:
     if name is None:
-        name = DefaultLoggerName.name
-    logger = logger_maker.get_registered_logger(get_simple_logger.__name__, name=name)
+        name = LoggerDefaults.logger_name
+    logger = LoggerMaker.get_registered_logger(
+        get_simple_logger.__name__,
+        name=name,
+    )
     if logger is None:
-        logger = logger_maker.create_singleton_logger(
-            get_simple_logger.__name__, name=name
+        logger = LoggerMaker.create_singleton_logger(
+            get_simple_logger.__name__, name=name, register=True
         )
         stdout_handler = AppRichHandler(app_rich_handler_args)
         logger.addHandler(stdout_handler)
     return logger
 
 
-def get_logger(name: Optional[str] = None) -> logging.Logger:
-    main_logger = logger_maker.get_registered_wrapper_class("get_main_logger")
+def _get_logger(name: Optional[str] = None) -> logging.Logger:
+    main_logger = LoggerMaker.get_registered_caller("get_main_logger")
     if main_logger is not None:
         return main_logger(name)
     return get_simple_logger(name)
+
+
+@dataclass
+class LoggerDefaults:
+    debug_envvar_suffix: ClassVar[str] = "DEBUG"
+    logger_name: ClassVar[str] = "app"
+    logger_callable: ClassVar[Callable] = _get_logger
+
+
+def get_logger(*args, **kwargs) -> logging.Logger:
+    if not callable(LoggerDefaults.logger_callable):
+        raise RuntimeError(
+            f"{LoggerDefaults.__name__} attribute 'logger_callable' value "
+            f"'{LoggerDefaults.logger_callable}' must be a callable that "
+            f"supports passing arguments."
+        )
+    return LoggerDefaults.logger_callable(*args, **kwargs)

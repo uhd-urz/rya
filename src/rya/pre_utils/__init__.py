@@ -13,10 +13,9 @@ from ._exit import Exit
 from ._layer_loader import LayerLoader, PublicLayerNames
 from ._log_state import LogState
 from ._loggers import (
-    AppDebugStateName,
+    LoggerDefaults,
     AppRichHandler,
     AppRichHandlerArgs,
-    DefaultLoggerName,
     LoggerMaker,
     LogItemList,
     LogMessageData,
@@ -65,7 +64,7 @@ __all__ = [
     "LogFileTuple",
     "FileTuple",
     "get_dynaconf_core_loader",
-    "AppDebugStateName",
+    "LoggerDefaults",
     "LoggerMaker",
     "LogItemList",
     "LogMessageData",
@@ -77,7 +76,6 @@ __all__ = [
     "global_log_record_container",
     "LogState",
     "app_rich_handler_args",
-    "DefaultLoggerName",
     "add_logging_level",
     "global_cli_result_callback",
     "global_cli_graceful_callback",
