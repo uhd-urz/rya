@@ -14,7 +14,7 @@ from ..loggers import (
     get_logger,
     global_log_record_container,
 )
-from ..names import AppIdentity, config_file_sources
+from ..names import AppIdentity, config_file_sources, run_early_list
 from ..plugins.commons import Typer
 
 # noinspection PyProtectedMember
@@ -103,6 +103,7 @@ def cli_startup(
                     level, message
                 )
 
+    cli_config_file_name: str = "CLI --config-file"
     if config_file is not None:
         try:
             cli_config_file = P(config_file)
@@ -112,7 +113,7 @@ def cli_startup(
         else:
             config_file_tuple = ConfigFileTuple(
                 path=cli_config_file,
-                name="CLI --config-file",
+                name=cli_config_file_name,
             )
             if config_file_tuple not in config_file_sources:
                 config_file_sources.append(config_file_tuple)
@@ -122,8 +123,15 @@ def cli_startup(
         if argv[-1] != (arg_to_skip := "--help") or arg_to_skip not in argv:
             # If an external plugin adds a new config file to dynaconf_args,
             # it will not be validated.
-            if AppConfig.validated is None:
-                AppConfig.validate(errors="ignore")
+            if AppConfig.validated is None or config_file is not None:
+                if run_early_list:
+                    logger.debug(
+                        f"run_early_list is not empty, but a file with "
+                        f"'{cli_config_file_name}' was passed. "
+                        f"run_early_list functions did not get the latest "
+                        f"validated configuration model."
+                    )
+                AppConfig.validate(errors="ignore", reload=True)
             show_aggressive_log_message()
             if global_cli_graceful_callback.get_callbacks():
                 logger.debug(
@@ -229,5 +237,11 @@ typer.rich_utils.rich_format_help = partial(
 
 # Must be run after all plugins are loaded as they are given
 # a chance to modify ResultCallbackHandler.is_store_okay
+if run_early_list:
+    logger.debug("run_early_list is non-empty. Early validation will be performed.")
+    early_validated_config = AppConfig.validate(errors="ignore")
+    for func in run_early_list:
+        func(early_validated_config)
+
 load_plugins()
 check_result_callback_log_container()

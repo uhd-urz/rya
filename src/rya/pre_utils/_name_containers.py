@@ -1,3 +1,4 @@
+from collections.abc import Callable
 from typing import Optional
 
 from properpath import P
@@ -36,3 +37,6 @@ class FileTupleContainer(DataObjectList[FileTuple]):
                 self.remove(file_tuple)
                 return
         raise ValueError(f"Name '{name}' not found in data.")
+
+
+class RunEarlyList(DataObjectList[Callable]): ...

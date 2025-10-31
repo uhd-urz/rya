@@ -14,6 +14,7 @@ from ..pre_utils import (
     LayerLoader,
     LogFileTuple,
     PublicLayerNames,
+    RunEarlyList,
     is_platform_unix,
 )
 
@@ -22,7 +23,7 @@ class AppIdentity(StrEnum):
     app_name = "rya"
     app_fancy_name = "rya"
     log_file_name = f"{app_name}.log"
-    config_file_extension = "yml"
+    config_file_extension = "toml"
     user_config_file_name = f"config.{config_file_extension}"
     project_config_file_name = f"{app_name}.{config_file_extension}"
     version_file_name = "VERSION"
@@ -83,6 +84,8 @@ log_file_sinks.append(
         name="user log",
     )
 )
+
+run_early_list: RunEarlyList = RunEarlyList()
 
 
 # Cache file definitions

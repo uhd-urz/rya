@@ -4,9 +4,14 @@ from typing import Callable, Optional
 
 import click
 import typer
+from rich_click.patch import patch_typer
 from typer.models import CommandFunctionType
 
 from ...loggers import get_logger
+from ._rich_click import RichClickOptions
+
+if RichClickOptions.enable_themes:
+    patch_typer()
 
 logger = get_logger()
 

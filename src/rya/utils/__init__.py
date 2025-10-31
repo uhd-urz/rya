@@ -16,6 +16,7 @@ from .utils import (
     check_reserved_keyword,
     get_external_python_version,
     get_sub_package_name,
+    update_rich_click_cli_theme,
     update_kwargs_with_defaults,
 )
 
@@ -38,4 +39,5 @@ __all__ = [
     "generate_pydantic_model_from_abstract_cls",
     "get_dynaconf_core_loader",
     "get_local_imports",
+    "update_rich_click_cli_theme",
 ]
