@@ -96,5 +96,5 @@ class LayerLoader:
                 else:
                     globals_[object_name] = attr
                     overloaded_objects[object_name] = layer_name
-        relations = ", ".join(f"'{v}' -> '{k}'" for k, v in overloaded_objects.items())
-        cls.logger.debug(f"The following objects have been overloaded {relations}.")
+        relations = ", ".join(f"'{v}'->'{k}'" for k, v in overloaded_objects.items())
+        cls.logger.debug(f"The following objects have been overloaded: {relations}.")
