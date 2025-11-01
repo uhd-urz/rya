@@ -5,10 +5,10 @@ import yaml
 from properpath import P
 
 from ...core_validators import Exit, Validate, ValidationError, Validator
-from ...loggers import get_file_logger
+from ...loggers import get_logger
 from ...styles import make_noted_text, print_typer_error, stdout_console
 
-file_logger = get_file_logger()
+logger = get_logger()
 
 
 class ValidateCLIJSONFile(Validator):
@@ -41,7 +41,7 @@ class ValidateCLIJSONFile(Validator):
                 f"that was assumed as a {ValidateCLIJSONFile.FILE_EXTENSION} file path, "
                 f"but it doesn't exist."
             )
-            file_logger.warning(err_msg)
+            logger.warning(err_msg)
             raise ValidationError(err_msg)
         with self.json_file_path.open(mode="r") as f:
             try:
@@ -54,7 +54,7 @@ class ValidateCLIJSONFile(Validator):
                     f"content caused a {ValidateCLIJSONFile.FILE_EXTENSION.upper()}"
                     f" syntax error."
                 )
-                file_logger.warning(err_msg)
+                logger.warning(err_msg)
                 raise ValidationError(err_msg)
             else:
                 return data_items

@@ -3,15 +3,15 @@ from pathlib import Path
 from typing import Generator
 
 from properpath import P
+from properpath.validators import PathValidationError
 
 from ..core_validators import (
     PathWriteValidator,
     Validate,
-    ValidationError,
 )
 from ..names import AppIdentity, log_file_sinks
 from ..pre_init import get_cached_data, update_cache
-from ..pre_utils import get_logger
+from ..pre_utils import LoggerDefaults, get_logger
 
 logger = get_logger()
 
@@ -26,13 +26,17 @@ def get_log_file_path() -> P:
     validate_path = Validate(PathWriteValidator(log_store_paths, err_logger=logger))
     try:
         log_file_path = validate_path.get()
-    except ValidationError as e:
+    except PathValidationError as e:
         logger.critical(
             f"{AppIdentity.app_name} couldn't validate any given log file paths: "
             f"{', '.join(map(str, log_store_paths))} to write logs."
         )
         raise e
     else:
-        cached_data.log_file_path = log_file_path
-        update_cache(cached_data)
+        if LoggerDefaults.will_cache_log_path:
+            cached_data.log_file_path = log_file_path
+            update_cache(cached_data)
+            logger.debug(
+                f"Log file path '{log_file_path}' has been cached to the cache file."
+            )
         return log_file_path

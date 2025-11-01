@@ -16,11 +16,11 @@ class LogMessageData(BaseModel):
 
 
 class LoggerMaker:
-    _logger_wrapper_callers: dict[str, type] = {}
+    _logger_wrapper_callers: dict[str, Callable] = {}
     _logger_objects: dict[str, dict[str, logging.Logger]] = {}
 
     @classmethod
-    def get_registered_caller(cls, name: str) -> Optional[type]:
+    def get_registered_caller(cls, name: str) -> Optional[Callable]:
         return cls._logger_wrapper_callers.get(name)
 
     @classmethod
@@ -104,6 +104,7 @@ class LoggerDefaults:
     debug_envvar_suffix: ClassVar[str] = "DEBUG"
     logger_name: ClassVar[str] = "app"
     logger_callable: ClassVar[Callable] = _get_logger
+    will_cache_log_path: ClassVar[bool] = False
 
 
 def get_logger(*args, **kwargs) -> logging.Logger:

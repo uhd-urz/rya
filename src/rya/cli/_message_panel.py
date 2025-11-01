@@ -6,11 +6,16 @@ from rich.table import Table
 
 from ..loggers import get_file_logger, get_logger
 from ..names import AppIdentity
+from ..pre_utils import LoggerDefaults
 from ..styles import make_noted_text, stderr_console
 from ..utils import messages_list
 
 logger = get_logger()
-file_logger = get_file_logger()
+try:
+    file_logger = get_file_logger()
+except RuntimeError as e:
+    logger.debug(f"File logger could not be instantiated. Exception: {e}")
+    file_logger = logger
 
 
 def messages_panel():
@@ -51,7 +56,8 @@ def messages_panel():
             make_noted_text(
                 f"{AppIdentity.app_name} will continue to work despite "
                 f"the above warnings. Enable environment variable "
-                f"[dim]{AppIdentity.app_name}_DEBUG: f[/dim] "
+                f"[dim]{AppIdentity.app_name.upper()}_"
+                f"{LoggerDefaults.debug_envvar_suffix.upper()}: f[/dim] "
                 f"to debug these errors with Python traceback (if any).",
                 stem="Note",
             ),
