@@ -19,15 +19,18 @@ logger = get_logger()
 @dataclass
 class _DetectedClickFeedback:
     context: Optional[typer.Context]
-    commands: Optional[str]
+    command_names: Optional[str]
 
 
 detected_click_feedback: _DetectedClickFeedback = _DetectedClickFeedback(
-    context=None, commands=None
+    context=None, command_names=None
 )
 
 
 class Typer(typer.Typer):
+    _cli_help_callbacks: Optional[list[Callable]] = None
+    _cli_help_result_callbacks: Optional[list[Callable]] = None
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.commands_skip_cli_startup: list[str] = []
@@ -40,8 +43,32 @@ class Typer(typer.Typer):
             while ctx.parent:
                 commands.insert(0, ctx.command.name)
                 ctx = ctx.parent
-        detected_click_feedback.commands = " ".join(commands)
+        detected_click_feedback.command_names = " ".join(commands)
         detected_click_feedback.context = ctx
+
+    @classmethod
+    def add_cli_help_callback(cls, callback: Callable) -> None:
+        if not callable(callback):
+            raise TypeError(f"Given callback '{callback}' must be a callable.")
+        if cls._cli_help_callbacks is None:
+            cls._cli_help_callbacks = []
+        cls._cli_help_callbacks.append(callback)
+
+    @classmethod
+    def add_cli_help_result_callback(cls, callback: Callable) -> None:
+        if not callable(callback):
+            raise TypeError(f"Given callback '{callback}' must be a callable.")
+        if cls._cli_help_result_callbacks is None:
+            cls._cli_help_result_callbacks = []
+        cls._cli_help_result_callbacks.append(callback)
+
+    @classmethod
+    def get_cli_help_callbacks(cls) -> list[Callable]:
+        return cls._cli_help_callbacks or []
+
+    @classmethod
+    def get_cli_help_result_callbacks(cls) -> list[Callable]:
+        return cls._cli_help_result_callbacks or []
 
     def command(
         self, *args, skip_cli_startup: bool = False, **kwargs

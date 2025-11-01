@@ -1,7 +1,7 @@
 from .base import stderr_console, stdout_console
 from .formats import BaseFormat, FormatError, FormatInstantiator, get_formatter
 from .highlight import color_text, make_noted_text, print_typer_error
-from .rich_utils import rich_format_help_with_callback
+from .rich_utils import click_format_help_with_callback, rich_format_help_with_callback
 
 __all__ = [
     "stdout_console",
@@ -14,4 +14,5 @@ __all__ = [
     "color_text",
     "print_typer_error",
     "rich_format_help_with_callback",
+    "click_format_help_with_callback",
 ]

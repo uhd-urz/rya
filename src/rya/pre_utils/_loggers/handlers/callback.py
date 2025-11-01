@@ -18,6 +18,10 @@ class ResultCallbackHandler(Handler):
         cls._client_count += 1
 
     @classmethod
+    def disable_store_okay(cls) -> None:
+        cls._store_okay = False
+
+    @classmethod
     def is_store_okay(cls) -> bool:
         return cls._store_okay
 

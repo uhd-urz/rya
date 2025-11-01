@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Callable, Literal, Optional, Type
+from typing import Any, Callable, ClassVar, Literal, Optional, Type
 
 from pydantic import BaseModel, ConfigDict
 from typer.core import MarkupMode, TyperGroup
@@ -39,14 +39,15 @@ class TyperArgs(BaseModel, validate_assignment=True):
 
 @dataclass
 class TyperRichPanelNames:
-    internal_plugins: str = "Built-in plugins"
-    external_plugins: str = "External plugins"
-    callback: str = f"{AppIdentity.app_fancy_name} global options"
+    internal_plugins: ClassVar[str] = "Built-in plugins"
+    external_plugins: ClassVar[str] = "External plugins"
+    messages: ClassVar[str] = "ⓘ Messages"
+    callback: ClassVar[str] = f"{AppIdentity.app_fancy_name} global options"
 
 
 @dataclass
 class TyperGlobalOptions:
-    config_file: tuple[str, str] = (
+    config_file: ClassVar[tuple[str, str]] = (
         "--config-file",
         "--C",
     )

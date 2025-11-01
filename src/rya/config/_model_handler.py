@@ -64,34 +64,33 @@ class ConfigMaker:
     def _register_plugin_model(
         cls, plugin_name: str, config_model: type[BaseModel]
     ) -> None:
-        try:
-            cls._basic_registry["plugins"]
-        except KeyError:
-            cls._basic_registry["plugins"] = {}
-        try:
-            cls._basic_registry["plugins"][plugin_name]
-        except KeyError:
-            cls._basic_registry["plugins"][plugin_name] = {
-                "model": config_model,
-                "fields": get_pydantic_nested_model_fields(config_model),
-            }
-        else:
+        cls._basic_registry.setdefault("plugins", {})
+        if cls._basic_registry["plugins"].get(plugin_name) is not None:
             logger.debug(
                 f"Plugin model '{config_model}' for plugin '{plugin_name}' "
                 f"is already registered."
             )
+        else:
+            cls._basic_registry["plugins"].setdefault(
+                plugin_name,
+                {
+                    "model": config_model,
+                    "fields": get_pydantic_nested_model_fields(config_model),
+                },
+            )
 
     @classmethod
     def _register_main_model(cls, config_model: type[BaseModel]) -> None:
-        try:
-            cls._basic_registry["main"]
-        except KeyError:
-            cls._basic_registry["main"] = {
+        if cls._basic_registry.get("main") is not None:
+            logger.debug(f"Main model '{config_model}' for is already registered.")
+            return
+        cls._basic_registry.setdefault(
+            "main",
+            {
                 "model": config_model,
                 "fields": get_pydantic_nested_model_fields(config_model),
-            }
-        else:
-            logger.debug(f"Main model '{config_model}' for is already registered.")
+            },
+        )
 
     @classmethod
     def add_model(cls, config_model: type[BaseModel], /) -> None:

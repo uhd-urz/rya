@@ -1,5 +1,3 @@
-from functools import partial
-from sys import argv
 from typing import Optional
 
 import click
@@ -9,20 +7,19 @@ from typing_extensions import Annotated
 
 from ..config import AppConfig
 from ..core_validators import Exit
-from ..loggers import (
-    ResultCallbackHandler,
-    get_logger,
-    global_log_record_container,
-)
+from ..loggers import get_logger
 from ..names import AppIdentity, config_file_sources, run_early_list
 from ..plugins.commons import Typer
 
 # noinspection PyProtectedMember
-from ..plugins.commons._names import TyperArgs, TyperGlobalOptions, TyperRichPanelNames
+from ..plugins.commons._names import (
+    TyperArgs,
+    TyperGlobalOptions,
+    TyperRichPanelNames,
+)
 from ..pre_utils import ConfigFileTuple, load_basic_debug_mode
 from ..styles import (
     print_typer_error,
-    rich_format_help_with_callback,
 )
 from ..utils import (
     global_cli_graceful_callback,
@@ -30,9 +27,16 @@ from ..utils import (
     global_cli_super_startup_callback,
     messages_list,
 )
+from ._cli_handler_utils import (
+    check_result_callback_log_container,
+    cli_cleanup_for_external_plugins,
+    cli_switch_venv_state,
+    load_plugins,
+    should_skip_cli_startup,
+)
+from ._click_help import apply_click_typer_help_patch
 from ._message_panel import messages_panel
 from ._plugin_loader import PluginLoader
-from ._venv_state_manager import switch_venv_state
 from .doc import MainAppCLIDoc
 
 logger = get_logger()
@@ -40,34 +44,32 @@ load_basic_debug_mode(AppIdentity.app_name, reload=True)
 
 
 def result_callback_wrapper(_, **kwargs):
-    should_skip, _ = should_skip_cli_startup()
+    # **kwargs is passed because the arguments from @app.callback
+    # are automatically passed here as well
+    ctx = click.get_current_context()
+    should_skip, _ = should_skip_cli_startup(plugin_loader, ctx)
     if should_skip:
         return
-    user_result_callback()
-    ctx = click.get_current_context()
-    if ctx.command.name != ctx.invoked_subcommand:
-        if argv[-1] != (ARG_TO_SKIP := "--help") or ARG_TO_SKIP not in argv:
-            if global_cli_result_callback.get_callbacks():
-                logger.debug(
-                    f"Running {__package__} controlled callback with "
-                    f"Typer result callback: "
-                    f"{global_cli_result_callback.instance_name}"
-                )
-                global_cli_result_callback.call_callbacks()
+    user_result_callback(**{"global_options": kwargs})
+    if global_cli_result_callback.get_callbacks():
+        logger.debug(
+            f"Running {__package__} controlled callback with "
+            f"Typer result callback: "
+            f"{global_cli_result_callback.instance_name}"
+        )
+        global_cli_result_callback.call_callbacks()
 
 
 typer_args = TyperArgs()
+user_callback = typer_args.callback or (lambda *args, **kwargs: None)
 user_result_callback = typer_args.result_callback or (lambda: None)
-user_callback = typer_args.callback or (lambda: None)
 typer_args.result_callback = result_callback_wrapper
 app = Typer(**typer_args.model_dump())
-panel_names = TyperRichPanelNames()
 plugin_loader = PluginLoader(
     typer_app=app,
-    internal_plugins_panel_name=panel_names.internal_plugins,
-    external_plugins_panel_name=panel_names.external_plugins,
+    internal_plugins_panel_name=TyperRichPanelNames.internal_plugins,
+    external_plugins_panel_name=TyperRichPanelNames.external_plugins,
 )
-typer_global_options = TyperGlobalOptions()
 
 
 @app.callback(invoke_without_command=True)
@@ -75,18 +77,20 @@ def cli_startup(
     config_file: Annotated[
         Optional[str],
         typer.Option(
-            typer_global_options.config_file[0],
-            typer_global_options.config_file[1],
+            TyperGlobalOptions.config_file[0],
+            TyperGlobalOptions.config_file[1],
             help=MainAppCLIDoc.cli_startup,
             show_default=False,
-            rich_help_panel=panel_names.callback,
+            rich_help_panel=TyperRichPanelNames.callback,
         ),
     ] = None,
 ) -> None:
-    should_skip, _ = should_skip_cli_startup()
+    ctx = click.get_current_context()
+    should_skip, _ = should_skip_cli_startup(plugin_loader, ctx)
     if should_skip:
         return
-    user_callback()
+    global_options = {"global_options": {"config_file": config_file}}
+    user_callback(**global_options)
     # GlobalCLICallback is run before configuration validation
     if global_cli_super_startup_callback.get_callbacks():
         logger.debug(
@@ -118,58 +122,43 @@ def cli_startup(
             if config_file_tuple not in config_file_sources:
                 config_file_sources.append(config_file_tuple)
             AppConfig.dynaconf_args.settings_files.append(str(cli_config_file))
-    ctx = click.get_current_context()
-    if ctx.command.name != (calling_sub_command_name := ctx.invoked_subcommand):
-        if argv[-1] != (arg_to_skip := "--help") or arg_to_skip not in argv:
-            # If an external plugin adds a new config file to dynaconf_args,
-            # it will not be validated.
-            if AppConfig.validated is None or config_file is not None:
-                if run_early_list:
-                    logger.debug(
-                        f"run_early_list is not empty, but a file with "
-                        f"'{cli_config_file_name}' was passed. "
-                        f"run_early_list functions did not get the latest "
-                        f"validated configuration model."
-                    )
-                AppConfig.validate(errors="ignore", reload=True)
-            show_aggressive_log_message()
-            if global_cli_graceful_callback.get_callbacks():
-                logger.debug(
-                    f"Running {__package__} controlled callback "
-                    f"after configuration validation: "
-                    f"{global_cli_graceful_callback.instance_name}"
-                )
-                global_cli_graceful_callback.call_callbacks()
+    # If an external/internal plugin adds a new config file to dynaconf_args,
+    # it will not be validated (i.e., validation is only performed once).
+    # Internal plugins should rely on a fixed number of config files added
+    # in the names/ layer. External plugins should perform the
+    # validation themselves.
+    calling_sub_command_name = ctx.invoked_subcommand
+    if AppConfig.validated is None or config_file is not None:
+        if run_early_list:
+            logger.debug(
+                f"run_early_list is not empty, but a file with "
+                f"'{cli_config_file_name}' was passed. "
+                f"run_early_list functions did not get the latest "
+                f"validated configuration model."
+            )
+        AppConfig.validate(errors="ignore", reload=True)
+        if AppConfig.exceptions:
+            logger.debug(
+                "Not all configuration models were validated successfully. "
+                "An incomplete or an empty configuration model was used."
+            )
         else:
-            return
+            logger.debug("All configuration models were validated successfully.")
+    show_aggressive_log_message()
+    if global_cli_graceful_callback.get_callbacks():
+        logger.debug(
+            f"Running {__package__} controlled callback "
+            f"after configuration validation: "
+            f"{global_cli_graceful_callback.instance_name}"
+        )
+        global_cli_graceful_callback.call_callbacks()
     if calling_sub_command_name is None:
-        # This is where we know that the app is run as is
+        # This is where we know that the app is run with no sub-commands or options
         if no_arg_cmd := getattr(plugin_loader.typer_app, "no_arg_command", None):
-            no_arg_cmd()
+            no_arg_cmd(**global_options)
 
 
-def check_result_callback_log_container():
-    if (
-        ResultCallbackHandler.is_store_okay()
-        and ResultCallbackHandler.get_client_count() == 0
-    ):
-        global_log_record_container.data.clear()
-        ResultCallbackHandler.is_store_okay = lambda: False
-
-
-def cli_switch_venv_state(state: bool, /) -> None:
-    try:
-        venv_dir = PluginLoader.loaded_external_plugins[
-            click.get_current_context().command.name
-        ].venv
-        project_dir = PluginLoader.loaded_external_plugins[
-            click.get_current_context().command.name
-        ].project_dir
-    except KeyError:
-        ...
-    else:
-        if venv_dir is not None:
-            switch_venv_state(state, venv_dir, project_dir)
+Typer.add_cli_help_callback(cli_startup)
 
 
 def cli_startup_for_plugins(
@@ -180,7 +169,7 @@ def cli_startup_for_plugins(
             "--C",
             help=MainAppCLIDoc.cli_startup,
             show_default=False,
-            rich_help_panel=panel_names.callback,
+            rich_help_panel=TyperRichPanelNames.callback,
         ),
     ] = None,
 ) -> None:
@@ -200,48 +189,19 @@ def cli_startup_for_plugins(
     cli_startup()
 
 
-def cli_cleanup_for_third_party_plugins(*args, **kwargs):
-    cli_switch_venv_state(False)
+apply_click_typer_help_patch(app, messages_panel)
 
-
-def should_skip_cli_startup() -> tuple[bool, Optional[str]]:
-    try:
-        if len(argv) == 2 and (running_command := argv[-1]) in getattr(
-            plugin_loader.typer_app, "commands_skip_cli_startup", []
-        ):
-            return True, running_command
-    except IndexError:
-        return False, None
-    return False, None
-
-
-def load_plugins():
-    should_skip, command = should_skip_cli_startup()
-    if should_skip:
-        logger.debug(f"Command '{command}' will skip any plugin loading.")
-        return
-    plugin_loader.add_internal_plugins(callback=cli_startup_for_plugins)
-    PluginLoader._internal_plugins_loaded = True
-    plugin_loader.add_external_plugins(
-        callback=cli_startup_for_plugins,
-        result_callback=cli_cleanup_for_third_party_plugins,
-    )
-    PluginLoader._external_plugins_loaded = True
-
-
-# cli_startup is passed here because --help doesn't trigger cli_startup
-typer.rich_utils.rich_format_help = partial(
-    rich_format_help_with_callback,
-    result_callback=(cli_startup, messages_panel),
-)
-
-# Must be run after all plugins are loaded as they are given
-# a chance to modify ResultCallbackHandler.is_store_okay
 if run_early_list:
     logger.debug("run_early_list is non-empty. Early validation will be performed.")
     early_validated_config = AppConfig.validate(errors="ignore")
     for func in run_early_list:
         func(early_validated_config)
 
-load_plugins()
+load_plugins(
+    plugin_loader,
+    cli_startup_for_plugins,
+    cli_cleanup_for_external_plugins,
+)
+# Must be run after all plugins are loaded as they are given
+# a chance to modify ResultCallbackHandler.is_store_okay
 check_result_callback_log_container()
