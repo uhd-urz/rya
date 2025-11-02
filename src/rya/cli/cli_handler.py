@@ -143,8 +143,7 @@ def cli_startup(
                 if not isinstance(exc, NoConfigModelRegistrationFound):
                     logger.debug(
                         "Not all configuration models were validated successfully. "
-                        "An incomplete or configuration model was used. "
-                        f"Validation errors: {', '.join(map(str, AppConfig.exceptions))}"
+                        "An incomplete or configuration model was used."
                     )
                     break
         else:
