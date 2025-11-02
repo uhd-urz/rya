@@ -22,7 +22,7 @@ def load_plugins(
         if should_skip:
             logger.debug(f"Command '{command}' will skip any plugin loading.")
             return
-        plugin_loader.add_internal_plugins(callback=cli_startup_for_plugins)
+    plugin_loader.add_internal_plugins(callback=cli_startup_for_plugins)
     PluginLoader._internal_plugins_loaded = True
     plugin_loader.add_external_plugins(
         callback=cli_startup_for_plugins,
@@ -43,17 +43,16 @@ def should_skip_cli_startup(
         return False, None
     else:
         if click_context is not None:
-            click_command_name: str = click_context.command.name
             is_no_arg_is_help = getattr(
                 click_context.command,
                 "no_args_is_help",
                 False,
             )
-            match running_command_name:
-                case click_command_name if is_no_arg_is_help is True:
-                    return True, running_command_name
-                case _:
-                    return False, None
+            invoked_subcommand = click_context.invoked_subcommand
+            if invoked_subcommand is None and is_no_arg_is_help is True:
+                return True, invoked_subcommand
+            else:
+                return False, None
         else:
             if len(argv) == 2 and running_command_name in getattr(
                 plugin_loader.typer_app,

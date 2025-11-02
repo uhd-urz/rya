@@ -6,6 +6,7 @@ from properpath import P
 from typing_extensions import Annotated
 
 from ..config import AppConfig
+from ..config._model_handler import NoConfigModelRegistrationFound
 from ..core_validators import Exit
 from ..loggers import get_logger
 from ..names import AppIdentity, config_file_sources, run_early_list
@@ -62,7 +63,7 @@ def result_callback_wrapper(_, **kwargs):
 
 typer_args = TyperArgs()
 user_callback = typer_args.callback or (lambda *args, **kwargs: None)
-user_result_callback = typer_args.result_callback or (lambda: None)
+user_result_callback = typer_args.result_callback or (lambda *args, **kwargs: None)
 typer_args.result_callback = result_callback_wrapper
 app = Typer(**typer_args.model_dump())
 plugin_loader = PluginLoader(
@@ -138,16 +139,20 @@ def cli_startup(
             )
         AppConfig.validate(errors="ignore", reload=True)
         if AppConfig.exceptions:
-            logger.debug(
-                "Not all configuration models were validated successfully. "
-                "An incomplete or an empty configuration model was used."
-            )
+            for exc in AppConfig.exceptions:
+                if not isinstance(exc, NoConfigModelRegistrationFound):
+                    logger.debug(
+                        "Not all configuration models were validated successfully. "
+                        "An incomplete or configuration model was used. "
+                        f"Validation errors: {', '.join(map(str, AppConfig.exceptions))}"
+                    )
+                    break
         else:
             logger.debug("All configuration models were validated successfully.")
     show_aggressive_log_message()
     if global_cli_graceful_callback.get_callbacks():
         logger.debug(
-            f"Running {__package__} controlled callback "
+            f"Running '{__package__}' controlled callback "
             f"after configuration validation: "
             f"{global_cli_graceful_callback.instance_name}"
         )
