@@ -5,6 +5,7 @@ import click
 from click import Context
 
 from ..loggers import get_logger
+from ..plugins.commons import Typer
 from ..pre_utils import ResultCallbackHandler, global_log_record_container
 from ._plugin_loader import PluginLoader
 from ._venv_state_manager import switch_venv_state
@@ -17,7 +18,7 @@ def load_plugins(
     cli_startup_for_plugins: Callable,
     cli_cleanup_for_third_party_plugins: Callable,
 ) -> None:
-    should_skip, command = should_skip_cli_startup(plugin_loader)
+    should_skip, command = should_skip_cli_startup(plugin_loader.typer_app)
     if not is_run_with_help_arg():
         if should_skip:
             logger.debug(f"Command '{command}' will skip any plugin loading.")
@@ -32,16 +33,18 @@ def load_plugins(
 
 
 def should_skip_cli_startup(
-    plugin_loader: PluginLoader,
+    typer_app: Typer,
     click_context: Optional[Context] = None,
 ) -> tuple[bool, Optional[str]]:
-    if is_run_with_help_arg(click_context):
-        return True, None
     try:
         running_command_name = argv[-1]
     except IndexError:
         return False, None
     else:
+        if len(argv) == 2 and running_command_name in getattr(
+            typer_app, "commands_skip_cli_startup", []
+        ):
+            return True, running_command_name
         if click_context is not None:
             is_no_arg_is_help = getattr(
                 click_context.command,
@@ -53,14 +56,7 @@ def should_skip_cli_startup(
                 return True, invoked_subcommand
             else:
                 return False, None
-        else:
-            if len(argv) == 2 and running_command_name in getattr(
-                plugin_loader.typer_app,
-                "commands_skip_cli_startup",
-                [],
-            ):
-                return True, running_command_name
-            return False, None
+        return False, None
 
 
 def is_run_with_help_arg(click_context: Optional[Context] = None) -> bool:
