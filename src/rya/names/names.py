@@ -22,7 +22,7 @@ from ..pre_utils import (
 class AppIdentity(StrEnum):
     app_name = "rya"
     app_fancy_name = "rya"
-    py_package_name = app_name
+    pypi_name = app_name
     log_file_name = f"{app_name}.log"
     config_file_extension = "toml"
     user_config_file_name = f"config.{config_file_extension}"

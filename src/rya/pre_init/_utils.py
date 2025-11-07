@@ -77,12 +77,12 @@ def get_app_version() -> str:
             else:
                 if (
                     pyproject.get(_ProjectDistMetadata.package_key)
-                    != AppIdentity.py_package_name
+                    != AppIdentity.pypi_name
                 ):
                     logger.warning(
                         f"The '{_ProjectDistMetadata.package_key}' from {pyproject_file} "
                         f"doesn't match app '{AppIdentity.app_name}' package "
-                        f"name '{AppIdentity.py_package_name}'. The found version will be "
+                        f"name '{AppIdentity.pypi_name}'. The found version will be "
                         f"considered but it could be of a different package! "
                         f"Update your 'AppIdentity.py_package_name' value to match "
                         f"your {_ProjectDistMetadata.file_name}'s if it should."
