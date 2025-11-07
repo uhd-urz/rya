@@ -233,7 +233,7 @@ wheels = [
 
 [[package]]
 name = "rya"
-version = "0.2.22"
+version = "0.2.23"
 source = { editable = "." }
 dependencies = [
     { name = "click" },
@@ -254,7 +254,7 @@ requires-dist = [
     { name = "colorama", specifier = ">=0.4.6" },
     { name = "dynaconf", specifier = ">=3.2.0,<4" },
     { name = "platformdirs", specifier = ">=4.4.0" },
-    { name = "properpath", specifier = ">=0.2.8" },
+    { name = "properpath", specifier = ">=0.2.9" },
     { name = "pydantic", specifier = ">=2.11.10,<2.13" },
     { name = "pyyaml", specifier = "==6.0.2" },
     { name = "rich", specifier = ">=14.1.0,<14.2.0" },
