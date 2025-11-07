@@ -58,7 +58,7 @@ def get_app_version() -> str:
                 f"add a {_ProjectDistMetadata.file_name} to your "
                 f"project directory."
             )
-        root_installation_dir = P(f"{module.__file__}/../../")
+        root_installation_dir = P(module.__file__).parent.parent
         try:
             pyproject_file = _search_pyproject_file(root_installation_dir, depth=3)
         except FileNotFoundError as e:
@@ -75,8 +75,9 @@ def get_app_version() -> str:
                     f"a valid TOML. Exception details: {e}"
                 ) from e
             else:
+                pyproject_project = pyproject.get("project", {})
                 if (
-                    pyproject.get(_ProjectDistMetadata.package_key)
+                    pyproject_project.get(_ProjectDistMetadata.package_key)
                     != AppIdentity.pypi_name
                 ):
                     logger.warning(
@@ -88,7 +89,7 @@ def get_app_version() -> str:
                         f"your {_ProjectDistMetadata.file_name}'s if it should."
                     )
                 try:
-                    return pyproject[_ProjectDistMetadata.version_key]
+                    return pyproject_project[_ProjectDistMetadata.version_key]
                 except KeyError as e:
                     raise AppVersionNotFound(
                         f"{pyproject_file} doesn't have the "
