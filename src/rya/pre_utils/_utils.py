@@ -1,13 +1,36 @@
 import inspect
+import os
 import sys
 from abc import ABC
+from dataclasses import dataclass
 from enum import StrEnum
 from types import ModuleType
 from typing import Callable, Optional, get_type_hints
 
+import typer
+from properpath import P
 from pydantic import BaseModel, create_model
 
 LocalImportsType = dict[str, dict[str, type[object] | Callable | ModuleType]]
+
+
+@dataclass
+class _DetectedClickFeedback:
+    context: Optional[typer.Context]
+    command_names: Optional[str]
+
+
+detected_click_feedback: _DetectedClickFeedback = _DetectedClickFeedback(
+    context=None, command_names=None
+)
+
+
+class SafeCWD:
+    def __enter__(self):
+        self.cwd = P.cwd()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        os.chdir(self.cwd)
 
 
 def is_platform_unix() -> bool:

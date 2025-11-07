@@ -30,6 +30,6 @@ class ResultCallbackHandler(Handler):
         return cls._client_count
 
     def emit(self, record):
-        if self._store_okay:
+        if ResultCallbackHandler._store_okay:
             if record.levelno >= self.level:
                 global_log_record_container.append(record)

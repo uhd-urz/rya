@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from functools import wraps
 from typing import Callable, Optional
 
@@ -8,23 +7,13 @@ from rich_click.patch import patch_typer
 from typer.models import CommandFunctionType
 
 from ...loggers import get_logger
+from ...pre_utils import detected_click_feedback
 from ._names import TyperArgs
 
 if TyperArgs().rich_markup_mode == "rich-click":
     patch_typer()
 
 logger = get_logger()
-
-
-@dataclass
-class _DetectedClickFeedback:
-    context: Optional[typer.Context]
-    command_names: Optional[str]
-
-
-detected_click_feedback: _DetectedClickFeedback = _DetectedClickFeedback(
-    context=None, command_names=None
-)
 
 
 class Typer(typer.Typer):

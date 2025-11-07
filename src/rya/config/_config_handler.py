@@ -13,9 +13,11 @@ from ..loggers import get_logger
 from ._model_handler import (
     ConfigMaker,
     NoConfigModelRegistrationFound,
+    PluginConfigStructType,
     PluginsConfigStructType,
 )
 from ._names import DynaConfArgs
+from ._names import PluginDefinitions as Pdf
 
 logger = get_logger()
 
@@ -125,7 +127,7 @@ class AppConfig:
     ) -> BaseModel:
         settings: Dynaconf = cls.get_settings(reload=reload)
         settings_data = {k.lower(): v for k, v in settings.as_dict().items()}
-        settings_data.pop("plugins", None)
+        settings_data.pop(Pdf.config_section_name, None)
         validated_main_model = main_model(**settings_data)
         return validated_main_model
 
@@ -135,7 +137,7 @@ class AppConfig:
         errors: Literal["raise", "ignore"] = "raise",
         reload: bool = False,
     ) -> BaseModel:
-        main_model_data: PluginsConfigStructType = ConfigMaker.get_main_model()
+        main_model_data: PluginConfigStructType = ConfigMaker.get_main_model()
         main_model = main_model_data["model"]
         validated_plugin_model = cls._handle_config_errors(
             lambda: cls._main_validate(main_model, reload=reload),
@@ -192,7 +194,7 @@ class AppConfig:
         reload: bool = False,
     ) -> BaseModel:
         plugins_settings_data: dict = getattr(
-            cls.get_settings(reload=reload), "plugins", {}
+            cls.get_settings(reload=reload), Pdf.config_section_name, {}
         )
         plugin_model_data = ConfigMaker.get_plugin_model(plugin_name)
         plugin_model: type[BaseModel] = plugin_model_data["model"]

@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional
+from typing import ClassVar, Optional
 
 from properpath import P
 from pydantic import BaseModel
@@ -62,23 +62,24 @@ class DynaConfArgs(BaseModel, validate_assignment=True):
 
 
 @dataclass
-class InternalPluginLoaderDefinitions:
-    root_installation_dir: P = P(__file__).parent.parent
-    directory_name: str = "plugins"
+class PluginDefinitions:
+    dir: P
     typer_app_file_name_prefix: str = "cli"
     typer_app_file_name: str = f"{typer_app_file_name_prefix}.py"
     typer_app_var_name: str = "app"
+    config_section_name: ClassVar[str] = PublicLayerNames.plugins
 
 
 @dataclass
-class ExternalPluginLoaderDefinitions:
-    directory_name: str = InternalPluginLoaderDefinitions.directory_name
+class InternalPluginLoaderDefinitions(PluginDefinitions):
+    directory_name: str = PublicLayerNames.plugins
+    dir: P = P(__file__).parent.parent / directory_name
+
+
+@dataclass
+class ExternalPluginLoaderDefinitions(PluginDefinitions):
+    directory_name: str = PublicLayerNames.plugins
     dir: P = app_dirs.user_data_dir / directory_name
-    typer_app_file_name_prefix: str = (
-        InternalPluginLoaderDefinitions.typer_app_file_name_prefix
-    )
-    typer_app_file_name: str = InternalPluginLoaderDefinitions.typer_app_file_name
-    typer_app_var_name: str = InternalPluginLoaderDefinitions.typer_app_var_name
     file_name_prefix: str = "plugin_metadata"
     file_ext: str = "toml"
     file_name: str = f"{file_name_prefix}.{file_ext}"

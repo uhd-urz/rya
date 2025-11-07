@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 
 from ..loggers import get_logger
+from ._names import PluginDefinitions as Pdf
 from ._pydantic_parser import FieldsConfigStructType, get_pydantic_nested_model_fields
 
 logger = get_logger()
@@ -18,7 +19,7 @@ class ConfigMaker:
     @classmethod
     def get_plugin_model(cls, plugin_name: str) -> PluginConfigStructType:
         try:
-            return cls._basic_registry.get("plugins", {})[plugin_name]
+            return cls._basic_registry.get(Pdf.config_section_name, {})[plugin_name]
         except KeyError as e:
             raise NoConfigModelRegistrationFound(
                 f"Plugin '{plugin_name}' is not registered. "
@@ -37,7 +38,7 @@ class ConfigMaker:
     @classmethod
     def get_plugins_models(cls) -> PluginsConfigStructType:
         try:
-            return cls._basic_registry["plugins"]
+            return cls._basic_registry[Pdf.config_section_name]
         except KeyError as e:
             raise NoConfigModelRegistrationFound(
                 f"No plugin model is registered to {cls}."
@@ -50,8 +51,8 @@ class ConfigMaker:
     @staticmethod
     def _check_reserved_names(config_model: type[BaseModel]) -> None:
         if (
-            "plugins" in config_model.model_fields
-            or "plugins" in config_model.__class_vars__
+            Pdf.config_section_name in config_model.model_fields
+            or Pdf.config_section_name in config_model.__class_vars__
         ):
             raise ValueError(
                 f"The name 'plugins' is reserved. "
@@ -64,14 +65,14 @@ class ConfigMaker:
     def _register_plugin_model(
         cls, plugin_name: str, config_model: type[BaseModel]
     ) -> None:
-        cls._basic_registry.setdefault("plugins", {})
-        if cls._basic_registry["plugins"].get(plugin_name) is not None:
+        cls._basic_registry.setdefault(Pdf.config_section_name, {})
+        if cls._basic_registry[Pdf.config_section_name].get(plugin_name) is not None:
             logger.debug(
                 f"Plugin model '{config_model}' for plugin '{plugin_name}' "
                 f"is already registered."
             )
         else:
-            cls._basic_registry["plugins"].setdefault(
+            cls._basic_registry[Pdf.config_section_name].setdefault(
                 plugin_name,
                 {
                     "model": config_model,

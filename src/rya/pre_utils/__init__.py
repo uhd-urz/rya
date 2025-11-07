@@ -13,9 +13,9 @@ from ._exit import Exit
 from ._layer_loader import LayerLoader, PublicLayerNames
 from ._log_state import LogState
 from ._loggers import (
-    LoggerDefaults,
     AppRichHandler,
     AppRichHandlerArgs,
+    LoggerDefaults,
     LoggerMaker,
     LogItemList,
     LogMessageData,
@@ -34,6 +34,8 @@ from ._name_containers import (
     RunEarlyList,
 )
 from ._utils import (
+    SafeCWD,
+    detected_click_feedback,
     generate_pydantic_model_from_abstract_cls,
     get_dynaconf_core_loader,
     get_local_imports,
@@ -85,4 +87,6 @@ __all__ = [
     "get_debug_mode_envvar",
     "PublicLayerNames",
     "RunEarlyList",
+    "detected_click_feedback",
+    "SafeCWD",
 ]

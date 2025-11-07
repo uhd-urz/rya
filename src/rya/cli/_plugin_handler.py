@@ -22,6 +22,7 @@ from ..config._names import (
 )
 from ..core_validators import Validate, ValidationError, Validator
 from ..loggers import get_logger
+from ..pre_utils import SafeCWD
 from ..utils import add_message, get_dynaconf_core_loader
 from ._venv_state_manager import switch_venv_state
 
@@ -48,9 +49,7 @@ class InternalPluginHandler:
     @classmethod
     def get_plugin_locations(cls) -> List[Tuple[str, Path]]:
         _paths = []
-        plugins_dir = (
-            int_plugin_def.root_installation_dir / int_plugin_def.directory_name
-        )
+        plugins_dir = int_plugin_def.dir
         if plugins_dir.exists():
             for path in plugins_dir.iterdir():
                 if path.kind == "dir":
@@ -103,158 +102,147 @@ class ExternalPluginLocationValidator(Validator):
                 ) from e
         self._location = value
 
-    def validate(self):
+    @staticmethod
+    def _get_validated_metadata(location: P | Path, /):
         parsed_metadata: dict = {
             ext_plugin_meta.file_exists: None,
             ext_plugin_meta.cli_script_path: None,
             ext_plugin_meta.plugin_name: None,
         }
-
-        if self.location.is_dir():
-            actual_cwd = Path.cwd()
-            os.chdir(self.location)
-
-            if (
-                plugin_metadata_file := (self.location / ext_plugin_def.file_name)
-            ).exists():
-                parsed_metadata[ext_plugin_meta.file_exists] = True
-                plugin_settings_args = DynaConfArgs(
-                    settings_files=[str(plugin_metadata_file)],
-                    core_loaders=list(
-                        get_dynaconf_core_loader(ext_plugin_def.file_ext)
-                    ),
+        if (plugin_metadata_file := (location / ext_plugin_def.file_name)).exists():
+            parsed_metadata[ext_plugin_meta.file_exists] = True
+            plugin_settings_args = DynaConfArgs(
+                settings_files=[str(plugin_metadata_file)],
+                core_loaders=list(get_dynaconf_core_loader(ext_plugin_def.file_ext)),
+            )
+            plugin_settings = get_dynaconf_settings(plugin_settings_args)
+            try:
+                plugin_settings.reload()
+            except (ScannerError, TOMLDecodeError) as e:
+                raise ValidationError(
+                    f"Plugin metadata file {plugin_metadata_file} exists, "
+                    f"but it couldn't be parsed. Exception details: {e}"
                 )
-                plugin_settings = get_dynaconf_settings(plugin_settings_args)
+            else:
                 try:
-                    plugin_settings.reload()
-                except (ScannerError, TOMLDecodeError) as e:
-                    raise ValidationError(
-                        f"Plugin metadata file {plugin_metadata_file} exists, "
-                        f"but it couldn't be parsed. Exception details: {e}"
-                    )
-                else:
-                    try:
-                        cli_script_path = plugin_settings[
-                            ext_plugin_meta.cli_script_path
-                        ]
-                    except KeyError:
-                        if (
-                            typer_app_file := (
-                                self.location / ext_plugin_def.typer_app_file_name
-                            )
-                        ).exists():
-                            parsed_metadata[ext_plugin_meta.cli_script_path] = (
-                                typer_app_file
-                            )
-                        else:
-                            raise ValidationError(
-                                f"{self.location} has the plugin metadata file, but no "
-                                f"'{ext_plugin_meta.cli_script_path}' path is "
-                                f"defined inside. No "
-                                f"{ext_plugin_def.typer_app_file_name} script is found as well."
-                            )
-                    else:
-                        try:
-                            cli_script_path = P(cli_script_path)
-                        except (TypeError, ValueError):
-                            raise ValidationError(
-                                f"Key '{ext_plugin_meta.cli_script_path}' "
-                                f"exists in {plugin_metadata_file}, but its assigned "
-                                f"value '{cli_script_path}' is invalid."
-                            )
-                        else:
-                            if cli_script_path.exists():
-                                parsed_metadata[ext_plugin_meta.cli_script_path] = (
-                                    cli_script_path.absolute()
-                                )
-                            else:
-                                raise ValidationError(
-                                    f"Key '{ext_plugin_meta.cli_script_path}' "
-                                    f"exists in {plugin_metadata_file}, but the path "
-                                    f"'{cli_script_path}' does not exist."
-                                )
-                    try:
-                        venv_path = plugin_settings[ext_plugin_meta.venv_path]
-                    except KeyError:
-                        parsed_metadata[ext_plugin_meta.venv_path] = None
-                    else:
-                        try:
-                            venv_path = P(venv_path)
-                        except (TypeError, ValueError):
-                            raise ValidationError(
-                                f"Key '{ext_plugin_meta.venv_path}' "
-                                f"exists in {plugin_metadata_file}, but its assigned "
-                                f"value '{venv_path}' is invalid."
-                            )
-                        else:
-                            if venv_path.exists():
-                                parsed_metadata[ext_plugin_meta.venv_path] = (
-                                    venv_path.absolute()
-                                )
-                            else:
-                                raise ValidationError(
-                                    f"Key '{ext_plugin_meta.venv_path}' "
-                                    f"exists in {plugin_metadata_file}, but the path "
-                                    f"'{venv_path}' does not exist."
-                                )
-                    try:
-                        project_path = plugin_settings[ext_plugin_meta.project_path]
-                    except KeyError:
-                        parsed_metadata[ext_plugin_meta.project_path] = parsed_metadata[
-                            ext_plugin_meta.cli_script_path
-                        ].parent
-                    else:
-                        try:
-                            project_path = P(project_path)
-                        except (TypeError, ValueError):
-                            raise ValidationError(
-                                f"Key '{ext_plugin_meta.project_path}' "
-                                f"exists in {plugin_metadata_file}, but its assigned "
-                                f"value '{project_path}' is invalid."
-                            )
-                        else:
-                            if project_path.exists():
-                                parsed_metadata[ext_plugin_meta.project_path] = (
-                                    project_path.absolute()
-                                )
-                            else:
-                                raise ValidationError(
-                                    f"Key '{ext_plugin_meta.project_path}' "
-                                    f"exists in {plugin_metadata_file}, but the path "
-                                    f"'{project_path}' does not exist."
-                                )
-                    try:
-                        plugin_name = plugin_settings[ext_plugin_meta.plugin_name]
-                    except KeyError:
-                        parsed_metadata[ext_plugin_meta.plugin_name] = (
-                            self.location.name
+                    cli_script_path = plugin_settings[ext_plugin_meta.cli_script_path]
+                except KeyError:
+                    if (
+                        typer_app_file := (
+                            location / ext_plugin_def.typer_app_file_name
+                        )
+                    ).exists():
+                        parsed_metadata[ext_plugin_meta.cli_script_path] = (
+                            typer_app_file
                         )
                     else:
-                        if self.location.name != plugin_name:
-                            raise ValidationError(
-                                f"Key '{ext_plugin_meta.plugin_name}' "
-                                f"exists in {plugin_metadata_file}, but it must be the same "
-                                f"name as the directory name the metadata file is in."
-                            )
-                        parsed_metadata[ext_plugin_meta.plugin_name] = plugin_name
-            else:
-                parsed_metadata[ext_plugin_meta.file_exists] = False
-                if (
-                    typer_app_file := (
-                        self.location / ext_plugin_def.typer_app_file_name
-                    )
-                ).exists():
-                    parsed_metadata[ext_plugin_meta.cli_script_path] = typer_app_file
-                    parsed_metadata[ext_plugin_meta.project_path] = self.location
-                    plugin_name = self.location.name
-                    parsed_metadata[ext_plugin_meta.plugin_name] = plugin_name
+                        raise ValidationError(
+                            f"{location} has the plugin metadata file, but no "
+                            f"'{ext_plugin_meta.cli_script_path}' path is "
+                            f"defined inside. No "
+                            f"{ext_plugin_def.typer_app_file_name} script is found as well."
+                        )
                 else:
-                    raise ValueError(
-                        f"{self.location} is not a proper plugin directory."
-                    )
-            os.chdir(actual_cwd)
+                    try:
+                        cli_script_path = P(cli_script_path)
+                    except (TypeError, ValueError):
+                        raise ValidationError(
+                            f"Key '{ext_plugin_meta.cli_script_path}' "
+                            f"exists in {plugin_metadata_file}, but its assigned "
+                            f"value '{cli_script_path}' is invalid."
+                        )
+                    else:
+                        if cli_script_path.exists():
+                            parsed_metadata[ext_plugin_meta.cli_script_path] = (
+                                cli_script_path.absolute()
+                            )
+                        else:
+                            raise ValidationError(
+                                f"Key '{ext_plugin_meta.cli_script_path}' "
+                                f"exists in {plugin_metadata_file}, but the path "
+                                f"'{cli_script_path}' does not exist."
+                            )
+                try:
+                    venv_path = plugin_settings[ext_plugin_meta.venv_path]
+                except KeyError:
+                    parsed_metadata[ext_plugin_meta.venv_path] = None
+                else:
+                    try:
+                        venv_path = P(venv_path)
+                    except (TypeError, ValueError):
+                        raise ValidationError(
+                            f"Key '{ext_plugin_meta.venv_path}' "
+                            f"exists in {plugin_metadata_file}, but its assigned "
+                            f"value '{venv_path}' is invalid."
+                        )
+                    else:
+                        if venv_path.exists():
+                            parsed_metadata[ext_plugin_meta.venv_path] = (
+                                venv_path.absolute()
+                            )
+                        else:
+                            raise ValidationError(
+                                f"Key '{ext_plugin_meta.venv_path}' "
+                                f"exists in {plugin_metadata_file}, but the path "
+                                f"'{venv_path}' does not exist."
+                            )
+                try:
+                    project_path = plugin_settings[ext_plugin_meta.project_path]
+                except KeyError:
+                    parsed_metadata[ext_plugin_meta.project_path] = parsed_metadata[
+                        ext_plugin_meta.cli_script_path
+                    ].parent
+                else:
+                    try:
+                        project_path = P(project_path)
+                    except (TypeError, ValueError):
+                        raise ValidationError(
+                            f"Key '{ext_plugin_meta.project_path}' "
+                            f"exists in {plugin_metadata_file}, but its assigned "
+                            f"value '{project_path}' is invalid."
+                        )
+                    else:
+                        if project_path.exists():
+                            parsed_metadata[ext_plugin_meta.project_path] = (
+                                project_path.absolute()
+                            )
+                        else:
+                            raise ValidationError(
+                                f"Key '{ext_plugin_meta.project_path}' "
+                                f"exists in {plugin_metadata_file}, but the path "
+                                f"'{project_path}' does not exist."
+                            )
+                try:
+                    plugin_name = plugin_settings[ext_plugin_meta.plugin_name]
+                except KeyError:
+                    parsed_metadata[ext_plugin_meta.plugin_name] = location.name
+                else:
+                    if location.name != plugin_name:
+                        raise ValidationError(
+                            f"Key '{ext_plugin_meta.plugin_name}' "
+                            f"exists in {plugin_metadata_file}, but it must be the same "
+                            f"name as the directory name the metadata file is in."
+                        )
+                    parsed_metadata[ext_plugin_meta.plugin_name] = plugin_name
         else:
+            parsed_metadata[ext_plugin_meta.file_exists] = False
+            if (
+                typer_app_file := (location / ext_plugin_def.typer_app_file_name)
+            ).exists():
+                parsed_metadata[ext_plugin_meta.cli_script_path] = typer_app_file
+                parsed_metadata[ext_plugin_meta.project_path] = location
+                plugin_name = location.name
+                parsed_metadata[ext_plugin_meta.plugin_name] = plugin_name
+            else:
+                raise ValueError(f"{location} is not a proper plugin directory.")
+        return parsed_metadata
+
+    def validate(self):
+        if not self.location.is_dir():
             raise ValueError(f"{self.location} is not a directory.")
+        with SafeCWD():
+            os.chdir(self.location)
+            parsed_metadata = self._get_validated_metadata(self.location)
         return parsed_metadata
 
 

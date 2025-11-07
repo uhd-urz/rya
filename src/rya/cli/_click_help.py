@@ -5,6 +5,7 @@ import rich_click
 import typer
 
 from ..loggers import get_logger
+from ..names import AppIdentity
 from ..plugins.commons import Typer
 from ..styles import click_format_help_with_callback, rich_format_help_with_callback
 
@@ -12,7 +13,7 @@ logger = get_logger()
 
 
 def apply_click_typer_help_patch(app: Typer, messages_panel: Callable) -> None:
-    logger.debug("Patching Click-Typer 'help' page.")
+    logger.debug(f"{AppIdentity.app_name} will patch Click-Typer 'help' page.")
     match app.rich_markup_mode:
         case "rich-click" | None:
             rich_click.rich_click.USE_RICH_MARKUP = True

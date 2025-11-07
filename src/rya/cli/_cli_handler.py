@@ -43,24 +43,23 @@ from ._plugin_loader import PluginLoader
 from .doc import MainAppCLIDoc
 
 logger = get_logger()
+CLIConfigFileType = Annotated[
+    Optional[str],
+    typer.Option(
+        TyperGlobalOptions.config_file[0],
+        TyperGlobalOptions.config_file[1],
+        help=MainAppCLIDoc.config_file,
+        show_default=False,
+        rich_help_panel=TyperRichPanelNames.callback,
+    ),
+]
 
 
 def initiate_cli_startup(app: Typer):
     load_basic_debug_mode(AppIdentity.app_name, reload=True)
 
     @app.callback(invoke_without_command=True)
-    def cli_startup(
-        config_file: Annotated[
-            Optional[str],
-            typer.Option(
-                TyperGlobalOptions.config_file[0],
-                TyperGlobalOptions.config_file[1],
-                help=MainAppCLIDoc.cli_startup,
-                show_default=False,
-                rich_help_panel=TyperRichPanelNames.callback,
-            ),
-        ] = None,
-    ) -> None:
+    def cli_startup(config_file: CLIConfigFileType = None) -> None:
         ctx = click.get_current_context()
         should_skip, _ = should_skip_cli_startup(app, ctx)
         if is_run_with_help_arg(ctx) or should_skip:
@@ -91,6 +90,7 @@ def initiate_cli_startup(app: Typer):
                 print_typer_error(str(conf_val_exc))
                 raise Exit(1)
             else:
+                cli_config_file = cli_config_file.absolute()
                 config_file_tuple = ConfigFileTuple(
                     path=cli_config_file,
                     name=cli_config_file_name,
@@ -98,6 +98,10 @@ def initiate_cli_startup(app: Typer):
                 if config_file_tuple not in config_file_sources:
                     config_file_sources.append(config_file_tuple)
                 AppConfig.dynaconf_args.settings_files.append(str(cli_config_file))
+                logger.debug(
+                    f"The following config files will be used: "
+                    f"{', '.join(AppConfig.dynaconf_args.settings_files)}"
+                )
         # If an external/internal plugin adds a new config file to dynaconf_args,
         # it will not be validated (i.e., validation is only performed once).
         # Internal plugins should rely on a fixed number of config files added
@@ -138,24 +142,13 @@ def initiate_cli_startup(app: Typer):
 
     Typer.add_cli_help_callback(cli_startup)
 
-    def cli_startup_for_plugins(
-        config_file: Annotated[
-            Optional[str],
-            typer.Option(
-                "--config-file",
-                "--C",
-                help=MainAppCLIDoc.cli_startup,
-                show_default=False,
-                rich_help_panel=TyperRichPanelNames.callback,
-            ),
-        ] = None,
-    ) -> None:
+    def cli_startup_for_plugins(config_file: CLIConfigFileType = None) -> None:
         cli_switch_venv_state(True)
         if config_file is not None:
             print_typer_error(
-                f"--config-file/--C can only be passed after "
-                f"the main program name '{AppIdentity.app_name}', "
-                f"and not after a plugin name."
+                f"{'/'.join(TyperGlobalOptions.config_file)} can only be "
+                f"passed after the main program name "
+                f"'{AppIdentity.app_name}', and not after a plugin name."
             )
             raise Exit(1)
         # Calling cli_startup again here would call cli_startup
