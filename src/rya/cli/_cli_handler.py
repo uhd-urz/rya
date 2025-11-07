@@ -67,12 +67,11 @@ def initiate_cli_startup(app: Typer):
         global_options = {"global_options": {"config_file": config_file}}
         user_callback(**global_options)
         # GlobalCLICallback is run before configuration validation
-        if global_cli_super_startup_callback.get_callbacks():
-            logger.debug(
-                f"Running {__package__} controlled callback before anything else: "
-                f"{global_cli_super_startup_callback.instance_name}"
-            )
-            global_cli_super_startup_callback.call_callbacks()
+        logger.debug(
+            f"Running {__package__} controlled callback before anything else: "
+            f"{global_cli_super_startup_callback.instance_name}"
+        )
+        global_cli_super_startup_callback.call_callbacks()
 
         def show_aggressive_log_message():
             for log_data in messages_list:
@@ -128,13 +127,12 @@ def initiate_cli_startup(app: Typer):
             else:
                 logger.debug("All configuration models were validated successfully.")
         show_aggressive_log_message()
-        if global_cli_graceful_callback.get_callbacks():
-            logger.debug(
-                f"Running '{__package__}' controlled callback "
-                f"after configuration validation: "
-                f"{global_cli_graceful_callback.instance_name}"
-            )
-            global_cli_graceful_callback.call_callbacks()
+        logger.debug(
+            f"Running '{__package__}' controlled callback "
+            f"after configuration validation: "
+            f"{global_cli_graceful_callback.instance_name}"
+        )
+        global_cli_graceful_callback.call_callbacks()
         if calling_sub_command_name is None:
             # This is where we know that the app is run with no sub-commands or options
             if no_arg_cmd := getattr(app, "no_arg_command", None):
