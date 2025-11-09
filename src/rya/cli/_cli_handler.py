@@ -43,20 +43,21 @@ from ._plugin_loader import PluginLoader
 from .doc import MainAppCLIDoc
 
 logger = get_logger()
-CLIConfigFileType = Annotated[
-    Optional[str],
-    typer.Option(
-        TyperGlobalOptions.config_file[0],
-        TyperGlobalOptions.config_file[1],
-        help=MainAppCLIDoc.config_file,
-        show_default=False,
-        rich_help_panel=TyperRichPanelNames.callback,
-    ),
-]
 
 
 def initiate_cli_startup(app: Typer):
     load_basic_debug_mode(AppIdentity.app_name, reload=True)
+    # noinspection PyPep8Naming
+    CLIConfigFileType = Annotated[
+        Optional[str],
+        typer.Option(
+            TyperGlobalOptions.config_file[0],
+            TyperGlobalOptions.config_file[1],
+            help=MainAppCLIDoc.config_file,
+            show_default=False,
+            rich_help_panel=TyperRichPanelNames.callback,
+        ),
+    ]
 
     @app.callback(invoke_without_command=True)
     def cli_startup(config_file: CLIConfigFileType = None) -> None:
