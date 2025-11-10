@@ -97,18 +97,3 @@ def get_external_python_version(venv_dir: Path) -> Tuple[str, str, str]:
             "Matching Python version not found in output string"
         )
 
-
-def update_rich_click_cli_theme(config_model: BaseModel) -> None:
-    rich_theme = getattr(config_model, "rich_theme", None)
-    if rich_theme is None:
-        return
-    rich_theme_name = getattr(rich_theme, "name", None)
-    if rich_theme_name is None:
-        return
-    try:
-        rc.THEME = rich_theme_name
-    except RichClickThemeNotFound as e:
-        logger.warning(
-            f"{AppIdentity.app_name} CLI theme could not be "
-            f"changed. Exception details: {e}"
-        )

@@ -1,10 +1,18 @@
+import operator
 from typing import Callable, Iterable, Optional
 
 import click
+import rich_click.rich_click as rc
 from click import Context, HelpFormatter
+from pydantic import BaseModel
 from rich.text import Text
+from rich_click.rich_click_theme import RichClickThemeNotFound
 from typer.core import MarkupMode
 from typer.rich_utils import rich_format_help
+
+from ..pre_utils import get_logger
+
+logger = get_logger()
 
 
 def rich_format_help_with_callback(
@@ -44,3 +52,26 @@ def click_format_help_with_callback(
         original_format_help(self, ctx, formatter)
 
     return format_help
+
+
+def update_rich_click_cli_theme(
+    config_model: BaseModel, /, config_field_loc: str, default_theme: str
+) -> None:
+    try:
+        theme = operator.attrgetter(config_field_loc)(config_model)
+    except AttributeError:
+        theme = default_theme
+        logger.debug(
+            f"Possible incomplete detected configuration model "
+            f"{config_model.__class__} was received. Default theme "
+            f"'{default_theme}' will be used."
+        )
+    try:
+        rc.THEME = theme
+        logger.debug(f"CLI theme is changed to '{theme}'.")
+    except RichClickThemeNotFound as e:
+        logger.warning(
+            f"CLI theme could not be changed. Exception details: {e}. "
+            f"Default theme '{default_theme}' will be used."
+        )
+        rc.THEME = default_theme

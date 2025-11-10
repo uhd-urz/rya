@@ -18,7 +18,6 @@ from .utils import (
     get_external_python_version,
     get_sub_package_name,
     update_kwargs_with_defaults,
-    update_rich_click_cli_theme,
 )
 
 __all__ = [
@@ -40,6 +39,5 @@ __all__ = [
     "generate_pydantic_model_from_abstract_cls",
     "get_dynaconf_core_loader",
     "get_local_imports",
-    "update_rich_click_cli_theme",
     "detected_click_feedback",
 ]
