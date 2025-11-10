@@ -4,6 +4,15 @@ from typing import Any, Callable, ClassVar, Literal, Optional, Type
 from pydantic import BaseModel, ConfigDict
 from typer.core import MarkupMode, TyperGroup
 
+# noinspection PyProtectedMember
+from ...config._names import (
+    ExternalPluginLoaderDefinitions as Epdf,
+)
+
+# noinspection PyProtectedMember
+from ...config._names import (
+    InternalPluginLoaderDefinitions as Ipdf,
+)
 from ...names import AppIdentity
 from ...pre_utils import LayerLoader, PublicLayerNames
 
@@ -39,8 +48,8 @@ class TyperArgs(BaseModel, validate_assignment=True):
 
 @dataclass
 class TyperRichPanelNames:
-    internal_plugins: ClassVar[str] = "Built-in plugins"
-    external_plugins: ClassVar[str] = "External plugins"
+    internal_plugins: ClassVar[str] = f"{Ipdf.name.capitalize()} plugins"
+    external_plugins: ClassVar[str] = f"{Epdf.name.capitalize()} plugins"
     messages: ClassVar[str] = "ⓘ Messages"
     callback: ClassVar[str] = f"{AppIdentity.app_fancy_name} global options"
 

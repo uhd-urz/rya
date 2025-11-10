@@ -11,7 +11,13 @@ from ..loggers import get_logger
 from ..names import AppIdentity
 from ..plugins.commons import Typer
 from ..utils import PythonVersionCheckFailed, add_message, get_external_python_version
-from ._plugin_handler import ExternalPluginHandler, InternalPluginHandler, PluginInfo
+from ._plugin_handler import (
+    ExternalPluginHandler,
+    InternalPluginHandler,
+    PluginInfo,
+    ext_plugin_def,
+    int_plugin_def,
+)
 
 logger = get_logger()
 
@@ -61,12 +67,12 @@ class PluginLoader(BaseModel):
     def add_internal_plugins(self, callback: Callable) -> None:
         if PluginLoader._internal_plugins_loaded is True:
             logger.debug(
-                f"{AppIdentity.app_name} internal plugins were loaded once. "
+                f"{AppIdentity.app_name} {int_plugin_def.name} plugins were loaded once. "
                 f"It will not be loaded again "
                 f"unless 'PluginLoader._internal_plugins_loaded' is reset to False."
             )
             return
-        logger.debug(f"{AppIdentity.app_name} will load internal plugins.")
+        logger.debug(f"{AppIdentity.app_name} will load {int_plugin_def.name} plugins.")
         for inter_app_obj in InternalPluginHandler.get_typer_apps():
             if inter_app_obj is not None:
                 app_name = inter_app_obj.info.name
@@ -85,12 +91,12 @@ class PluginLoader(BaseModel):
     ) -> None:
         if PluginLoader._external_plugins_loaded is True:
             logger.debug(
-                f"{AppIdentity.app_name} external plugins were loaded once. "
+                f"{AppIdentity.app_name} {ext_plugin_def.name} plugins were loaded once. "
                 f"It will not be loaded again "
                 f"unless 'PluginLoader._external_plugins_loaded' is reset to False."
             )
             return
-        logger.debug(f"{AppIdentity.app_name} will load external plugins.")
+        logger.debug(f"{AppIdentity.app_name} will load {ext_plugin_def.name} plugins.")
         for plugin_info in ExternalPluginHandler.get_typer_apps(
             PluginLoader.loading_errors
         ):

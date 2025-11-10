@@ -13,6 +13,7 @@ from ..loggers import get_logger
 from ..names import run_early_list
 from ..plugins.commons import Typer
 from ..pre_utils import ResultCallbackHandler, global_log_record_container
+from ._plugin_handler import ext_plugin_def
 from ._plugin_loader import PluginLoader
 from ._venv_state_manager import switch_venv_state
 
@@ -46,6 +47,12 @@ def load_plugins(
 ) -> None:
     plugin_loader.add_internal_plugins(callback=cli_startup_for_plugins)
     PluginLoader._internal_plugins_loaded = True
+    if ext_plugin_def.dir is None:
+        logger.debug(
+            f"{ext_plugin_def.__class__.__name__} attribute 'dir' is None. "
+            f"Loading {ext_plugin_def.name} plugins will be skipped."
+        )
+        return
     plugin_loader.add_external_plugins(
         callback=cli_startup_for_plugins,
         result_callback=cli_cleanup_for_third_party_plugins,
