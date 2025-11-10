@@ -10,6 +10,7 @@ from ..config import AppConfig
 # noinspection PyProtectedMember
 from ..config._model_handler import NoConfigModelRegistrationFound
 from ..loggers import get_logger
+from ..names import run_early_list
 from ..plugins.commons import Typer
 from ..pre_utils import ResultCallbackHandler, global_log_record_container
 from ._plugin_loader import PluginLoader
@@ -43,11 +44,6 @@ def load_plugins(
     cli_startup_for_plugins: Callable,
     cli_cleanup_for_third_party_plugins: Callable,
 ) -> None:
-    should_skip, command = should_skip_cli_startup(plugin_loader.typer_app)
-    if not is_run_with_help_arg():
-        if should_skip:
-            logger.debug(f"Command '{command}' will skip any plugin loading.")
-            return
     plugin_loader.add_internal_plugins(callback=cli_startup_for_plugins)
     PluginLoader._internal_plugins_loaded = True
     plugin_loader.add_external_plugins(
@@ -97,6 +93,14 @@ def check_result_callback_log_container() -> None:
     ):
         global_log_record_container.data.clear()
         ResultCallbackHandler.disable_store_okay()
+
+
+def call_run_early_list() -> None:
+    if run_early_list:
+        logger.debug("run_early_list is non-empty. Early validation will be performed.")
+        early_validated_config = validate_configuration()
+        for func in run_early_list:
+            func(early_validated_config)
 
 
 def cli_switch_venv_state(state: bool, /) -> None:

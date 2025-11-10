@@ -5,7 +5,7 @@ import typer
 from properpath import P
 from typing_extensions import Annotated
 
-from ..config import AppConfig
+from ..config import AppConfig, ConfigMaker
 
 # noinspection PyProtectedMember
 from ..core_validators import Exit
@@ -29,6 +29,7 @@ from ..utils import (
 )
 from ._app_util import user_callback
 from ._cli_handler_utils import (
+    call_run_early_list,
     check_result_callback_log_container,
     cli_cleanup_for_external_plugins,
     cli_switch_venv_state,
@@ -62,7 +63,7 @@ def initiate_cli_startup(app: Typer):
     @app.callback(invoke_without_command=True)
     def cli_startup(config_file: CLIConfigFileType = None) -> None:
         ctx = click.get_current_context()
-        should_skip, _ = should_skip_cli_startup(app, ctx)
+        should_skip, _ = should_skip_cli_startup(app, ctx)  # ctx is not None here
         if is_run_with_help_arg(ctx) or should_skip:
             return
         global_options = {"global_options": {"config_file": config_file}}
@@ -105,13 +106,15 @@ def initiate_cli_startup(app: Typer):
         # in the names/ layer. External plugins should perform the
         # validation themselves.
         calling_sub_command_name = ctx.invoked_subcommand
-        if AppConfig.validated is None or config_file is not None:
+        if (
+            AppConfig.validated is None
+            or len(ConfigMaker.get_all_models()) > 1
+            or config_file is not None
+        ):
             if run_early_list:
                 logger.debug(
-                    f"run_early_list is not empty, but a file with "
-                    f"'{cli_config_file_name}' was passed. "
-                    f"run_early_list functions did not get the latest "
-                    f"validated configuration model."
+                    "run_early_list is not empty. run_early_list functions did "
+                    "not get the latest validated configuration model."
                 )
             validate_configuration()
         show_aggressive_log_message()
@@ -140,21 +143,22 @@ def initiate_cli_startup(app: Typer):
         # callback to global_cli_graceful_callback.
         cli_startup()
 
+    _should_skip, _command = should_skip_cli_startup(app)
+    if _should_skip:
+        logger.debug(
+            f"Command '{_command}' will skip Click-Typer help patch, "
+            f"calling run_early_list, loading plugins, and checking result "
+            f"callback log container."
+        )
+        return
     apply_click_typer_help_patch(app, messages_panel)
-
-    if run_early_list:
-        logger.debug("run_early_list is non-empty. Early validation will be performed.")
-        early_validated_config = validate_configuration()
-        for func in run_early_list:
-            func(early_validated_config)
-
-    plugin_loader = PluginLoader(
-        typer_app=app,
-        internal_plugins_panel_name=TyperRichPanelNames.internal_plugins,
-        external_plugins_panel_name=TyperRichPanelNames.external_plugins,
-    )
+    call_run_early_list()
     load_plugins(
-        plugin_loader,
+        PluginLoader(
+            typer_app=app,
+            internal_plugins_panel_name=TyperRichPanelNames.internal_plugins,
+            external_plugins_panel_name=TyperRichPanelNames.external_plugins,
+        ),
         cli_startup_for_plugins,
         cli_cleanup_for_external_plugins,
     )
