@@ -8,7 +8,6 @@ from typing_extensions import Annotated
 from ..config import AppConfig
 
 # noinspection PyProtectedMember
-from ..config._model_handler import NoConfigModelRegistrationFound
 from ..core_validators import Exit
 from ..loggers import get_logger
 from ..names import AppIdentity, config_file_sources, run_early_list
@@ -36,6 +35,7 @@ from ._cli_handler_utils import (
     is_run_with_help_arg,
     load_plugins,
     should_skip_cli_startup,
+    validate_configuration,
 )
 from ._click_help import apply_click_typer_help_patch
 from ._message_panel import messages_panel
@@ -68,10 +68,7 @@ def initiate_cli_startup(app: Typer):
         global_options = {"global_options": {"config_file": config_file}}
         user_callback(**global_options)
         # GlobalCLICallback is run before configuration validation
-        logger.debug(
-            f"Running {__package__} controlled callback before anything else: "
-            f"{global_cli_super_startup_callback.instance_name}"
-        )
+        logger.debug("Running global callbacks at the CLI startup.")
         global_cli_super_startup_callback.call_callbacks()
 
         def show_aggressive_log_message():
@@ -116,23 +113,9 @@ def initiate_cli_startup(app: Typer):
                     f"run_early_list functions did not get the latest "
                     f"validated configuration model."
                 )
-            AppConfig.validate(errors="ignore", reload=True)
-            if AppConfig.exceptions:
-                for exc in AppConfig.exceptions:
-                    if not isinstance(exc, NoConfigModelRegistrationFound):
-                        logger.debug(
-                            "Not all configuration models were validated successfully. "
-                            "An incomplete or configuration model was used."
-                        )
-                        break
-            else:
-                logger.debug("All configuration models were validated successfully.")
+            validate_configuration()
         show_aggressive_log_message()
-        logger.debug(
-            f"Running '{__package__}' controlled callback "
-            f"after configuration validation: "
-            f"{global_cli_graceful_callback.instance_name}"
-        )
+        logger.debug("Running global callbacks after configuration validation.")
         global_cli_graceful_callback.call_callbacks()
         if calling_sub_command_name is None:
             # This is where we know that the app is run with no sub-commands or options
@@ -161,7 +144,7 @@ def initiate_cli_startup(app: Typer):
 
     if run_early_list:
         logger.debug("run_early_list is non-empty. Early validation will be performed.")
-        early_validated_config = AppConfig.validate(errors="ignore")
+        early_validated_config = validate_configuration()
         for func in run_early_list:
             func(early_validated_config)
 

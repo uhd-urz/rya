@@ -3,7 +3,12 @@ from typing import Callable, Optional
 
 import click
 from click import Context
+from pydantic import BaseModel
 
+from ..config import AppConfig
+
+# noinspection PyProtectedMember
+from ..config._model_handler import NoConfigModelRegistrationFound
 from ..loggers import get_logger
 from ..plugins.commons import Typer
 from ..pre_utils import ResultCallbackHandler, global_log_record_container
@@ -11,6 +16,26 @@ from ._plugin_loader import PluginLoader
 from ._venv_state_manager import switch_venv_state
 
 logger = get_logger()
+
+
+def validate_configuration() -> BaseModel:
+    validated_config = AppConfig.validate(errors="ignore", reload=True)
+    if AppConfig.exceptions:
+        for exc in AppConfig.exceptions:
+            if not isinstance(exc, NoConfigModelRegistrationFound):
+                logger.debug(
+                    "Not all configuration models were validated successfully. "
+                    "An incomplete or configuration model was used."
+                )
+                break
+        else:
+            logger.debug(
+                "The registered configuration models were validated successfully, "
+                "but not all plugins or main app registered configuration models."
+            )
+    else:
+        logger.debug("All configuration models were validated successfully.")
+    return validated_config
 
 
 def load_plugins(

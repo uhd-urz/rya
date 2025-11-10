@@ -21,11 +21,7 @@ def result_callback_wrapper(_, **kwargs):
     if is_run_with_help_arg(ctx) or should_skip:
         return
     user_result_callback(**{"global_options": kwargs})
-    logger.debug(
-        f"Running {__package__} controlled callback with "
-        f"Typer result callback: "
-        f"{global_cli_result_callback.instance_name}"
-    )
+    logger.debug("Running global callbacks with Typer result callback.")
     global_cli_result_callback.call_callbacks()
 
 
