@@ -81,7 +81,7 @@ class InternalPluginLoaderDefinitions(PluginDefinitions):
 class ExternalPluginLoaderDefinitions(PluginDefinitions):
     name: ClassVar[str] = "external"
     directory_name: str = PublicLayerNames.plugins
-    dir: P = app_dirs.user_data_dir / directory_name
+    dir: Optional[P] = app_dirs.user_data_dir / directory_name
     file_name_prefix: str = "plugin_metadata"
     file_ext: str = "toml"
     file_name: str = f"{file_name_prefix}.{file_ext}"

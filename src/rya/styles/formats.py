@@ -4,18 +4,19 @@ from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from csv import DictWriter
 from io import StringIO
-from typing import Any, Optional, Self, Union
+from typing import Any, Optional, Self
 
 import yaml
+from pydantic import BaseModel
 
-from ..pre_utils import generate_pydantic_model_from_abstract_cls
 from ..names import AppIdentity
+from ..pre_utils import generate_pydantic_model_from_abstract_cls
 
 
 class BaseFormat(ABC):
     _registry: dict[str, dict[str, type[Self]]] = {AppIdentity.app_name: {}}
     _names: dict[str, list[str]] = {AppIdentity.app_name: []}
-    _conventions: dict[str, list[str]] = {AppIdentity.app_name: []}
+    _conventions: dict[str, tuple[str]] = {AppIdentity.app_name: []}
 
     # noinspection PyTypeChecker
     def __init_subclass__(cls, **kwargs):
@@ -164,50 +165,27 @@ class TXTFormat(BaseFormat):
         return str(data)
 
 
-class FormatInstantiator:
-    def __init__(self, language: str, *, plugin_name: str):
-        self.plugin_name = plugin_name
-        self._register = language
+class _FormatInstantiator(BaseModel):
+    language: str
+    plugin_name: str
 
-    @property
-    def plugin_name(self) -> str:
-        return self._plugin_name
-
-    @plugin_name.setter
-    def plugin_name(self, value):
-        if not isinstance(value, str):
-            raise ValueError(f"{value} must be an instance of str.")
-        self._plugin_name = value
-
-    @property
-    def _register(self):
-        raise AttributeError(
-            "'_register' isn't meant to be called directly! "
-            "Use attributes 'name' and 'formatter'."
-        )
-
-    @_register.setter
-    def _register(self, value):
+    def __call__(self) -> BaseFormat:
         try:
             supported_formatters = BaseFormat.supported_formatters()[self.plugin_name]
         except KeyError as e:
             raise KeyError(
-                f"Plugin '{self.plugin_name}' not found "
-                f"in registered supported_formatters dictionary!"
+                f"Plugin '{self.plugin_name}' not found in registered "
+                f"{BaseFormat.supported_formatters.__name__} dictionary!"
             ) from e
         for pattern, formatter in supported_formatters.items():
-            if re.match(rf"{pattern or ''}", value, flags=re.IGNORECASE):
-                self.name: str = formatter.name
-                self.conventions: Union[str, Iterable[str]] = formatter.conventions
-                self.formatter: type[BaseFormat] = formatter
-                return
+            if re.match(rf"{pattern or ''}", self.language, flags=re.IGNORECASE):
+                return formatter
         raise FormatError(
-            f"'{value}' isn't a supported language format! "
-            f"Supported formats are: "
+            f"'{self.language}' isn't a supported language format! "
+            f"Supported formats for plugin '{self.plugin_name}' are: "
             f"{BaseFormat.supported_formatter_names(self.plugin_name)}."
         )
 
 
 def get_formatter(language: str, /, *, plugin_name: str) -> BaseFormat:
-    lang = FormatInstantiator(language, plugin_name=plugin_name)
-    return lang.formatter()
+    return _FormatInstantiator(language=language, plugin_name=plugin_name)()

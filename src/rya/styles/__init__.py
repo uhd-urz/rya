@@ -1,5 +1,5 @@
 from .base import stderr_console, stdout_console
-from .formats import BaseFormat, FormatError, FormatInstantiator, get_formatter
+from .formats import BaseFormat, FormatError, _FormatInstantiator, get_formatter
 from .highlight import color_text, make_noted_text, print_typer_error
 from .rich_utils import (
     click_format_help_with_callback,
@@ -13,7 +13,7 @@ __all__ = [
     "BaseFormat",
     "FormatError",
     "get_formatter",
-    "FormatInstantiator",
+    "_FormatInstantiator",
     "make_noted_text",
     "color_text",
     "print_typer_error",

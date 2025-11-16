@@ -6,7 +6,7 @@ from .names import (
     cache_path,
     config_file_sources,
     log_file_sinks,
-    run_early_list
+    run_early_list,
 )
 
 __all__ = [
@@ -17,5 +17,5 @@ __all__ = [
     "cache_path",
     "config_file_sources",
     "log_file_sinks",
-    "run_early_list"
+    "run_early_list",
 ]

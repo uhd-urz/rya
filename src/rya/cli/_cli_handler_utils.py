@@ -43,7 +43,7 @@ def validate_configuration() -> BaseModel:
 def load_plugins(
     plugin_loader: PluginLoader,
     cli_startup_for_plugins: Callable,
-    cli_cleanup_for_third_party_plugins: Callable,
+    cli_cleanup_for_plugins: Callable,
 ) -> None:
     plugin_loader.add_internal_plugins(callback=cli_startup_for_plugins)
     PluginLoader._internal_plugins_loaded = True
@@ -55,7 +55,7 @@ def load_plugins(
         return
     plugin_loader.add_external_plugins(
         callback=cli_startup_for_plugins,
-        result_callback=cli_cleanup_for_third_party_plugins,
+        result_callback=cli_cleanup_for_plugins,
     )
     PluginLoader._external_plugins_loaded = True
 

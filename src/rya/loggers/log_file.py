@@ -1,6 +1,6 @@
 from functools import cache
 from pathlib import Path
-from typing import Generator
+from typing import Generator, Optional
 
 from properpath import P
 from properpath.validators import PathValidationError
@@ -9,7 +9,7 @@ from ..core_validators import (
     PathWriteValidator,
     Validate,
 )
-from ..names import AppIdentity, log_file_sinks
+from ..names import AppIdentity, CacheModel, log_file_sinks
 from ..pre_init import get_cached_data, update_cache
 from ..pre_utils import LoggerDefaults, get_logger
 
@@ -18,9 +18,12 @@ logger = get_logger()
 
 @cache
 def get_log_file_path() -> P:
-    cached_data = get_cached_data()
-    if cached_data.log_file_path:
-        return cached_data.log_file_path
+    cached_data: Optional[CacheModel]
+    cached_data = None
+    if LoggerDefaults.will_cache_log_path:
+        cached_data = get_cached_data()
+        if cached_data.log_file_path:
+            return cached_data.log_file_path
     log_store_paths: Generator[Path | P]
     log_store_paths = (log_file_tuple.path for log_file_tuple in log_file_sinks)
     validate_path = Validate(PathWriteValidator(log_store_paths, err_logger=logger))
@@ -33,7 +36,7 @@ def get_log_file_path() -> P:
         )
         raise e
     else:
-        if LoggerDefaults.will_cache_log_path:
+        if isinstance(cached_data, CacheModel):
             cached_data.log_file_path = log_file_path
             update_cache(cached_data)
             logger.debug(

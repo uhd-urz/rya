@@ -90,7 +90,7 @@ run_early_list: RunEarlyList = RunEarlyList()
 
 # Cache file definitions
 class CacheModel(BaseModel):
-    date: datetime
+    date: datetime = datetime.now()
     log_file_path: Optional[P] = None
 
 

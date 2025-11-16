@@ -11,8 +11,7 @@ logger = get_logger()
 
 def get_cached_data() -> CacheModel:
     def _new_cache() -> CacheModel:
-        cache_ = CacheModel(date=datetime.now())
-        update_cache(cache_)
+        update_cache(cache_ := CacheModel())
         return cache_
 
     raw_cache = json.loads(
@@ -40,8 +39,7 @@ def get_cached_data() -> CacheModel:
 
 def update_cache(cache: CacheModel) -> None:
     if not cache_path.exists():
-        cache_path.parent.mkdir(parents=True, exist_ok=True)
-        cache_path.touch(exist_ok=True)
+        cache_path.create(verbose=False)
     cache.date = datetime.now()
     cache_path.write_text(
         cache.model_dump_json(indent=CacheFileProperties.indent),

@@ -56,7 +56,7 @@ class PluginLoader(BaseModel):
     _internal_plugins_loaded: ClassVar[bool] = False
     _external_plugins_loaded: ClassVar[bool] = False
     loading_errors: ClassVar[bool] = False
-    reserved_plugin_names: ClassVar[list[str]] = ["version", AppIdentity.app_name]
+    reserved_plugin_names: ClassVar[list[str]] = [AppIdentity.app_name]
     loaded_internal_plugins: ClassVar[dict[str, typer.Typer]] = {}
     loaded_external_plugins: ClassVar[dict[str, PluginInfo]] = {}
     commands_to_skip_cli_startup: ClassVar[list] = []

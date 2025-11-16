@@ -59,7 +59,7 @@ class ExportPathWriteValidator(PathWriteValidator):
     def __init__(
         self,
         /,
-        export_path: Union[Iterable, Union[str, P, Path]],
+        export_path: Iterable[str | P | Path] | str | P | Path,
         can_overwrite: bool = False,
     ):
         self.export_path = export_path

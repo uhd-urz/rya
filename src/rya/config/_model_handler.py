@@ -67,9 +67,9 @@ class ConfigMaker:
     ) -> None:
         cls._basic_registry.setdefault(Pdf.config_section_name, {})
         if cls._basic_registry[Pdf.config_section_name].get(plugin_name) is not None:
-            logger.debug(
+            logger.warning(
                 f"Plugin model '{config_model}' for plugin '{plugin_name}' "
-                f"is already registered. New model will not considered."
+                f"is already registered. New model will not be considered."
             )
         else:
             cls._basic_registry[Pdf.config_section_name].setdefault(
@@ -83,9 +83,9 @@ class ConfigMaker:
     @classmethod
     def _register_main_model(cls, config_model: type[BaseModel]) -> None:
         if cls._basic_registry.get("main") is not None:
-            logger.debug(
+            logger.warning(
                 f"Main model '{config_model}' for is already registered. "
-                f"New model will not considered."
+                f"New model will not be considered."
             )
             return
         cls._basic_registry.setdefault(
