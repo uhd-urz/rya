@@ -3,6 +3,7 @@ from .formats import BaseFormat, FormatError, _FormatInstantiator, get_formatter
 from .highlight import color_text, make_noted_text, print_typer_error
 from .rich_utils import (
     click_format_help_with_callback,
+    get_rich_inline_code_text,
     rich_format_help_with_callback,
     update_rich_click_cli_theme,
 )
@@ -20,4 +21,5 @@ __all__ = [
     "rich_format_help_with_callback",
     "click_format_help_with_callback",
     "update_rich_click_cli_theme",
+    "get_rich_inline_code_text",
 ]

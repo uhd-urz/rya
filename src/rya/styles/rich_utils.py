@@ -75,3 +75,22 @@ def update_rich_click_cli_theme(
             f"Default theme '{default_theme}' will be used."
         )
         rc.THEME = default_theme
+
+
+def get_rich_inline_code_text(
+    text: str,
+    *,
+    typer_rich_markup_mode: Optional[str],
+    default_rich_tag: str = "green",
+) -> str:
+    match typer_rich_markup_mode:
+        case "markdown":
+            return f"`{text}`"
+        case "rich-click" | "rich":
+            return f"[{default_rich_tag}]{text}[/{default_rich_tag}]"
+        case None:
+            return text
+        case _:
+            raise ValueError(
+                f"Invalid Typer rich_markup_mode '{typer_rich_markup_mode}'."
+            )
