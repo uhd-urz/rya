@@ -2,16 +2,17 @@ import logging
 
 from .._vendor import haggis
 from .._vendor.haggis.logs import add_logging_level
-from ._basic_debug_mode import get_debug_mode_envvar, load_basic_debug_mode
 from ._callbacks import (
     global_cli_graceful_callback,
     global_cli_result_callback,
     global_cli_super_startup_callback,
 )
 from ._data_list import DataObjectList
+from ._debug_builtins import BuiltInDebugModeShortcuts
+from ._debug_mode import DebugMode, DebugModeTuple, get_debug_mode_envvar
 from ._exit import Exit
 from ._layer_loader import LayerLoader, PublicLayerNames
-from ._log_state import LogState
+from ._logger_state import LoggerState
 from ._loggers import (
     AppRichHandler,
     AppRichHandlerArgs,
@@ -76,17 +77,19 @@ __all__ = [
     "get_logger",
     "get_simple_logger",
     "global_log_record_container",
-    "LogState",
+    "LoggerState",
     "app_rich_handler_args",
     "add_logging_level",
     "global_cli_result_callback",
     "global_cli_graceful_callback",
     "global_cli_super_startup_callback",
     "Exit",
-    "load_basic_debug_mode",
     "get_debug_mode_envvar",
     "PublicLayerNames",
     "RunEarlyList",
     "detected_click_feedback",
     "SafeCWD",
+    "BuiltInDebugModeShortcuts",
+    "DebugMode",
+    "DebugModeTuple",
 ]

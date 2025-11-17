@@ -18,7 +18,7 @@ from ..plugins.commons._names import (
     TyperGlobalOptions,
     TyperRichPanelNames,
 )
-from ..pre_utils import ConfigFileTuple, load_basic_debug_mode
+from ..pre_utils import ConfigFileTuple, DebugMode
 from ..styles import (
     print_typer_error,
 )
@@ -47,7 +47,7 @@ logger = get_logger()
 
 
 def initiate_cli_startup(app: Typer):
-    load_basic_debug_mode(AppIdentity.app_name, reload=True)
+    DebugMode(AppIdentity.app_name).load(reload=True, verbose=False)
     # noinspection PyPep8Naming
     CLIConfigFileType = Annotated[
         Optional[str],
