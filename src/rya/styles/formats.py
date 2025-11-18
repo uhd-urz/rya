@@ -25,26 +25,26 @@ class BaseFormat(ABC):
             BaseFormat, exclude=("__call__",)
         )
         attrs_cls(**cls.__dict__)
-        if cls.plugin_name not in cls._registry:
-            cls._registry[cls.plugin_name] = {}
-            cls._registry[cls.plugin_name].update(cls._registry[AppIdentity.app_name])
-        if cls.plugin_name not in cls._names:
-            cls._names[cls.plugin_name] = []
-            cls._names[cls.plugin_name] += cls._names[AppIdentity.app_name]
-        if cls.plugin_name not in cls._conventions:
-            cls._conventions[cls.plugin_name] = []
-            cls._conventions[cls.plugin_name] += cls._conventions[AppIdentity.app_name]
+        if cls.identifier not in cls._registry:
+            cls._registry[cls.identifier] = {}
+            cls._registry[cls.identifier].update(cls._registry[AppIdentity.app_name])
+        if cls.identifier not in cls._names:
+            cls._names[cls.identifier] = []
+            cls._names[cls.identifier] += cls._names[AppIdentity.app_name]
+        if cls.identifier not in cls._conventions:
+            cls._conventions[cls.identifier] = []
+            cls._conventions[cls.identifier] += cls._conventions[AppIdentity.app_name]
         if cls.name is None:
-            if cls.plugin_name == AppIdentity.app_name:
+            if cls.identifier == AppIdentity.app_name:
                 raise ValueError(
-                    f"Attribute 'name' cannot be None for when plugin_name "
+                    f"Attribute 'name' cannot be None for when identifier "
                     f"is {AppIdentity.app_name} as it will "
                     f"remove {AppIdentity.app_name} built-in formats."
                 )
-            existing_cls = cls._registry[cls.plugin_name].pop(cls.pattern)
+            existing_cls = cls._registry[cls.identifier].pop(cls.pattern)
             try:
-                cls._names[cls.plugin_name].remove(existing_cls.name)
-                cls._conventions[cls.plugin_name].remove(existing_cls.conventions)
+                cls._names[cls.identifier].remove(existing_cls.name)
+                cls._conventions[cls.identifier].remove(existing_cls.conventions)
             except ValueError as e:
                 raise KeyError(
                     f"Attribute 'name' is None, which will remove "
@@ -52,11 +52,11 @@ class BaseFormat(ABC):
                     f"but class {cls!r} was never registered before!"
                 ) from e
         else:
-            cls._registry[cls.plugin_name][cls.pattern] = cls
-            if cls.name not in cls._names[cls.plugin_name]:
-                cls._names[cls.plugin_name].append(cls.name)
-            if cls.conventions not in cls._conventions[cls.plugin_name]:
-                cls._conventions[cls.plugin_name].append(cls.conventions)
+            cls._registry[cls.identifier][cls.pattern] = cls
+            if cls.name not in cls._names[cls.identifier]:
+                cls._names[cls.identifier].append(cls.name)
+            if cls.conventions not in cls._conventions[cls.identifier]:
+                cls._conventions[cls.identifier].append(cls.conventions)
 
     @property
     @abstractmethod
@@ -72,23 +72,23 @@ class BaseFormat(ABC):
 
     @property
     @abstractmethod
-    def plugin_name(self) -> Optional[str]: ...
+    def identifier(self) -> Optional[str]: ...
 
     @classmethod
     def supported_formatters(
-        cls, plugin_name: Optional[str] = None
+        cls, identifier: Optional[str] = None
     ) -> dict[str, dict[str, type[Self]]] | dict[str, type[Self]]:
-        if plugin_name is None:
+        if identifier is None:
             return cls._registry
-        return cls._registry[plugin_name]
+        return cls._registry[identifier]
 
     @classmethod
     def supported_formatter_names(
-        cls, plugin_name: Optional[str] = None
+        cls, identifier: Optional[str] = None
     ) -> dict[str, list[str]] | list[str]:
-        if plugin_name is None:
+        if identifier is None:
             return cls._names
-        return cls._names[plugin_name]
+        return cls._names[identifier]
 
     @property
     @abstractmethod
@@ -105,7 +105,7 @@ class JSONFormat(BaseFormat):
     name: str = "json"
     conventions: tuple[str] = (name,)
     pattern: str = r"^json$"
-    plugin_name: str = AppIdentity.app_name
+    identifier: str = AppIdentity.app_name
 
     def __call__(self, data: Any) -> str:
         return json.dumps(
@@ -117,7 +117,7 @@ class YAMLFormat(BaseFormat):
     name: str = "yaml"
     conventions: tuple[str] = ("yml", "yaml")
     pattern: str = r"^ya?ml$"
-    plugin_name: str = AppIdentity.app_name
+    identifier: str = AppIdentity.app_name
 
     def __call__(self, data: Any) -> str:
         return yaml.dump(data, indent=2, allow_unicode=True, sort_keys=False)
@@ -127,7 +127,7 @@ class CSVFormat(BaseFormat):
     name: str = "csv"
     conventions: tuple[str] = (name,)
     pattern: str = r"^csv$"
-    plugin_name: str = AppIdentity.app_name
+    identifier: str = AppIdentity.app_name
 
     def __call__(self, data: Any) -> str:
         with StringIO() as csv_buffer:
@@ -159,7 +159,7 @@ class TXTFormat(BaseFormat):
     name: str = "txt"
     conventions: tuple[str] = ("txt",)
     pattern: str = r"^txt|text|plaintext$"
-    plugin_name: str = AppIdentity.app_name
+    identifier: str = AppIdentity.app_name
 
     def __call__(self, data: Any) -> str:
         return str(data)
@@ -167,14 +167,14 @@ class TXTFormat(BaseFormat):
 
 class _FormatInstantiator(BaseModel):
     language: str
-    plugin_name: str
+    identifier: str
 
     def __call__(self) -> BaseFormat:
         try:
-            supported_formatters = BaseFormat.supported_formatters()[self.plugin_name]
+            supported_formatters = BaseFormat.supported_formatters()[self.identifier]
         except KeyError as e:
             raise KeyError(
-                f"Plugin '{self.plugin_name}' not found in registered "
+                f"Plugin '{self.identifier}' not found in registered "
                 f"{BaseFormat.supported_formatters.__name__} dictionary!"
             ) from e
         for pattern, formatter in supported_formatters.items():
@@ -182,10 +182,10 @@ class _FormatInstantiator(BaseModel):
                 return formatter
         raise FormatError(
             f"'{self.language}' isn't a supported language format! "
-            f"Supported formats for plugin '{self.plugin_name}' are: "
-            f"{BaseFormat.supported_formatter_names(self.plugin_name)}."
+            f"Supported formats for plugin '{self.identifier}' are: "
+            f"{BaseFormat.supported_formatter_names(self.identifier)}."
         )
 
 
-def get_formatter(language: str, /, *, plugin_name: str) -> BaseFormat:
-    return _FormatInstantiator(language=language, plugin_name=plugin_name)()
+def get_formatter(language: str, /, *, identifier: str) -> BaseFormat:
+    return _FormatInstantiator(language=language, identifier=identifier)()
