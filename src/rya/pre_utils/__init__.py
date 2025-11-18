@@ -9,10 +9,11 @@ from ._callbacks import (
 )
 from ._data_list import DataObjectList
 from ._debug_builtins import BuiltInDebugModeShortcuts
-from ._debug_mode import DebugMode, DebugModeTuple, get_debug_mode_envvar
+from ._debug_mode import DebugMode, get_debug_mode_envvar
 from ._exit import Exit
 from ._layer_loader import LayerLoader, PublicLayerNames
 from ._logger_state import LoggerState
+from ._logger_state_utils import LoggerStateFlags, LoggerStateTuple, LoggerUpdateRel
 from ._loggers import (
     AppRichHandler,
     AppRichHandlerArgs,
@@ -91,5 +92,7 @@ __all__ = [
     "SafeCWD",
     "BuiltInDebugModeShortcuts",
     "DebugMode",
-    "DebugModeTuple",
+    "LoggerStateTuple",
+    "LoggerUpdateRel",
+    "LoggerStateFlags",
 ]

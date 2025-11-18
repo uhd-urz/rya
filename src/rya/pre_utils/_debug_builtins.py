@@ -6,6 +6,8 @@ from pydantic import BaseModel
 
 from ._exit import Exit
 from ._logger_state import LoggerState
+from ._logger_state_utils import LoggerStateFlags, LoggerStateTuple, LoggerUpdateRel
+from ._loggers import AppRichHandler
 
 
 # noinspection PyUnusedLocal
@@ -15,7 +17,14 @@ def _star_debug_mode_sc(reload: bool = False, verbose: bool = True, **kwargs) ->
         LoggerState._last_int_state = None
     LoggerState.switch_int_state(logging.DEBUG, verbose=verbose)
     LoggerState.switch_package_state(
-        logging.DEBUG, package_name=None, update_stderr_handler=True, verbose=verbose
+        LoggerStateTuple(
+            package_name=LoggerStateFlags.ALL,
+            level=logging.DEBUG,
+            logger_update_rel=LoggerUpdateRel(
+                old=logging.StreamHandler, new=AppRichHandler
+            ),
+        ),
+        verbose=verbose,
     )
 
 
@@ -30,7 +39,7 @@ def _core_debug_mode_sc(reload: bool = False, verbose: bool = True, **kwargs) ->
 # noinspection PyUnusedLocal
 def _o_debug_mode_sc(**kwargs) -> None:
     Exit.SYSTEM_EXIT = True
-    LoggerState.reset_states()
+    LoggerState.reset_levels()
 
 
 class _CallableSc(BaseModel, validate_assignment=True):
