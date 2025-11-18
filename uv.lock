@@ -233,7 +233,7 @@ wheels = [
 
 [[package]]
 name = "rya"
-version = "0.2.32"
+version = "0.2.33"
 source = { editable = "." }
 dependencies = [
     { name = "click" },
