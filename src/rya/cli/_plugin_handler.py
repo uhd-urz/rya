@@ -22,7 +22,8 @@ from ..config._names import (
 )
 from ..core_validators import Validate, ValidationError, Validator
 from ..loggers import get_logger
-from ..pre_utils import SafeCWD
+from ..names import AppIdentity
+from ..pre_utils import LayerLoader, SafeCWD
 from ..utils import add_message, get_dynaconf_core_loader
 from ._venv_state_manager import switch_venv_state
 
@@ -66,10 +67,11 @@ class InternalPluginHandler:
             )
             module = importlib.util.module_from_spec(spec)
             sys.modules[spec.name] = module
+            # noinspection PyProtectedMember
             module.__package__ = f"{
                 __package__.replace(
-                    cls._current_layer_name, int_plugin_def.directory_name
-                )
+                    LayerLoader._self_app_name, AppIdentity.app_name, 1
+                ).replace(cls._current_layer_name, int_plugin_def.directory_name, 1)
             }.{plugin_name}"
             # Since we use relative imports, Python will try to find the module
             # relative to the __package__ path. Without this module.__package__

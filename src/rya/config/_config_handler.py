@@ -32,10 +32,14 @@ class BadConfigurationFile(Exception): ...
 class ConfigurationValidationError(Exception): ...
 
 
+AppConfigErrorRaiseType = Literal["raise", "ignore", "ignore+"]
+ExpectedConfigModelType = "Union[BaseModel, ConfigModel]"
+
+
 class AppConfig:
     _dynaconf_settings: Optional[Dynaconf] = None
     dynaconf_args: DynaConfArgs = DynaConfArgs()
-    validated: BaseModel = None
+    validated: ExpectedConfigModelType = None
     exceptions: list[Exception] = []
 
     class PluginConfigModel(BaseModel): ...
@@ -58,39 +62,43 @@ class AppConfig:
         cls,
         config_loader_func: Callable,
         source_name: Optional[str],
-        errors: Literal["raise", "ignore"] = "raise",
+        errors: AppConfigErrorRaiseType = "raise",
     ) -> Optional[BaseModel]:
         try:
             called_loader = config_loader_func()
         except (ScannerError, TOMLDecodeError) as e:
-            logger.warning(
-                f"Configuration file(s) could not be scanned. {source_name} could "
-                f"not be loaded. Exception details: {e}"
-            )
+            if errors != "ignore+":
+                logger.warning(
+                    f"Configuration file(s) could not be scanned. {source_name} could "
+                    f"not be loaded. Exception details: {e}"
+                )
             cls.exceptions.append(e)
-            if errors == "raise":
-                cls.exceptions.append(e)
-                raise BadConfigurationFile from e
-            elif errors == "ignore":
-                return None
+            match errors:
+                case "raise":
+                    cls.exceptions.append(e)
+                    raise BadConfigurationFile from e
+                case "ignore" | "ignore+":
+                    return None
         except ValidationError as e:
             cls.exceptions.append(e)
-            logger.warning(
-                f"{source_name} for validation was unsuccessful. Exception details: {e}"
-            )
-            if errors == "raise":
-                raise e
-            elif errors == "ignore":
-                return None
+            if errors != "ignore+":
+                logger.warning(
+                    f"{source_name} validation was unsuccessful. Exception details: {e}"
+                )
+            match errors:
+                case "raise":
+                    raise e
+                case "ignore" | "ignore+":
+                    return None
         else:
             return called_loader
 
     @classmethod
     def validate(
         cls,
-        errors: Literal["raise", "ignore"] = "raise",
+        errors: AppConfigErrorRaiseType = "raise",
         reload: bool = False,
-    ) -> BaseModel:
+    ) -> ExpectedConfigModelType:
         try:
             validated_main_model = cls.main_validate(errors=errors, reload=reload)
         except NoConfigModelRegistrationFound as e:
@@ -134,7 +142,7 @@ class AppConfig:
     @classmethod
     def main_validate(
         cls,
-        errors: Literal["raise", "ignore"] = "raise",
+        errors: AppConfigErrorRaiseType = "raise",
         reload: bool = False,
     ) -> BaseModel:
         main_model_data: PluginConfigStructType = ConfigMaker.get_main_model()
@@ -153,7 +161,7 @@ class AppConfig:
     @classmethod
     def plugins_validate(
         cls,
-        errors: Literal["raise", "ignore"] = "raise",
+        errors: AppConfigErrorRaiseType = "raise",
         reload: bool = False,
     ) -> BaseModel:
         plugins_models_data: PluginsConfigStructType = ConfigMaker.get_plugins_models()

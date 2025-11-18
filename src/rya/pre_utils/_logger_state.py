@@ -50,7 +50,7 @@ class LoggerState:
                         }
                     if update_stderr_handler:
                         if handler.__class__ is logging.StreamHandler:
-                            package_logger.handlers.remove(handler)
+                            package_logger.removeHandler(handler)
                             package_logger.addHandler(
                                 AppRichHandler(app_rich_handler_args)
                             )

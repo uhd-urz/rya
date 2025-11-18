@@ -21,7 +21,7 @@ logger = get_logger()
 
 
 def validate_configuration() -> BaseModel:
-    validated_config = AppConfig.validate(errors="ignore", reload=True)
+    validated_config = AppConfig.validate(errors="ignore+", reload=True)
     if AppConfig.exceptions:
         for exc in AppConfig.exceptions:
             if not isinstance(exc, NoConfigModelRegistrationFound):
