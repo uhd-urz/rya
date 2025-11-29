@@ -32,7 +32,11 @@ class DebugMode:
     @classmethod
     def add_shortcut(cls, name: str, action: Callable | LoggerStateTuple) -> None:
         if name in cls._registered_shortcuts:
-            raise ValueError(f"Debug mode shortcut '{name}' already exists.")
+            logger.warning(
+                f"Debug mode shortcut '{name}' is already registered. "
+                f"Re-registration will not be considered."
+            )
+            return
         if not isinstance(action, (Callable, LoggerStateTuple)):
             raise TypeError(
                 f"Argument 'action' for debug mode shortcut "

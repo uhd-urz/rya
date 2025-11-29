@@ -124,5 +124,6 @@ def cli_switch_venv_state(state: bool, /) -> None:
             switch_venv_state(state, venv_dir, project_dir)
 
 
+# noinspection PyUnusedLocal
 def cli_cleanup_for_external_plugins(*args, **kwargs) -> None:
     cli_switch_venv_state(False)

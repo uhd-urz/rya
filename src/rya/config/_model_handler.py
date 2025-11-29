@@ -69,7 +69,7 @@ class ConfigMaker:
         if cls._basic_registry[Pdf.config_section_name].get(plugin_name) is not None:
             logger.warning(
                 f"Plugin model '{config_model}' for plugin '{plugin_name}' "
-                f"is already registered. New model will not be considered."
+                f"is already registered. Re-registration will not be considered."
             )
         else:
             cls._basic_registry[Pdf.config_section_name].setdefault(
@@ -85,7 +85,7 @@ class ConfigMaker:
         if cls._basic_registry.get("main") is not None:
             logger.warning(
                 f"Main model '{config_model}' for is already registered. "
-                f"New model will not be considered."
+                f"Re-registration will not be considered."
             )
             return
         cls._basic_registry.setdefault(

@@ -48,8 +48,8 @@ class TyperArgs(BaseModel, validate_assignment=True):
 
 @dataclass
 class TyperRichPanelNames:
-    internal_plugins: ClassVar[str] = f"{Ipdf.name.capitalize()} plugins"
-    external_plugins: ClassVar[str] = f"{Epdf.name.capitalize()} plugins"
+    internal_plugins: ClassVar[Optional[str]] = f"{Ipdf.name.capitalize()} plugins"
+    external_plugins: ClassVar[Optional[str]] = f"{Epdf.name.capitalize()} plugins"
     messages: ClassVar[str] = "ⓘ Messages"
     callback: ClassVar[str] = f"{AppIdentity.app_fancy_name} global options"
 

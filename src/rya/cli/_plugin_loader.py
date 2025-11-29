@@ -61,8 +61,8 @@ class PluginLoader(BaseModel):
     loaded_external_plugins: ClassVar[dict[str, PluginInfo]] = {}
     commands_to_skip_cli_startup: ClassVar[list] = []
     typer_app: typer.Typer
-    internal_plugins_panel_name: str
-    external_plugins_panel_name: str
+    internal_plugins_panel_name: Optional[str]
+    external_plugins_panel_name: Optional[str]
 
     def add_internal_plugins(self, callback: Callable) -> None:
         if PluginLoader._internal_plugins_loaded is True:
@@ -82,7 +82,8 @@ class PluginLoader(BaseModel):
                 )
                 self.typer_app.add_typer(
                     inter_app_obj,
-                    rich_help_panel=self.internal_plugins_panel_name,
+                    rich_help_panel=inter_app_obj.rich_help_panel
+                    or self.internal_plugins_panel_name,
                     callback=callback,
                 )
 
@@ -214,7 +215,8 @@ class PluginLoader(BaseModel):
                     PluginLoader.commands_to_skip_cli_startup.append(ext_app_name)
                     self.typer_app.add_typer(
                         ext_app_obj,
-                        rich_help_panel=self.external_plugins_panel_name,
+                        rich_help_panel=ext_app_obj.rich_help_panel
+                        or self.external_plugins_panel_name,
                         callback=callback,
                         result_callback=result_callback,
                     )
