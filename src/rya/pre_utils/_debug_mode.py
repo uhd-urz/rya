@@ -1,4 +1,5 @@
-from typing import Callable, ClassVar
+from collections.abc import Callable
+from typing import ClassVar
 
 from dynaconf import Dynaconf
 
@@ -24,7 +25,7 @@ def get_debug_mode_envvar(envvar_prefix: str, reload: bool = False) -> str:
 
 
 class DebugMode:
-    _registered_shortcuts: ClassVar[dict[str, Callable]] = {}
+    _registered_shortcuts: ClassVar[dict[str, Callable | LoggerStateTuple]] = {}
 
     def __init__(self, envvar_prefix: str) -> None:
         self.envvar_prefix = envvar_prefix
@@ -37,7 +38,7 @@ class DebugMode:
                 f"Re-registration will not be considered."
             )
             return
-        if not isinstance(action, (Callable, LoggerStateTuple)):
+        if not (callable(action) or isinstance(action, LoggerStateTuple)):
             raise TypeError(
                 f"Argument 'action' for debug mode shortcut "
                 f"'{name}' must be a callable or a {LoggerStateTuple.__name__}."

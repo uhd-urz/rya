@@ -11,7 +11,7 @@ from pydantic.fields import FieldInfo
 from ..loggers import get_logger
 
 logger = get_logger()
-FieldConfigStructType = dict[str, dict[str, FieldInfo | list[str]]]
+FieldConfigStructType = dict[str, dict[str, FieldInfo | list[str] | str]]
 FieldsConfigStructType = dict[str, FieldConfigStructType]
 
 
@@ -19,14 +19,14 @@ FieldsConfigStructType = dict[str, FieldConfigStructType]
 def get_pydantic_nested_model_fields(
     model: type[BaseModel],
 ) -> FieldConfigStructType:
-    main_fields: dict[str, dict[str, FieldInfo | list[str]]] = {}
+    main_fields: FieldConfigStructType = {}
 
     def read_model(
         current_model: type[BaseModel], current_parent: Optional[list[str]] = None
     ) -> None:
         for field_name, field_info in current_model.model_fields.items():
-            current_parent: list[str] = current_parent or []
-            new_parent: list[str] = current_parent + [field_name]
+            current_parent_: list[str] = current_parent or []
+            new_parent: list[str] = current_parent_ + [field_name]
             if not is_pydantic_model(field_info.annotation, new_parent):
                 main_fields[".".join(new_parent)] = {
                     "name": field_name,

@@ -7,6 +7,7 @@ from enum import StrEnum
 from types import ModuleType
 from typing import Callable, Optional, get_type_hints
 
+import click
 import typer
 from properpath import P
 from pydantic import BaseModel, create_model
@@ -16,7 +17,7 @@ LocalImportsType = dict[str, dict[str, type[object] | Callable | ModuleType]]
 
 @dataclass
 class _DetectedClickFeedback:
-    context: Optional[typer.Context]
+    context: typer.Context | click.Context | None
     command_names: Optional[str]
 
 
@@ -40,9 +41,9 @@ def is_platform_unix() -> bool:
 def generate_pydantic_model_from_abstract_cls(
     abs_cls: type[ABC], /, exclude: Optional[tuple[str]] = None
 ) -> type[BaseModel]:
-    exclude = exclude or ()
+    exclude_ = exclude or ()
     abs_fields: dict[str, tuple[type, ...]] = {}
-    abs_methods = [_ for _ in abs_cls.__abstractmethods__ if _ not in exclude]
+    abs_methods = [_ for _ in abs_cls.__abstractmethods__ if _ not in exclude_]
     for abs_method_name in abs_methods:
         abs_cls_attribute = getattr(abs_cls, abs_method_name)
         if isinstance(abs_cls_attribute, property):
@@ -55,7 +56,7 @@ def generate_pydantic_model_from_abstract_cls(
             )
         # noinspection PyTypeChecker
         abs_fields[abs_method_name] = (attribute_return_type, ...)
-    return create_model(f"{abs_cls.__name__}Attrs", **abs_fields)
+    return create_model(f"{abs_cls.__name__}Attrs", **abs_fields)  # type: ignore[call-overload]
 
 
 def get_local_imports(

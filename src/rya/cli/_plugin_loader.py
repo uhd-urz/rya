@@ -28,14 +28,17 @@ def disable_plugin(
     *,
     plugin_name: str,
     err_msg: str,
-    panel_name: str,
+    panel_name: Optional[str],
     short_reason: Optional[str] = None,
 ):
     add_message(err_msg, logging.WARNING)
     for i, registered_app in enumerate(main_app.registered_groups):
-        if plugin_name == registered_app.typer_instance.info.name:
-            main_app.registered_groups.pop(i)
-            break
+        if registered_app.typer_instance is not None:
+            # typer_instance should not be none in actuality,
+            # but the type hint from Typer allows it.
+            if plugin_name == registered_app.typer_instance.info.name:
+                main_app.registered_groups.pop(i)
+                break
     help_message = (
         f"🚫️ Disabled{' due to ' + short_reason if short_reason is not None else ''}. "
         f"See `--help` or log file to know more."
@@ -60,7 +63,7 @@ class PluginLoader(BaseModel):
     loaded_internal_plugins: ClassVar[dict[str, typer.Typer]] = {}
     loaded_external_plugins: ClassVar[dict[str, PluginInfo]] = {}
     commands_to_skip_cli_startup: ClassVar[list] = []
-    typer_app: typer.Typer
+    typer_app: Typer
     internal_plugins_panel_name: Optional[str]
     external_plugins_panel_name: Optional[str]
 
@@ -75,7 +78,7 @@ class PluginLoader(BaseModel):
         logger.debug(f"{AppIdentity.app_name} will load {int_plugin_def.name} plugins.")
         for inter_app_obj in InternalPluginHandler.get_typer_apps():
             if inter_app_obj is not None:
-                app_name = inter_app_obj.info.name
+                app_name: str = inter_app_obj.info.name  # type: ignore[assignment]
                 PluginLoader.loaded_internal_plugins[app_name] = inter_app_obj
                 PluginLoader.commands_to_skip_cli_startup.append(
                     inter_app_obj.info.name

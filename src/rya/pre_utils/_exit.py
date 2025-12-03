@@ -22,7 +22,7 @@ class Exit(BaseExit):
     else:
         SYSTEM_EXIT = True
 
-    def __new__(cls, *args, **kwargs) -> SystemExit | Self:
+    def __new__(cls, *args, **kwargs) -> SystemExit | Self:  # type: ignore[misc]
         global_cli_result_callback.call_callbacks()
         if cls.SYSTEM_EXIT:
             return SystemExit(*args)

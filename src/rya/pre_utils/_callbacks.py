@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, Optional
 
 from ._data_list import DataObjectList
 from ._loggers import get_logger
@@ -7,7 +7,7 @@ logger = get_logger()
 
 
 class CallbackList(DataObjectList[Callable]):
-    def __init__(self, items: list[Callable] = None):
+    def __init__(self, items: Optional[list[Callable]] = None):
         super().__init__(items, run_before=self.check_duplicates)
 
     @staticmethod

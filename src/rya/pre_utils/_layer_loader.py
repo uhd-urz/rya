@@ -72,7 +72,13 @@ class LayerLoader:
                 yield from filter(cls._filter_object_item, objects.items())
 
     @classmethod
-    def _load_module(cls, layer_name: str) -> ModuleType:
+    def _load_module(cls, layer_name: str) -> Optional[ModuleType]:
+        if cls._self_app_name is None or cls._app_name is None:
+            raise RuntimeError(
+                f"Both _self_app_name and _app_name class attributes "
+                f"of {LayerLoader.__name__} must be set. Bootstrap mode will not "
+                f"be enabled."
+            )
         module_name = __package__.replace(cls._self_app_name, cls._app_name).replace(
             cls._current_layer_name, layer_name
         )

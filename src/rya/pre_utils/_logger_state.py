@@ -1,6 +1,5 @@
 import logging
 from collections import defaultdict
-from collections.abc import Iterable
 from typing import Optional
 
 from ._logger_state_utils import (
@@ -15,8 +14,8 @@ logger = get_logger()
 
 class LoggerState:
     _last_int_state: Optional[int] = None
-    _original_states: dict[str, dict[str, tuple[logging.Handler, int]]] = defaultdict(
-        dict
+    _original_states: dict[str, dict[Optional[str], tuple[logging.Handler, int]]] = (
+        defaultdict(dict)
     )
 
     @staticmethod
@@ -32,13 +31,12 @@ class LoggerState:
 
     @staticmethod
     def modify_package_logger_state(logger_state_tuple: LoggerStateTuple) -> None:
-        package_loggers: Iterable[logging.Logger] = []
+        package_loggers: list[logging.Logger | logging.PlaceHolder] = []
         logger_state_changed: bool = False
         match logger_state_tuple.package_name:
             case LoggerStateFlags.ALL:
-                package_loggers = logging.root.manager.loggerDict.values()
+                package_loggers = list(logging.root.manager.loggerDict.values())
             case _:
-                package_loggers: list[logging.Logger]
                 for logger_name, logger_obj in logging.root.manager.loggerDict.items():
                     if logger_name.startswith(logger_state_tuple.package_name):
                         package_loggers.append(logger_obj)
@@ -69,6 +67,7 @@ class LoggerState:
                         x_handler.setLevel(logger_state_tuple.level)
                         logger_state_changed = True
                     if logger_state_changed:
+                        # x_handler.name here is the handler name which can also be None apparently.
                         if (
                             x_handler.name
                             not in LoggerState._original_states[logger_name]

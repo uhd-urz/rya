@@ -22,11 +22,11 @@ class Typer(typer.Typer):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.commands_skip_cli_startup: list[str] = []
-        self.no_arg_command: Optional[Callable] = None
+        self.commands_skip_cli_startup: list[str] = []  # type: ignore[annotation-unchecked]
+        self.no_arg_command: Optional[Callable] = None  # type: ignore[annotation-unchecked]
 
     @staticmethod
-    def _preload_ctx_feedback(ctx: typer.Context) -> None:
+    def _preload_ctx_feedback(ctx: typer.Context | click.Context) -> None:
         commands: list[str] = []
         if ctx.command.name:
             while ctx.parent:

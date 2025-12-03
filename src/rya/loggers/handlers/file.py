@@ -10,9 +10,9 @@ class AppFileHandlerArgs(BaseModel, validate_assignment=True):
     filename: P
     mode: str = "a"
     encoding: Optional[str] = None
-    delay: Optional[bool] = False
+    delay: bool = False
     errors: Optional[str] = None
-    os_errors: Literal["strict", "ignore"] = "ignore"
+    os_errors: Literal["raise", "ignore"] = "ignore"
     level: int = logging.INFO
     formatter: logging.Formatter = Field(
         default=logging.Formatter(
@@ -44,7 +44,7 @@ class AppFileHandler(logging.FileHandler):
             )
         except self.file.PathException as e:
             match self.args.os_errors:
-                case "strict":
+                case "raise":
                     raise e
                 case "ignore":
                     pass

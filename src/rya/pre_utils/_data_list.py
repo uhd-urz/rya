@@ -42,7 +42,7 @@ class DataObjectList[T](UserList):
             self.run_before(self.data, value)
         self.__value = value
 
-    def __setitem__(self, index: int, item: T) -> None:
+    def __setitem__(self, index: int, item: T) -> None:  # type: ignore[override]
         self._last_item = item
         self.data[index] = item
 
@@ -53,10 +53,10 @@ class DataObjectList[T](UserList):
         self._last_item = item
         self.data.insert(index, self._last_item)
 
-    def extend(self, items: list[T]):
-        for item in items:
+    def extend(self, other: list[T]):  # type: ignore[override]
+        for item in other:
             self.append(item)
 
-    def __iadd__(self, items: list[T]):
-        self.extend(items)
+    def __iadd__(self, other: list[T]):  # type: ignore[override,misc]
+        self.extend(other)
         return self

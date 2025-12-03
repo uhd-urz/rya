@@ -95,11 +95,17 @@ def initiate_cli_startup(app: Typer):
                 )
                 if config_file_tuple not in config_file_sources:
                     config_file_sources.append(config_file_tuple)
-                AppConfig.dynaconf_args.settings_files.append(str(cli_config_file))
-                logger.debug(
-                    f"The following config files will be used: "
-                    f"{', '.join(AppConfig.dynaconf_args.settings_files)}"
-                )
+                if AppConfig.dynaconf_args.settings_files is None:
+                    AppConfig.dynaconf_args.settings_files = []
+                # Even when AppConfig.dynaconf_args.settings_files is None,
+                # --config-file can be passed. For now, the global option
+                # --config-file cannot be disabled.
+                if isinstance(AppConfig.dynaconf_args.settings_files, list):
+                    AppConfig.dynaconf_args.settings_files.append(str(cli_config_file))
+                    logger.debug(
+                        f"The following config files will be used: "
+                        f"{', '.join(AppConfig.dynaconf_args.settings_files)}"
+                    )
         # If an external/internal plugin adds a new config file to dynaconf_args,
         # it will not be validated (i.e., validation is only performed once).
         # Internal plugins should rely on a fixed number of config files added
