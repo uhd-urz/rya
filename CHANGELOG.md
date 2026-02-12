@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.37] - 2025-02-12
+
+This release refactors and breaks some APIs of `styles.BaseFormat`.
+
+| Old                         | New                                 |
+|-----------------------------|-------------------------------------|
+| `supported_formatters`      | `get_all_supported_formatters`      |
+| `supported_formatter_names` | `get_all_supported_formatter_names` |
+|                             | `get_supported_formatters`          |
+|                             | `get_supported_formatter_names`     |
+
 ## [0.2.24] - 2025-11-07
 
 The third beta release of Rya that replaces the old AGPL license with the permissive MIT license. Thanks

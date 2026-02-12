@@ -16,7 +16,7 @@ from ..pre_utils import generate_pydantic_model_from_abstract_cls
 class BaseFormat(ABC):
     _registry: dict[str, dict[str, type[Self]]] = {AppIdentity.app_name: {}}
     _names: dict[str, list[str]] = {AppIdentity.app_name: []}
-    _conventions: dict[str, tuple[str]] = {AppIdentity.app_name: []}
+    _conventions: dict[str, tuple[str] | list[str]] = {AppIdentity.app_name: []}
 
     # noinspection PyTypeChecker
     def __init_subclass__(cls, **kwargs):
@@ -65,7 +65,9 @@ class BaseFormat(ABC):
     @property
     @abstractmethod
     def conventions(self) -> Optional[tuple[str, ...]]:
-        return self.name
+        if self.name is None:
+            return None
+        return tuple(self.name)
 
     @conventions.setter
     def conventions(self, value): ...
@@ -75,19 +77,19 @@ class BaseFormat(ABC):
     def identifier(self) -> Optional[str]: ...
 
     @classmethod
-    def supported_formatters(
-        cls, identifier: Optional[str] = None
-    ) -> dict[str, dict[str, type[Self]]] | dict[str, type[Self]]:
-        if identifier is None:
-            return cls._registry
+    def get_all_supported_formatters(cls) -> dict[str, dict[str, type[Self]]]:
+        return cls._registry
+
+    @classmethod
+    def get_supported_formatters(cls, identifier: str) -> dict[str, type[Self]]:
         return cls._registry[identifier]
 
     @classmethod
-    def supported_formatter_names(
-        cls, identifier: Optional[str] = None
-    ) -> dict[str, list[str]] | list[str]:
-        if identifier is None:
-            return cls._names
+    def get_all_supported_formatter_names(cls) -> dict[str, list[str]]:
+        return cls._names
+
+    @classmethod
+    def get_supported_formatter_names(cls, identifier: str) -> list[str]:
         return cls._names[identifier]
 
     @property
@@ -115,7 +117,7 @@ class JSONFormat(BaseFormat):
 
 class YAMLFormat(BaseFormat):
     name: str = "yaml"
-    conventions: tuple[str] = ("yml", "yaml")
+    conventions: tuple[str, str] = ("yml", "yaml")
     pattern: str = r"^ya?ml$"
     identifier: str = AppIdentity.app_name
 
@@ -165,27 +167,28 @@ class TXTFormat(BaseFormat):
         return str(data)
 
 
-class _FormatInstantiator(BaseModel):
+class _FormatterDeterminer(BaseModel):
     language: str
     identifier: str
 
-    def __call__(self) -> BaseFormat:
+    def get_cls(self) -> type[BaseFormat]:
         try:
-            supported_formatters = BaseFormat.supported_formatters()[self.identifier]
+            supported_formatters = BaseFormat.get_supported_formatters(self.identifier)
         except KeyError as e:
             raise KeyError(
                 f"Plugin '{self.identifier}' not found in registered "
-                f"{BaseFormat.supported_formatters.__name__} dictionary!"
+                f"{BaseFormat.get_all_supported_formatters.__name__} dictionary!"
             ) from e
-        for pattern, formatter in supported_formatters.items():
+        for pattern, formatter_cls in supported_formatters.items():
             if re.match(rf"{pattern or ''}", self.language, flags=re.IGNORECASE):
-                return formatter
+                return formatter_cls
         raise FormatError(
             f"'{self.language}' isn't a supported language format! "
             f"Supported formats for plugin '{self.identifier}' are: "
-            f"{BaseFormat.supported_formatter_names(self.identifier)}."
+            f"{BaseFormat.get_supported_formatter_names(self.identifier)}."
         )
 
 
 def get_formatter(language: str, /, *, identifier: str) -> BaseFormat:
-    return _FormatInstantiator(language=language, identifier=identifier)()
+    # The second set of parentheses instantiates a subclass of BaseFormat (e.g., TXTFormat)
+    return _FormatterDeterminer(language=language, identifier=identifier).get_cls()()
