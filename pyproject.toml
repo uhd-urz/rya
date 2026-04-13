@@ -5,15 +5,15 @@ requires-python = ">=3.12,<4"
 description = "rya is a Python application bootstrapper."
 dependencies = [
     "rich>=14.1.0,< 14.2.0",
-    "dynaconf>=3.2.0,<4",
+    "dynaconf>=3.2.13,<4",
     "typer>=0.17.4",
     "pyyaml==6.0.2",
     "click>=8.1.8,<8.2",
     "colorama>=0.4.6",
-    "platformdirs>=4.4.0",
+    "platformdirs>=4.6.0",
     "pydantic>=2.11.10,<2.13",
     "properpath>=0.2.12",
-    "rich-click>=1.9.4",
+    "rich-click>=1.9.7",
 ]
 readme = "README.md"
 authors = [{ name = "Alexander Haller, Mahadi Xion", email = "elabftw@uni-heidelberg.de" }]
