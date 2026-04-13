@@ -35,8 +35,9 @@ class DataObjectList[T](UserList):
             )
         if not isinstance(value, used_generic_type):
             raise TypeError(
-                f"{self.__class__.__name__} only accepts "
-                f"'{used_generic_type.__name__}' as values."
+                f"{self.__class__.__name__} only accepts values of type "
+                f"'{used_generic_type.__name__}'. Given object is "
+                f"of type '{used_generic_type}'."
             )
         if self.run_before is not None:
             self.run_before(self.data, value)
