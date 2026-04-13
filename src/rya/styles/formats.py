@@ -64,10 +64,10 @@ class BaseFormat(ABC):
 
     @property
     @abstractmethod
-    def conventions(self) -> Optional[tuple[str, ...]]:
+    def conventions(self) -> Optional[tuple[str | None, ...]]:
         if self.name is None:
             return None
-        return tuple(self.name)
+        return (self.name,)
 
     @conventions.setter
     def conventions(self, value): ...
