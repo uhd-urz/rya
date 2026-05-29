@@ -131,7 +131,7 @@ class AppConfig:
             )
             cls.validated = model(
                 **validated_main_model.model_dump(),
-                **{Pdf.config_section_name: validated_plugins_models.__class__},
+                **{Pdf.config_section_name: validated_plugins_models},
             )
             return cls.validated
 
