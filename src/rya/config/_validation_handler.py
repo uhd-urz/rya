@@ -1,3 +1,4 @@
+import types
 from collections.abc import Callable
 from types import EllipsisType
 from typing import Literal, Optional
@@ -13,8 +14,8 @@ from ..loggers import get_logger
 from ._model_handler import (
     ConfigMaker,
     NoConfigModelRegistrationFound,
-    PluginConfigStructType,
-    PluginsConfigStructType,
+    _PluginConfigType,
+    _PluginsConfigType,
 )
 from ._names import DynaConfArgs
 from ._names import PluginDefinitions as Pdf
@@ -33,23 +34,29 @@ class ConfigurationValidationError(Exception): ...
 
 
 AppConfigErrorRaiseType = Literal["raise", "ignore", "ignore+"]
-ExpectedConfigModelType = "Union[BaseModel, ConfigModel]"
 
 
 class AppConfig:
-    _dynaconf_settings: Optional[Dynaconf] = None
-    dynaconf_args: DynaConfArgs = DynaConfArgs()
-    validated: ExpectedConfigModelType = None
-    exceptions: list[Exception] = []
-
-    class PluginConfigModel(BaseModel): ...
+    PluginConfigModel: type[BaseModel] = types.new_class(
+        f"{Pdf.config_section_name.capitalize()}ConfigModel",
+        (BaseModel,),
+    )
 
     class ConfigModel(BaseModel): ...
 
+    _dynaconf_settings: Dynaconf
+    dynaconf_args: DynaConfArgs = DynaConfArgs()
+    validated: BaseModel = create_model(
+        f"Incomplete{ConfigModel.__name__}",
+        __base__=ConfigModel,
+    )()
+    exceptions: list[Exception] = []
+
     @classmethod
     def load_settings(cls, reload: bool = False) -> None:
-        if cls._dynaconf_settings is None or reload is True:
+        if not hasattr(cls, "_dynaconf_settings"):
             cls._dynaconf_settings = get_dynaconf_settings(cls.dynaconf_args)
+        if reload is True:
             cls._dynaconf_settings.reload()
 
     @classmethod
@@ -98,7 +105,7 @@ class AppConfig:
         cls,
         errors: AppConfigErrorRaiseType = "raise",
         reload: bool = False,
-    ) -> ExpectedConfigModelType:
+    ) -> BaseModel:
         try:
             validated_main_model = cls.main_validate(errors=errors, reload=reload)
         except NoConfigModelRegistrationFound as e:
@@ -120,10 +127,11 @@ class AppConfig:
             model = create_model(
                 validated_main_model.__class__.__name__,
                 __base__=validated_main_model.__class__,
-                plugins=validated_plugins_models.__class__,
+                **{Pdf.config_section_name: validated_plugins_models.__class__},
             )
             cls.validated = model(
-                **validated_main_model.model_dump(), plugins=validated_plugins_models
+                **validated_main_model.model_dump(),
+                **{Pdf.config_section_name: validated_plugins_models.__class__},
             )
             return cls.validated
 
@@ -145,7 +153,7 @@ class AppConfig:
         errors: AppConfigErrorRaiseType = "raise",
         reload: bool = False,
     ) -> BaseModel:
-        main_model_data: PluginConfigStructType = ConfigMaker.get_main_model()
+        main_model_data: _PluginConfigType = ConfigMaker.get_main_model()
         main_model = main_model_data["model"]
         validated_plugin_model = cls._handle_config_errors(
             lambda: cls._main_validate(main_model, reload=reload),
@@ -164,7 +172,7 @@ class AppConfig:
         errors: AppConfigErrorRaiseType = "raise",
         reload: bool = False,
     ) -> BaseModel:
-        plugins_models_data: PluginsConfigStructType = ConfigMaker.get_plugins_models()
+        plugins_models_data: _PluginsConfigType = ConfigMaker.get_plugins_models()
         plugins_validated_models: dict[str, tuple[type[BaseModel], EllipsisType]] = {}
         plugins_validated_model_instances: dict[str, BaseModel] = {}
         plugin_model_shell: type[BaseModel] = cls.PluginConfigModel
@@ -190,8 +198,8 @@ class AppConfig:
         )
         plugin_model_shell = create_model(
             plugin_model_name,
-            **plugins_validated_models,
             __base__=plugin_model_shell,
+            **plugins_validated_models,
         )
         return plugin_model_shell(**plugins_validated_model_instances)
 
