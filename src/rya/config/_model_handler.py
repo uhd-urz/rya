@@ -86,7 +86,7 @@ class ConfigMaker:
             logger.warning(
                 f"Plugin model '{config_model}' for plugin '{plugin_name}' "
                 f"is already registered. Re-registration will not be considered. "
-                f"Pass 'force_reregister = True' to force re-registration."
+                f"Pass 'force_reregister=True' to force re-registration."
             )
             return
         if force_reregister:
@@ -105,7 +105,7 @@ class ConfigMaker:
         if cls._main_config_model and not force_reregister:
             logger.warning(
                 f"Main model '{config_model}' for is already registered. "
-                f"Re-registration will not be considered. Pass 'force_reregister = True' "
+                f"Re-registration will not be considered. Pass 'force_reregister=True' "
                 f"to force re-registration."
             )
             return
