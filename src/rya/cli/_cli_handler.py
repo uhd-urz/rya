@@ -76,13 +76,15 @@ def initiate_cli_startup(app: Typer):
             for log_data in messages_list:
                 message, level, logger_, is_aggressive = log_data
                 if is_aggressive is True:
+                    # noinspection PyNoneFunctionAssignment
                     logger.log(level, message) if logger_ is None else logger_.log(
                         level, message
                     )
 
-        cli_config_file_name: str = "CLI --config-file"
+        cli_config_file_name: str = f"CLI {TyperGlobalOptions.config_file[0]}"
         if config_file is not None:
             try:
+                # noinspection PyTypeChecker
                 cli_config_file = P(config_file)
             except (ValueError, TypeError) as conf_val_exc:
                 print_typer_error(str(conf_val_exc))
