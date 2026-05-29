@@ -82,7 +82,7 @@ class ConfigMaker:
         *,
         force_reregister: bool = False,
     ) -> None:
-        if cls._plugins_config_model.get(plugin_name):
+        if cls._plugins_config_model.get(plugin_name) and not force_reregister:
             logger.warning(
                 f"Plugin model '{config_model}' for plugin '{plugin_name}' "
                 f"is already registered. Re-registration will not be considered. "
