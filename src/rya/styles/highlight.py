@@ -1,7 +1,8 @@
-import click
 from colorama import Fore
 from rich.padding import Padding
 from rich.text import Text
+from typer._click import ClickException
+from typer._click.globals import get_current_context
 from typer.rich_utils import rich_format_error
 
 
@@ -19,6 +20,7 @@ def color_text(text: str, /, ansi_color: str) -> str:
 
 
 def print_typer_error(error_message: str) -> None:
-    exception = click.ClickException(error_message)
-    exception.ctx = click.get_current_context()
+    exception = ClickException(error_message)
+    # This extra ctx attribute is added so we can inspect the context later.
+    exception.ctx = get_current_context()  # type: ignore[attr-defined]
     rich_format_error(exception)

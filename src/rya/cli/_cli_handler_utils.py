@@ -1,9 +1,9 @@
 from sys import argv
 from typing import Callable, Optional
 
-import click
-from click import Context
 from pydantic import BaseModel
+from typer._click import Context
+from typer._click.globals import get_current_context
 
 from ..config import AppConfig
 
@@ -111,7 +111,12 @@ def call_run_early_list() -> None:
 
 
 def cli_switch_venv_state(state: bool, /) -> None:
-    ctx = click.get_current_context()
+    ctx = get_current_context()
+    if ctx.command.name is None:
+        raise RuntimeError(
+            f"{cli_switch_venv_state.__name__} can only work when "
+            f"ctx.command.name is not None."
+        )
     try:
         venv_dir, project_dir = (
             PluginLoader.loaded_external_plugins[ctx.command.name].venv,

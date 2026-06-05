@@ -1,14 +1,14 @@
 import operator
 from typing import Callable, Iterable, Optional
 
-import click
 import rich_click.rich_click as rc
-from click import Context, HelpFormatter
+import typer._click as click
 from pydantic import BaseModel
 from rich.text import Text
 from rich_click.rich_click_theme import RichClickThemeNotFound
-from typer.core import MarkupMode
-from typer.rich_utils import rich_format_help
+from typer._click import Context, HelpFormatter
+from typer.core import TyperGroup
+from typer.rich_utils import MarkupModeStrict, rich_format_help
 
 from ..pre_utils import get_logger
 
@@ -17,9 +17,9 @@ logger = get_logger()
 
 def rich_format_help_with_callback(
     *,
-    obj: click.Command | click.Group,
+    obj: click.Command | TyperGroup,
     ctx: Context,
-    markup_mode: MarkupMode,
+    markup_mode: MarkupModeStrict,
     callback: Optional[Iterable[Callable]] = None,
     result_callback: Optional[Iterable[Callable]] = None,
 ) -> None:

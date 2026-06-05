@@ -1,9 +1,10 @@
 from functools import wraps
 from typing import Callable, Optional
 
-import click
 import typer
+import typer._click as click
 from rich_click.patch import patch_typer
+from typer._click.globals import get_current_context
 from typer.models import CommandFunctionType
 
 from ...loggers import get_logger
@@ -76,7 +77,7 @@ class Typer(typer.Typer):
         def custom_decorator(func):
             @wraps(func)
             def wrapper(*wrapper_args, **wrapper_kwargs):
-                ctx = click.get_current_context()
+                ctx = get_current_context()
                 self._preload_ctx_feedback(ctx)
                 return func(*wrapper_args, **wrapper_kwargs)
 

@@ -1,8 +1,8 @@
 from typing import Optional
 
-import click
 import typer
 from properpath import P
+from typer._click.globals import get_current_context
 from typing_extensions import Annotated
 
 from ..config import AppConfig, ConfigMaker
@@ -62,7 +62,7 @@ def initiate_cli_startup(app: Typer):
 
     @app.callback(invoke_without_command=True)
     def cli_startup(config_file: CLIConfigFileType = None) -> None:
-        ctx = click.get_current_context()
+        ctx = get_current_context()
         should_skip, _ = should_skip_cli_startup(app, ctx)  # ctx is not None here
         if is_run_with_help_arg(ctx) or should_skip:
             return

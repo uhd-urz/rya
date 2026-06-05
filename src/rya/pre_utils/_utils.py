@@ -7,7 +7,7 @@ from enum import StrEnum
 from types import ModuleType
 from typing import Callable, Optional, get_type_hints
 
-import click
+import typer._click as click
 import typer
 from properpath import P
 from pydantic import BaseModel, create_model

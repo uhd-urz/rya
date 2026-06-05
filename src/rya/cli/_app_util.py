@@ -1,4 +1,4 @@
-import click
+from typer._click.globals import get_current_context
 
 from ..loggers import get_logger
 from ..plugins.commons import Typer
@@ -16,7 +16,7 @@ logger = get_logger()
 def result_callback_wrapper(_, **kwargs):
     # **kwargs is passed because the arguments from @app.callback
     # are automatically passed here as well
-    ctx = click.get_current_context()
+    ctx = get_current_context()
     should_skip, _ = should_skip_cli_startup(app, ctx)
     if is_run_with_help_arg(ctx) or should_skip:
         return
