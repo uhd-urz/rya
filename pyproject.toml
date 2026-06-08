@@ -1,6 +1,6 @@
 [project]
 name = "rya"
-version = "0.2.38"
+version = "0.2.39"
 requires-python = ">=3.12,<4"
 description = "rya is a Python application bootstrapper."
 dependencies = [
@@ -12,7 +12,7 @@ dependencies = [
     "colorama>=0.4.6",
     "pydantic>=2.11.10",
     "properpath>=0.2.12",
-    "rich-click>=1.9.7",
+    "rich-click>=1.9.8",
 ]
 readme = "README.md"
 authors = [{ name = "Alexander Haller, Mahadi Xion", email = "elabftw@uni-heidelberg.de" }]
