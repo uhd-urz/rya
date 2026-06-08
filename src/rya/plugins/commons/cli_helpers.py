@@ -1,3 +1,4 @@
+import warnings
 from functools import wraps
 from typing import Callable, Optional
 
@@ -11,7 +12,8 @@ from ...pre_utils import detected_click_feedback
 from ._names import TyperArgs
 
 if TyperArgs().rich_markup_mode == "rich-click":
-    patch_typer()
+    with warnings.catch_warnings(action="ignore", category=RuntimeWarning):
+        patch_typer()
 
 logger = get_logger()
 
