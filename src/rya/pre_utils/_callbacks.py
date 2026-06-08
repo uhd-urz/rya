@@ -41,6 +41,7 @@ class _Callback:
                     self.in_a_call = True
                     func()
                 self._callbacks.clear()
+                self.in_a_call = False
 
     def get_callbacks(self) -> CallbackList:
         return self._callbacks

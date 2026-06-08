@@ -64,6 +64,7 @@ class DynaConfArgs(BaseModel, validate_assignment=True):
 @dataclass
 class PluginDefinitions:
     dir: Optional[P]
+    cls_attr_name: ClassVar[str] = "plugin_name"
     typer_app_file_name_prefix: str = "cli"
     typer_app_file_name: str = f"{typer_app_file_name_prefix}.py"
     typer_app_var_name: str = "app"

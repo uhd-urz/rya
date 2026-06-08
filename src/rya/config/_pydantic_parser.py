@@ -1,5 +1,5 @@
 from functools import lru_cache
-from typing import Optional, Union, get_args, get_origin
+from typing import Optional, TypedDict, Union, get_args, get_origin
 
 from pydantic import BaseModel
 
@@ -11,15 +11,23 @@ from pydantic.fields import FieldInfo
 from ..loggers import get_logger
 
 logger = get_logger()
-FieldConfigStructType = dict[str, dict[str, FieldInfo | list[str] | str]]
-FieldsConfigStructType = dict[str, FieldConfigStructType]
+
+FieldConfigType = TypedDict(
+    "FieldConfigType",
+    {
+        "name": str,
+        "nested_relation": list[str],
+        "field_info": FieldInfo,
+    },
+)
+FieldsConfigType = dict[str, FieldConfigType]
 
 
 @lru_cache(maxsize=128, typed=True)
 def get_pydantic_nested_model_fields(
     model: type[BaseModel],
-) -> FieldConfigStructType:
-    main_fields: FieldConfigStructType = {}
+) -> FieldsConfigType:
+    main_fields: FieldsConfigType = {}
 
     def read_model(
         current_model: type[BaseModel], current_parent: Optional[list[str]] = None

@@ -1,4 +1,4 @@
-from ._config_handler import AppConfig, get_dynaconf_settings
+from ._validation_handler import AppConfig, get_dynaconf_settings
 from ._model_handler import ConfigMaker
 
 __all__ = [
