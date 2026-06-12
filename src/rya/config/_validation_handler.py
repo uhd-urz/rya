@@ -14,7 +14,7 @@ from ..loggers import get_logger
 from ._model_handler import (
     ConfigMaker,
     NoConfigModelRegistrationFound,
-    _PluginConfigType,
+    PluginConfigType,
     _PluginsConfigType,
 )
 from ._names import DynaConfArgs
@@ -153,7 +153,7 @@ class AppConfig:
         errors: AppConfigErrorRaiseType = "raise",
         reload: bool = False,
     ) -> BaseModel:
-        main_model_data: _PluginConfigType = ConfigMaker.get_main_model()
+        main_model_data: PluginConfigType = ConfigMaker.get_main_model()
         main_model = main_model_data["model"]
         validated_plugin_model = cls._handle_config_errors(
             lambda: cls._main_validate(main_model, reload=reload),
