@@ -19,21 +19,13 @@ from ._model_handler import (
 )
 from ._names import DynaConfArgs
 from ._names import PluginDefinitions as Pdf
+from .exceptions import BadConfigurationFile, IncompleteConfigModelAccessError
 
 logger = get_logger()
 
 
 def get_dynaconf_settings(dynaconf_args_: DynaConfArgs, /) -> Dynaconf:
     return Dynaconf(**dynaconf_args_.model_dump())
-
-
-class BadConfigurationFile(Exception): ...
-
-
-class ConfigurationValidationError(Exception): ...
-
-
-class IncompleteConfigModelAccessError(AttributeError): ...
 
 
 AppConfigErrorRaiseType = Literal["raise", "ignore", "ignore+"]
