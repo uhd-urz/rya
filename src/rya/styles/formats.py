@@ -10,7 +10,7 @@ import yaml
 from pydantic import BaseModel
 
 from ..names import AppIdentity
-from ..pre_utils import generate_pydantic_model_from_abstract_cls
+from ..kernel import generate_pydantic_model_from_abstract_cls
 
 
 class BaseFormat(ABC):

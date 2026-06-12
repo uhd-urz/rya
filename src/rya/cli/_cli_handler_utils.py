@@ -12,7 +12,7 @@ from ..config._model_handler import NoConfigModelRegistrationFound
 from ..loggers import get_logger
 from ..names import run_early_list
 from ..plugins.commons import Typer
-from ..pre_utils import ResultCallbackHandler, global_log_record_container
+from ..kernel import ResultCallbackHandler, global_log_record_container
 from ._plugin_handler import ext_plugin_def
 from ._plugin_loader import PluginLoader
 from ._venv_state_manager import switch_venv_state

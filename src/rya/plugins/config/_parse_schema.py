@@ -8,7 +8,7 @@ from rich.markup import escape
 
 from ...config import AllConfigModelsType, AppConfig, FieldsConfigType
 from ...config._names import PluginDefinitions as Pdf
-from ...pre_utils import Missing
+from ...kernel import Missing
 from ._names import (
     ConfDescDefinition,
 )

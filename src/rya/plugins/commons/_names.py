@@ -14,7 +14,7 @@ from ...config._names import (
     InternalPluginLoaderDefinitions as Ipdf,
 )
 from ...names import AppIdentity
-from ...pre_utils import LayerLoader, PublicLayerNames
+from ...kernel import LayerLoader, PublicLayerNames
 
 
 class TyperArgs(BaseModel, validate_assignment=True):

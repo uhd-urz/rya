@@ -9,7 +9,7 @@ from properpath import P
 from pydantic.types import PositiveInt
 
 from ..names import AppIdentity
-from ..pre_utils import PublicLayerNames, get_logger
+from ..kernel import PublicLayerNames, get_logger
 
 logger = get_logger()
 

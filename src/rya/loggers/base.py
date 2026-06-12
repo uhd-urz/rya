@@ -2,7 +2,7 @@ from logging import Handler
 from typing import Optional
 
 from ..names import log_file_sinks
-from ..pre_utils import (
+from ..kernel import (
     AppRichHandler,
     LoggerDefaults,
     LoggerMaker,

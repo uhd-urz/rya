@@ -18,7 +18,7 @@ from ..plugins.commons._names import (
     TyperGlobalOptions,
     TyperRichPanelNames,
 )
-from ..pre_utils import ConfigFileTuple, DebugMode
+from ..kernel import ConfigFileTuple, DebugMode
 from ..styles import (
     print_typer_error,
 )

@@ -1,7 +1,7 @@
 import logging
 from typing import Optional
 
-from ..pre_utils import DataObjectList
+from ..kernel import DataObjectList
 from ..loggers import LogMessageData
 
 

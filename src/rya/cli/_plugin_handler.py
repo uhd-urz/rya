@@ -23,7 +23,7 @@ from ..config._names import (
 from ..core_validators import Validate, ValidationError, Validator
 from ..loggers import get_logger
 from ..names import AppIdentity
-from ..pre_utils import LayerLoader, SafeCWD
+from ..kernel import LayerLoader, SafeCWD
 from ..utils import add_message, get_dynaconf_core_loader
 from ._venv_state_manager import switch_venv_state
 

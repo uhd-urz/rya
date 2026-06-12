@@ -17,7 +17,7 @@ __all__ = [
 ]
 
 
-from ..pre_utils import (
+from ..kernel import (
     AppRichHandler,
     AppRichHandlerArgs,
     LoggerMaker,

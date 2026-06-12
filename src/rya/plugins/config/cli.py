@@ -6,7 +6,7 @@ import typer
 from rich.table import Table
 
 from ...config import ConfigMaker
-from ...pre_utils import Exit
+from ...kernel import Exit
 from ...styles import print_typer_error, stdout_console
 from ..commons import Typer
 from ._names import ConfigDisplayOptionDefaults, _ConfigInternalDisplayOptionDefaults

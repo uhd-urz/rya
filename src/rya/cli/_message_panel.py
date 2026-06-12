@@ -12,7 +12,7 @@ from ..names import AppIdentity
 
 # noinspection PyProtectedMember
 from ..plugins.commons._names import TyperRichPanelNames
-from ..pre_utils import LoggerDefaults
+from ..kernel import LoggerDefaults
 from ..styles import (
     make_noted_text,
     stderr_console,

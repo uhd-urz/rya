@@ -11,7 +11,7 @@ from ..core_validators import (
 )
 from ..names import AppIdentity, CacheModel, log_file_sinks
 from ..pre_init import get_cached_data, update_cache
-from ..pre_utils import LoggerDefaults, get_logger
+from ..kernel import LoggerDefaults, get_logger
 
 logger = get_logger()
 

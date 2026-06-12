@@ -26,7 +26,7 @@ class PublicLayerNames:
 class LayerLoader:
     _bootstrap_mode: ClassVar[bool] = False
     _root_installation_dir: ClassVar[None | P | Path] = None
-    _current_layer_name: ClassVar[str] = "pre_utils"
+    _current_layer_name: ClassVar[str] = "kernel"
     _app_name: ClassVar[Optional[str]] = None
     _self_app_name: ClassVar[Optional[str]] = None
     logger = get_logger(name=__package__)

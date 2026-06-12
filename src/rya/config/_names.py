@@ -5,7 +5,7 @@ from properpath import P
 from pydantic import BaseModel
 
 from ..names import AppIdentity, app_dirs, config_file_sources
-from ..pre_utils import LayerLoader, PublicLayerNames, get_dynaconf_core_loader
+from ..kernel import LayerLoader, PublicLayerNames, get_dynaconf_core_loader
 
 
 class DynaConfArgs(BaseModel, validate_assignment=True):
