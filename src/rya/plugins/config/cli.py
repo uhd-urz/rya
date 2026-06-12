@@ -123,4 +123,4 @@ def show(
     if unique_config_files:
         stdout_console.print("\n[bold]Unique Configuration Files:[/bold]")
         for k, v in unique_config_files.items():
-            stdout_console.print(f"- {k}: {v} match(es)")
+            stdout_console.print(f"- {k}: {v} matched")
