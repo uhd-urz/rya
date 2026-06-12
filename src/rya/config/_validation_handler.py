@@ -33,13 +33,27 @@ class BadConfigurationFile(Exception): ...
 class ConfigurationValidationError(Exception): ...
 
 
+class IncompleteConfigModelAccessError(AttributeError): ...
+
+
 AppConfigErrorRaiseType = Literal["raise", "ignore", "ignore+"]
+
+
+class IncompleteConfigPlaceholder(BaseModel):
+    def __getattr__(self, item):
+        raise IncompleteConfigModelAccessError(
+            f"Attribute '{item}' could not be read because the model that would "
+            f"have the attribute was not instantiated. This likely means that "
+            f"a configuration field is missing or of invalid type, "
+            f"so model validation failed. Try manually validating the "
+            f"model with 'AppConfig.validate' model, and debug the error"
+        )
 
 
 class AppConfig:
     PluginConfigModel: type[BaseModel] = types.new_class(
         f"{Pdf.config_section_name.capitalize()}ConfigModel",
-        (BaseModel,),
+        (IncompleteConfigPlaceholder,),
     )
 
     class ConfigModel(BaseModel): ...
@@ -163,6 +177,7 @@ class AppConfig:
         if validated_plugin_model is None:
             return create_model(
                 f"Incomplete{main_model.__name__}",
+                __base__=IncompleteConfigPlaceholder,
             )()
         return validated_plugin_model
 
