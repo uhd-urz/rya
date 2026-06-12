@@ -1,7 +1,6 @@
 from typing import Any
 
 from dynaconf import LazySettings
-from dynaconf.utils import inspect
 from pydantic.experimental.missing_sentinel import MISSING
 from pydantic.fields import FieldInfo
 from pydantic_core import PydanticUndefined
@@ -9,6 +8,7 @@ from rich.markup import escape
 
 from ...config import AllConfigModelsType, AppConfig, FieldsConfigType
 from ...config._names import PluginDefinitions as Pdf
+from ...pre_utils import Missing
 from ._names import (
     ConfDescDefinition,
 )
@@ -302,7 +302,18 @@ def _get_field_config_result(
         field_name, _default_or_missing(field_info)
     )
     field_location = get_dynaconf_settings_history(
-        dynaconf_settings, field_name=field_name, default=[{"identifier": "NOT FOUND"}]
+        dynaconf_settings,
+        field_name=field_name,
+        default=[
+            {
+                "identifier": str(
+                    Missing(
+                        "LOCATION NOT FOUND",
+                        rich_color="red",
+                    )
+                )
+            }
+        ],
     )[-1]["identifier"]
     match field_info.json_schema_extra:
         case dict():
@@ -322,6 +333,14 @@ def _get_field_config_result(
                                 config_description=config_description,
                                 filter_=filters,
                             ):
+                                if field_value is MISSING:
+                                    return ConfigDisplayValues(
+                                        key=field_name,
+                                        value=str(Missing(rich_color="red")),
+                                        description=config_description.description,
+                                        unit=None,
+                                        location=field_location,
+                                    )
                                 if _is_field_secret(field_info, config_description):
                                     return ConfigDisplayValues(
                                         key=field_name,
@@ -360,6 +379,12 @@ def _get_field_config_result(
                 config_description=None,
                 filter_=filters,
             ):
+                if field_value is MISSING:
+                    return ConfigDisplayValues(
+                        key=field_name,
+                        value=str(Missing(rich_color="red")),
+                        location=field_location,
+                    )
                 if _is_field_secret(field_info, config_description=None):
                     return ConfigDisplayValues(
                         key=field_name,
