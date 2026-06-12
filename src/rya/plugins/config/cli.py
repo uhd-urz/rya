@@ -118,7 +118,9 @@ def show(
                         for _i, _c in enumerate(column_names):
                             table.columns[_i].header = _c
                         table.add_row(*rows)
-    stdout_console.print(table)
-    stdout_console.print("\n[bold]Unique Configuration Files:[/bold]")
-    for k, v in unique_config_files.items():
-        stdout_console.print(f"- {k}: {v} field(s)")
+    if table.row_count > 0:
+        stdout_console.print(table)
+    if unique_config_files:
+        stdout_console.print("\n[bold]Unique Configuration Files:[/bold]")
+        for k, v in unique_config_files.items():
+            stdout_console.print(f"- {k}: {v} match(es)")
