@@ -64,9 +64,15 @@ run_early_list: RunEarlyList = RunEarlyList()
 
 
 # Cache file definitions
+class CLILayerCacheModel(BaseModel):
+    internal_plugins: list[str] | None = None
+    external_plugins: list[str] | None = None
+
+
 class CacheModel(BaseModel):
     date: datetime = datetime.now()
     log_file_path: Optional[P] = None
+    cli_layer: CLILayerCacheModel | None = None
 
 
 @dataclass(frozen=True)

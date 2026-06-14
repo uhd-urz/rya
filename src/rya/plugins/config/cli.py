@@ -5,6 +5,7 @@ from typing import Annotated, Optional
 import typer
 from rich.table import Table
 
+from ._meta import get_app_meta_info
 from ._names import ConfigDisplayOptionDefaults, _ConfigInternalDisplayOptionDefaults
 from ._parse_schema import (
     _add_include_options_to_display_values,
@@ -20,12 +21,13 @@ from .utils import (
 from ..commons import Typer
 from ...config import ConfigMaker
 from ...kernel import Exit
+from ...names import AppIdentity
 from ...styles import print_typer_error, stdout_console
 
-app = Typer(name="config", short_help="Manage configuration.", no_args_is_help=True)
+app = Typer(name="config", help="Manage configuration.", no_args_is_help=True)
 
 
-@app.command(name="show", short_help="Display all configuration values.")
+@app.command(name="show", help="Display configuration values.")
 def show(
     key_name: Annotated[
         Optional[str], typer.Argument(help="Configuration key name.")
@@ -123,3 +125,14 @@ def show(
         stdout_console.print("\n[bold]Unique Configuration Files:[/bold]")
         for k, v in unique_config_files.items():
             stdout_console.print(f"- {k}: {v} matched")
+
+
+@app.command(name="meta", help=f"Show {AppIdentity.app_fancy_name} meta information.")
+def meta():
+    table = Table(box=None, show_header=True)
+    table.add_column("", overflow="fold", no_wrap=False)
+    table.add_column("", overflow="fold", no_wrap=False)
+    stdout_console.print(f"[bold]{AppIdentity.app_fancy_name} meta information:[/bold]")
+    for key, val in get_app_meta_info().items():
+        table.add_row(f"[magenta]{key}[/magenta]", str(val))
+    stdout_console.print(table)

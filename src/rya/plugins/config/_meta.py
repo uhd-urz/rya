@@ -1,0 +1,43 @@
+from properpath import P
+
+from ...config._names import (
+    ExternalPluginLoaderDefinitions,
+    InternalPluginLoaderDefinitions,
+)
+from ...kernel import PublicLayerNames
+from ...loggers import get_log_file_path, LogFileNotGivenError
+from ...names import app_locations
+from ...pre_init import get_cached_data
+
+
+def get_app_meta_info() -> dict:
+    log_file_path: str | P
+    try:
+        log_file_path = get_log_file_path()
+    except LogFileNotGivenError:
+        log_file_path = "Not used"
+    ext_plugin_defs = ExternalPluginLoaderDefinitions()
+    int_plugin_defs = InternalPluginLoaderDefinitions()
+    loaded_internal_plugins = getattr(
+        get_cached_data().cli_layer, "internal_plugins", None
+    )
+    loaded_external_plugins = getattr(
+        get_cached_data().cli_layer, "external_plugins", None
+    )
+    return {
+        "Log file path": log_file_path,
+        "App data directory": app_locations.platform_dirs.user_data_dir,
+        "Cache file path": app_locations.cache_path,
+        f"{ext_plugin_defs.name.capitalize()} {PublicLayerNames.plugins} "
+        f"directory": ext_plugin_defs.dir or "[red]Disabled[/red]",
+        f"Loaded {int_plugin_defs.name} {PublicLayerNames.plugins}": f"{
+            f'[blue]{", ".join(loaded_internal_plugins or "")}[/blue]'
+            if loaded_internal_plugins
+            else 'None'
+        }",
+        f"Loaded {ext_plugin_defs.name} {PublicLayerNames.plugins}": f"{
+            f'[blue]{", ".join(loaded_external_plugins or "")}[/blue]'
+            if loaded_external_plugins
+            else 'None'
+        }",
+    }
