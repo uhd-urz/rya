@@ -1,5 +1,5 @@
 from collections.abc import Callable
-from typing import Optional
+from typing import Optional, Sequence
 
 from properpath import P
 from pydantic import BaseModel
@@ -7,24 +7,17 @@ from pydantic import BaseModel
 from ._data_list import DataObjectList
 
 
-class FileTuple(BaseModel):
+class FileModel(BaseModel):
     path: P
     name: str
 
 
-class ConfigFileTuple(FileTuple):
-    init_cmd_default: bool = False
-
-
-class LogFileTuple(FileTuple): ...
-
-
-class FileTupleContainer(DataObjectList[FileTuple]):
-    def __init__(self, items: Optional[list[FileTuple]] = None) -> None:
+class FileModelContainer(DataObjectList[FileModel]):
+    def __init__(self, items: Optional[Sequence[FileModel]] = None) -> None:
         super().__init__(items, run_before=self.check_duplicates)
 
     @staticmethod
-    def check_duplicates(items: list[FileTuple], value: FileTuple) -> None:
+    def check_duplicates(items: list[FileModel], value: FileModel) -> None:
         for item in items:
             if item.name == value.name:
                 raise ValueError(f"Name '{item.name}' already exists in {item}.")
@@ -37,6 +30,18 @@ class FileTupleContainer(DataObjectList[FileTuple]):
                 self.remove(file_tuple)
                 return
         raise ValueError(f"Name '{name}' not found in data.")
+
+
+class ConfigFileModel(FileModel):
+    target_platforms: tuple[str, ...] | None = None
+
+
+class FallbackLogFileModel(FileModel):
+    target_platforms: tuple[str, ...] | None = None
+
+
+class LogFileModel(FileModel):
+    fallback_paths: Sequence[FallbackLogFileModel] = []
 
 
 class RunEarlyList(DataObjectList[Callable]): ...

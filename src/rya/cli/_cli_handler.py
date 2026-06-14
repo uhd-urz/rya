@@ -5,27 +5,6 @@ import typer
 from properpath import P
 from typing_extensions import Annotated
 
-from ..config import AppConfig, ConfigMaker
-
-# noinspection PyProtectedMember
-from ..kernel import ConfigFileTuple, DebugMode, Exit
-from ..loggers import get_logger
-from ..names import AppIdentity, config_file_sources, run_early_list
-from ..plugins.commons import Typer
-
-# noinspection PyProtectedMember
-from ..plugins.commons._names import (
-    TyperGlobalOptions,
-    TyperRichPanelNames,
-)
-from ..styles import (
-    print_typer_error,
-)
-from ..utils import (
-    global_cli_graceful_callback,
-    global_cli_super_startup_callback,
-    messages_list,
-)
 from ._app_util import user_callback
 from ._cli_handler_utils import (
     call_run_early_list,
@@ -41,6 +20,25 @@ from ._click_help import apply_click_typer_help_patch
 from ._message_panel import messages_panel
 from ._plugin_loader import PluginLoader
 from .doc import MainAppCLIDoc
+from ..config import AppConfig, ConfigMaker
+# noinspection PyProtectedMember
+from ..kernel import ConfigFileModel, DebugMode, Exit
+from ..loggers import get_logger
+from ..names import AppIdentity, run_early_list, app_locations
+from ..plugins.commons import Typer
+# noinspection PyProtectedMember
+from ..plugins.commons._names import (
+    TyperGlobalOptions,
+    TyperRichPanelNames,
+)
+from ..styles import (
+    print_typer_error,
+)
+from ..utils import (
+    global_cli_graceful_callback,
+    global_cli_super_startup_callback,
+    messages_list,
+)
 
 logger = get_logger()
 
@@ -90,12 +88,12 @@ def initiate_cli_startup(app: Typer):
                 raise Exit(1)
             else:
                 cli_config_file = cli_config_file.absolute()
-                config_file_tuple = ConfigFileTuple(
+                cli_config_file_model = ConfigFileModel(
                     path=cli_config_file,
                     name=cli_config_file_name,
                 )
-                if config_file_tuple not in config_file_sources:
-                    config_file_sources.append(config_file_tuple)
+                if cli_config_file_model not in app_locations.config_files:
+                    app_locations.config_files.append(cli_config_file_model)
                 if AppConfig.dynaconf_args.settings_files is None:
                     AppConfig.dynaconf_args.settings_files = []
                 # Even when AppConfig.dynaconf_args.settings_files is None,

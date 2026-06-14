@@ -1,7 +1,6 @@
 import logging
 
-from .._vendor import haggis
-from .._vendor.haggis.logs import add_logging_level
+from ._app_location import AppLocations
 from ._callbacks import (
     global_cli_graceful_callback,
     global_cli_result_callback,
@@ -29,11 +28,12 @@ from ._loggers import (
 )
 from ._missing import Missing
 from ._name_containers import (
-    ConfigFileTuple,
-    FileTuple,
-    FileTupleContainer,
-    LogFileTuple,
+    ConfigFileModel,
+    FileModel,
+    FileModelContainer,
+    LogFileModel,
     RunEarlyList,
+    FallbackLogFileModel,
 )
 from ._utils import (
     SafeCWD,
@@ -44,6 +44,8 @@ from ._utils import (
     is_platform_unix,
 )
 from ._validator_helpers import MultiValidator
+from .._vendor import haggis
+from .._vendor.haggis.logs import add_logging_level
 
 haggis.logs.logging = logging
 
@@ -64,10 +66,10 @@ __all__ = [
     "generate_pydantic_model_from_abstract_cls",
     "get_local_imports",
     "LayerLoader",
-    "FileTupleContainer",
-    "ConfigFileTuple",
-    "LogFileTuple",
-    "FileTuple",
+    "FileModelContainer",
+    "ConfigFileModel",
+    "LogFileModel",
+    "FileModel",
     "get_dynaconf_core_loader",
     "LoggerDefaults",
     "LoggerMaker",
@@ -97,4 +99,6 @@ __all__ = [
     "LoggerUpdateRel",
     "LoggerStateFlags",
     "MultiValidator",
+    "AppLocations",
+    "FallbackLogFileModel",
 ]

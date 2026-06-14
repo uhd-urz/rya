@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, ClassVar
+from typing import ClassVar
 
 from ...kernel import LayerLoader, PublicLayerNames
 

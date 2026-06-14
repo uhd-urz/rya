@@ -3,12 +3,7 @@ import subprocess
 from pathlib import Path
 from typing import Tuple
 
-import rich_click.rich_click as rc
-from pydantic import BaseModel
-from rich_click.rich_click_theme import RichClickThemeNotFound
-
 from ..loggers import get_logger
-from ..names import AppIdentity
 from ..utils import Missing
 
 logger = get_logger()
@@ -96,4 +91,3 @@ def get_external_python_version(venv_dir: Path) -> Tuple[str, str, str]:
         raise PythonVersionCheckFailed(
             "Matching Python version not found in output string"
         )
-

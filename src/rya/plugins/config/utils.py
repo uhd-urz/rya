@@ -1,7 +1,7 @@
 import re
 import typing
 from enum import StrEnum
-from typing import Any, Generic
+from typing import Generic
 
 from dynaconf import LazySettings
 from dynaconf.utils import inspect

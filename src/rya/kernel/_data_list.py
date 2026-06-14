@@ -1,12 +1,12 @@
 from collections import UserList
 from types import get_original_bases
-from typing import Callable, Optional, get_args, get_origin
+from typing import Callable, Optional, Sequence, get_args, get_origin
 
 
 class DataObjectList[T](UserList):
     def __init__(
         self,
-        items: Optional[list[T]] = None,
+        items: Optional[Sequence[T]] = None,
         *,
         run_before: Optional[Callable[[list[T], T], None]] = None,
     ) -> None:

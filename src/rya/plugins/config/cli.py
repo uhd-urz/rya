@@ -5,10 +5,6 @@ from typing import Annotated, Optional
 import typer
 from rich.table import Table
 
-from ...config import ConfigMaker
-from ...kernel import Exit
-from ...styles import print_typer_error, stdout_console
-from ..commons import Typer
 from ._names import ConfigDisplayOptionDefaults, _ConfigInternalDisplayOptionDefaults
 from ._parse_schema import (
     _add_include_options_to_display_values,
@@ -21,6 +17,10 @@ from .utils import (
     _MultiOptionsParserParams,
     _parse_config_disp_user_multi_options,
 )
+from ..commons import Typer
+from ...config import ConfigMaker
+from ...kernel import Exit
+from ...styles import print_typer_error, stdout_console
 
 app = Typer(name="config", short_help="Manage configuration.", no_args_is_help=True)
 
@@ -82,7 +82,6 @@ def show(
 
     unique_config_files: dict[str | None, int] = defaultdict(int)
     table = Table(box=None, show_header=True)
-    iterable_column_names = ["Field name", "Description", "Location", "Value"]
     table.add_column("", overflow="fold", no_wrap=False)
     table.add_column("", overflow="fold", no_wrap=False)
     table.add_column("", overflow="fold", no_wrap=False)

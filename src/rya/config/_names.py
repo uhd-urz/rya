@@ -4,8 +4,8 @@ from typing import ClassVar, Optional
 from properpath import P
 from pydantic import BaseModel
 
-from ..names import AppIdentity, app_dirs, config_file_sources
 from ..kernel import LayerLoader, PublicLayerNames, get_dynaconf_core_loader
+from ..names import AppIdentity, app_locations
 
 
 class DynaConfArgs(BaseModel, validate_assignment=True):
@@ -47,7 +47,7 @@ class DynaConfArgs(BaseModel, validate_assignment=True):
     root_path: Optional[str] = None
     secrets: Optional[str] = None
     settings_files: Optional[str | list[str]] = [
-        str(config_file.path) for config_file in config_file_sources
+        str(config_file.path) for config_file in app_locations.config_files
     ]  # Modified
     skip_files: Optional[list[str]] = None
     sysenv_fallback: bool | list[str] = False
@@ -82,7 +82,7 @@ class InternalPluginLoaderDefinitions(PluginDefinitions):
 class ExternalPluginLoaderDefinitions(PluginDefinitions):
     name: ClassVar[str] = "external"
     directory_name: str = PublicLayerNames.plugins
-    dir: Optional[P] = app_dirs.user_data_dir / directory_name
+    dir: Optional[P] = app_locations.platform_dirs.user_data_dir / directory_name
     file_name_prefix: str = "plugin_metadata"
     file_ext: str = "toml"
     file_name: str = f"{file_name_prefix}.{file_ext}"

@@ -4,7 +4,7 @@ from datetime import datetime
 from pydantic import ValidationError
 
 from ..kernel import get_logger
-from ..names import CacheFileProperties, CacheModel, cache_path
+from ..names import CacheFileProperties, CacheModel, app_locations
 
 logger = get_logger()
 
@@ -15,7 +15,7 @@ def get_cached_data() -> CacheModel:
         return cache_
 
     raw_cache = json.loads(
-        cache_path.get_text(
+        app_locations.cache_path.get_text(
             encoding=CacheFileProperties.encoding,
         )
         or "{}"
@@ -24,14 +24,14 @@ def get_cached_data() -> CacheModel:
         cache = CacheModel(**raw_cache)
     except ValidationError:
         logger.debug(
-            f"Cache found in '{cache_path}' is either empty or invalid. "
+            f"Cache found in '{app_locations.cache_path}' is either empty or invalid. "
             f"New cache will be created."
         )
         return _new_cache()
     else:
         if (datetime.now() - cache.date).days > CacheFileProperties.expires_in_days:
             logger.debug(
-                f"Cache found in '{cache_path}' is older than "
+                f"Cache found in '{app_locations.cache_path}' is older than "
                 f"{CacheFileProperties.expires_in_days} days. "
                 f"New cache will be created."
             )
@@ -41,10 +41,10 @@ def get_cached_data() -> CacheModel:
 
 
 def update_cache(cache: CacheModel) -> None:
-    if not cache_path.exists():
-        cache_path.create(verbose=False)
+    if not app_locations.cache_path.exists():
+        app_locations.cache_path.create(verbose=False)
     cache.date = datetime.now()
-    cache_path.write_text(
+    app_locations.cache_path.write_text(
         cache.model_dump_json(indent=CacheFileProperties.indent),
         encoding=CacheFileProperties.encoding,
     )
