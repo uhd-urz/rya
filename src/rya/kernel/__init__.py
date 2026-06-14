@@ -43,6 +43,7 @@ from ._utils import (
     get_local_imports,
     is_platform_unix,
 )
+from ._validator_helpers import MultiValidator
 
 haggis.logs.logging = logging
 
@@ -95,4 +96,5 @@ __all__ = [
     "LoggerStateTuple",
     "LoggerUpdateRel",
     "LoggerStateFlags",
+    "MultiValidator",
 ]

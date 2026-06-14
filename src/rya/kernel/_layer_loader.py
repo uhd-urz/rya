@@ -15,7 +15,6 @@ from ._utils import get_local_imports
 class PublicLayerNames:
     styles: ClassVar[str] = "styles"
     names: ClassVar[str] = "names"
-    core_validators: ClassVar[str] = "core_validators"
     loggers: ClassVar[str] = "loggers"
     utils: ClassVar[str] = "utils"
     config: ClassVar[str] = "config"
