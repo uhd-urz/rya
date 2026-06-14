@@ -29,8 +29,12 @@ app = Typer(name="config", help="Manage configuration.", no_args_is_help=True)
 
 @app.command(name="show", help="Display configuration values.")
 def show(
-    key_name: Annotated[
-        Optional[str], typer.Argument(help="Configuration key name.")
+    field_name: Annotated[
+        Optional[str],
+        typer.Argument(
+            help="Configuration field name (a.k.a. the key). "
+            "Dot notation is also supported. E.g.: [green]plugins.foo[/green]"
+        ),
     ] = None,
     include_options: Annotated[
         str,
@@ -89,7 +93,7 @@ def show(
     table.add_column("", overflow="fold", no_wrap=False)
     table.add_column("", overflow="fold", no_wrap=False)
     for key, val in flatten_config_schema(ConfigMaker.get_all_models()).items():
-        match key_name:
+        match field_name:
             case None:
                 result = _get_field_config_result(key, val, filters=filters_struct)
                 if result is not None:
@@ -101,7 +105,7 @@ def show(
                         table.columns[_i].header = _c
                     table.add_row(*rows)
             case _:
-                pattern_appr_key = (key_name or "").replace(".", r"\.")
+                pattern_appr_key = (field_name or "").replace(".", r"\.")
                 pattern = re.compile(
                     (
                         rf"^({pattern_appr_key}(?=\.))|"
