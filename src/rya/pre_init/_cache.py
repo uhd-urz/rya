@@ -3,8 +3,8 @@ from datetime import datetime
 
 from pydantic import ValidationError
 
-from ..names import CacheFileProperties, CacheModel, cache_path
 from ..kernel import get_logger
+from ..names import CacheFileProperties, CacheModel, cache_path
 
 logger = get_logger()
 
@@ -15,7 +15,10 @@ def get_cached_data() -> CacheModel:
         return cache_
 
     raw_cache = json.loads(
-        cache_path.get_text(encoding=CacheFileProperties.encoding, default="{}")
+        cache_path.get_text(
+            encoding=CacheFileProperties.encoding,
+        )
+        or "{}"
     )
     try:
         cache = CacheModel(**raw_cache)

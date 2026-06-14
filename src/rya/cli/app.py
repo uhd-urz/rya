@@ -1,6 +1,6 @@
 
 
-from ..core_validators import Exit
+from ..kernel import Exit
 from ..loggers import get_logger
 from ..names import AppIdentity
 from ..pre_init import AppVersionNotFound, get_app_version

@@ -8,7 +8,7 @@ from typing_extensions import Annotated
 from ..config import AppConfig, ConfigMaker
 
 # noinspection PyProtectedMember
-from ..core_validators import Exit
+from ..kernel import ConfigFileTuple, DebugMode, Exit
 from ..loggers import get_logger
 from ..names import AppIdentity, config_file_sources, run_early_list
 from ..plugins.commons import Typer
@@ -18,7 +18,6 @@ from ..plugins.commons._names import (
     TyperGlobalOptions,
     TyperRichPanelNames,
 )
-from ..kernel import ConfigFileTuple, DebugMode
 from ..styles import (
     print_typer_error,
 )

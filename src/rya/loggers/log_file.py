@@ -3,35 +3,32 @@ from pathlib import Path
 from typing import Generator, Optional
 
 from properpath import P
-from properpath.validators import PathValidationError
+from properpath.validators import PathValidationError, PathWriteValidator
 
-from ..core_validators import (
-    PathWriteValidator,
-    Validate,
-)
+from ..kernel import LoggerDefaults, get_logger
 from ..names import AppIdentity, CacheModel, log_file_sinks
 from ..pre_init import get_cached_data, update_cache
-from ..kernel import LoggerDefaults, get_logger
 
 logger = get_logger()
 
 
 @cache
 def get_log_file_path() -> P:
-    cached_data: Optional[CacheModel]
-    cached_data = None
     if LoggerDefaults.will_cache_log_path:
         cached_data = get_cached_data()
         if cached_data.log_file_path:
             return cached_data.log_file_path
-    log_store_paths: Generator[Path | P]
-    log_store_paths = (log_file_tuple.path for log_file_tuple in log_file_sinks)
-    validate_path = Validate(PathWriteValidator(log_store_paths, err_logger=logger))
+    else:
+        cached_data = None
+    log_store_paths = map(lambda p: p.path, log_file_sinks)
     try:
-        log_file_path = validate_path.get()
+        log_file_path = PathWriteValidator(
+            log_store_paths, err_logger=logger
+        ).validate()
     except PathValidationError as e:
         logger.critical(
-            f"{AppIdentity.app_name} couldn't validate any given log file paths: "
+            f"{AppIdentity.app_name} couldn't validate any "
+            f"given log file paths: "
             f"{', '.join(map(str, log_store_paths))} to write logs."
         )
         raise e

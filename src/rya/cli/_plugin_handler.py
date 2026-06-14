@@ -10,6 +10,7 @@ import typer
 from dynaconf.vendor.ruamel.yaml.scanner import ScannerError
 from dynaconf.vendor.tomllib import TOMLDecodeError
 from properpath import P
+from pydantic import ValidationError
 
 from ..config import get_dynaconf_settings
 
@@ -20,10 +21,9 @@ from ..config._names import (
     ExternalPluginMetadataDefinitions,
     InternalPluginLoaderDefinitions,
 )
-from ..core_validators import Validate, ValidationError, Validator
+from ..kernel import LayerLoader, SafeCWD
 from ..loggers import get_logger
 from ..names import AppIdentity
-from ..kernel import LayerLoader, SafeCWD
 from ..utils import add_message, get_dynaconf_core_loader
 from ._venv_state_manager import switch_venv_state
 
@@ -84,7 +84,7 @@ class InternalPluginHandler:
                 yield None
 
 
-class ExternalPluginLocationValidator(Validator):
+class ExternalPluginLocationValidator:
     def __init__(self, location: str | Path | P, /):
         self.location = location
 
@@ -264,7 +264,7 @@ class ExternalPluginHandler:
         try:
             for path in sorted(plugin_paths, key=lambda x: str(x).lower()):
                 try:
-                    metadata = Validate(ExternalPluginLocationValidator(path)).get()
+                    metadata = ExternalPluginLocationValidator(path).validate()
                 except ValidationError as e:
                     logger.debug(str(e))
                     if loading_errors is True:

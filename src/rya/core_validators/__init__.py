@@ -1,10 +1,7 @@
 __all__ = [
-    "Validator",
-    "Validate",
-    "Exit",
+    "BasicValidationModel",
+    "MultiValidator",
     "ValidationError",
-    "RuntimeValidationError",
-    "CriticalValidationError",
     "PathWriteValidator",
     "PathValidationError",
 ]
@@ -12,10 +9,7 @@ __all__ = [
 from properpath.validators import PathValidationError, PathWriteValidator
 
 from .base import (
-    CriticalValidationError,
-    Exit,
-    RuntimeValidationError,
-    Validate,
+    MultiValidator,
     ValidationError,
-    Validator,
+    BasicValidationModel,
 )
