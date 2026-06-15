@@ -1,10 +1,6 @@
-from dataclasses import dataclass
-from datetime import datetime
 from enum import StrEnum
-from typing import ClassVar, Optional
 
 from properpath import P
-from pydantic import BaseModel
 
 from ..kernel import (
     AppLocations,
@@ -14,6 +10,7 @@ from ..kernel import (
     LoggerDefaults,
     PublicLayerNames,
     RunEarlyList,
+    BaseCacheModel,
 )
 
 
@@ -64,22 +61,7 @@ run_early_list: RunEarlyList = RunEarlyList()
 
 
 # Cache file definitions
-class CLILayerCacheModel(BaseModel):
-    internal_plugins: list[str] | None = None
-    external_plugins: list[str] | None = None
-
-
-class CacheModel(BaseModel):
-    date: datetime = datetime.now()
-    log_file_path: Optional[P] = None
-    cli_layer: CLILayerCacheModel | None = None
-
-
-@dataclass(frozen=True)
-class CacheFileProperties:
-    expires_in_days: ClassVar[int] = 30
-    encoding: ClassVar[str] = "utf-8"
-    indent: ClassVar[int] = 4
+class CacheModel(BaseCacheModel): ...
 
 
 if LayerLoader.is_bootstrap_mode():

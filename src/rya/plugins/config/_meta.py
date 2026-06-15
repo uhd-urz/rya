@@ -1,4 +1,5 @@
 from properpath import P
+from pydantic.experimental.missing_sentinel import MISSING
 
 from ...config._names import (
     ExternalPluginLoaderDefinitions,
@@ -19,10 +20,10 @@ def get_app_meta_info() -> dict:
     ext_plugin_defs = ExternalPluginLoaderDefinitions()
     int_plugin_defs = InternalPluginLoaderDefinitions()
     loaded_internal_plugins = getattr(
-        get_cached_data().cli_layer, "internal_plugins", None
+        get_cached_data().app_meta, "internal_plugins", None
     )
     loaded_external_plugins = getattr(
-        get_cached_data().cli_layer, "external_plugins", None
+        get_cached_data().app_meta, "external_plugins", None
     )
     return {
         "Log file path": log_file_path,
@@ -31,13 +32,13 @@ def get_app_meta_info() -> dict:
         f"{ext_plugin_defs.name.capitalize()} {PublicLayerNames.plugins} "
         f"directory": ext_plugin_defs.dir or "[red]Disabled[/red]",
         f"Loaded {int_plugin_defs.name} {PublicLayerNames.plugins}": f"{
-            f'[blue]{", ".join(loaded_internal_plugins or "")}[/blue]'
-            if loaded_internal_plugins
+            f'[blue]{", ".join(loaded_internal_plugins or [])}[/blue]'
+            if loaded_internal_plugins is not MISSING
             else 'None'
         }",
         f"Loaded {ext_plugin_defs.name} {PublicLayerNames.plugins}": f"{
-            f'[blue]{", ".join(loaded_external_plugins or "")}[/blue]'
-            if loaded_external_plugins
+            f'[blue]{", ".join(loaded_external_plugins or [])}[/blue]'
+            if loaded_external_plugins is not MISSING
             else 'None'
         }",
     }

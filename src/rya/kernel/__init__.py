@@ -1,6 +1,7 @@
 import logging
 
 from ._app_location import AppLocations
+from ._cache_models import AppMetaCacheModel, BaseCacheModel, CacheFileProperties
 from ._callbacks import (
     global_cli_graceful_callback,
     global_cli_result_callback,
@@ -101,4 +102,7 @@ __all__ = [
     "MultiValidator",
     "AppLocations",
     "FallbackLogFileModel",
+    "AppMetaCacheModel",
+    "BaseCacheModel",
+    "CacheFileProperties",
 ]

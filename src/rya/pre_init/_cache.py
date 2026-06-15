@@ -2,9 +2,10 @@ import json
 from datetime import datetime
 
 from pydantic import ValidationError
+from pydantic.experimental.missing_sentinel import MISSING
 
-from ..kernel import get_logger
-from ..names import CacheFileProperties, CacheModel, app_locations
+from ..kernel import get_logger, CacheFileProperties, AppMetaCacheModel
+from ..names import CacheModel, app_locations
 
 logger = get_logger()
 
@@ -48,3 +49,15 @@ def update_cache(cache: CacheModel) -> None:
         cache.model_dump_json(indent=CacheFileProperties.indent),
         encoding=CacheFileProperties.encoding,
     )
+
+
+def update_meta_cache(cache: CacheModel, /, **kwargs) -> None:
+    if cache.app_meta is MISSING:
+        app_meta_dump = kwargs
+    else:
+        app_meta_dump = {
+            **kwargs,
+            **cache.app_meta.model_dump(exclude={*kwargs.keys()}),
+        }
+    cache.app_meta = AppMetaCacheModel(**app_meta_dump)
+    update_cache(cache)

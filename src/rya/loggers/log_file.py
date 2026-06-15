@@ -3,10 +3,11 @@ from functools import cache
 from properpath import P
 from properpath.validators import PathValidationError, PathWriteValidator
 from pydantic import ValidationError
+from pydantic.experimental.missing_sentinel import MISSING
 
 from ..kernel import LoggerDefaults, get_logger
 from ..names import AppIdentity, CacheModel, app_locations
-from ..pre_init import get_cached_data, update_cache
+from ..pre_init import get_cached_data, update_meta_cache
 
 logger = get_logger()
 
@@ -22,8 +23,8 @@ def get_log_file_path() -> P:
         )
     if LoggerDefaults.will_cache_log_path:
         cached_data = get_cached_data()
-        if cached_data.log_file_path:
-            return cached_data.log_file_path
+        if getattr(cached_data.app_meta, "log_file_path", MISSING) is not MISSING:
+            return cached_data.app_meta.log_file_path
     else:
         cached_data = None
     log_paths = (
@@ -44,8 +45,7 @@ def get_log_file_path() -> P:
         raise e
     else:
         if isinstance(cached_data, CacheModel):
-            cached_data.log_file_path = log_file_path
-            update_cache(cached_data)
+            update_meta_cache(cached_data, log_file_path=log_file_path)
             logger.debug(
                 f"Log file path '{log_file_path}' has been cached to the cache file."
             )

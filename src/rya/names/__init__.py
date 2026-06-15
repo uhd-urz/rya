@@ -1,6 +1,5 @@
 from .names import (
     AppIdentity,
-    CacheFileProperties,
     CacheModel,
     app_locations,
     run_early_list,
@@ -8,7 +7,6 @@ from .names import (
 
 __all__ = [
     "AppIdentity",
-    "CacheFileProperties",
     "CacheModel",
     "run_early_list",
     "app_locations",

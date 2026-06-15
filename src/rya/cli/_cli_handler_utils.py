@@ -14,9 +14,8 @@ from ..config._model_handler import NoConfigModelRegistrationFound
 from ..kernel import ResultCallbackHandler, global_log_record_container
 from ..loggers import get_logger
 from ..names import run_early_list
-from ..names.names import CLILayerCacheModel
 from ..plugins.commons import Typer
-from ..pre_init import get_cached_data, update_cache
+from ..pre_init import get_cached_data, update_meta_cache
 
 logger = get_logger()
 
@@ -50,27 +49,35 @@ def load_plugins(
     PluginLoader._internal_plugins_loaded = True
     # The caching here is mainly for the "config meta command" for now
     cache = get_cached_data()
-    cache.cli_layer = CLILayerCacheModel(
-        internal_plugins=list(
-            PluginLoader.loaded_internal_plugins.keys(),
-        ),
-    )
     if ext_plugin_def.dir is None:
         logger.debug(
             f"{ext_plugin_def.__class__.__name__} attribute 'dir' is None. "
             f"Loading {ext_plugin_def.name} plugins will be skipped."
         )
-        update_cache(cache)
+        update_meta_cache(
+            cache,
+            internal_plugins=list(
+                PluginLoader.loaded_internal_plugins.keys(),
+            ),
+        )
         return
     plugin_loader.add_external_plugins(
         callback=cli_startup_for_plugins,
         result_callback=cli_cleanup_for_plugins,
     )
     PluginLoader._external_plugins_loaded = True
-    cache.cli_layer.external_plugins = list(
+    cache.app_meta.external_plugins = list(
         PluginLoader.loaded_external_plugins.keys(),
     )
-    update_cache(cache)
+    update_meta_cache(
+        cache,
+        internal_plugins=list(
+            PluginLoader.loaded_internal_plugins.keys(),
+        ),
+        external_plugins=list(
+            PluginLoader.loaded_external_plugins.keys(),
+        ),
+    )
 
 
 def should_skip_cli_startup(
