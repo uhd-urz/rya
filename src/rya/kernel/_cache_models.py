@@ -18,6 +18,18 @@ class BaseCacheModel(BaseModel):
     date: datetime = datetime.now()
     app_meta: AppMetaCacheModel | MISSING = Field(MISSING, alias="_app_meta")
 
+    @classmethod
+    def __init_subclass__(cls, **kwargs) -> None:
+        super().__init_subclass__(**kwargs)
+        for name, field in cls.model_fields.items():
+            if field.is_required():
+                raise AttributeError(
+                    f"Every field of {BaseCacheModel.__name__} subclass must have "
+                    f"a default value. Use pydantic.experimental.missing_sentinel."
+                    f"{MISSING.__class__.__name__} sentinel "
+                    f"for default when no default value is obvious."
+                )
+
 
 @dataclass(frozen=True)
 class CacheFileProperties:
