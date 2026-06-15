@@ -35,8 +35,8 @@ LoggerDefaults.logger_name = AppIdentity.app_name
 _platform_dirs = P.platformdirs(
     appname=AppIdentity.app_name,
     appauthor=AppIdentity.app_name,
-    ensure_exists=True,
-    follow_unix=True,
+    ensure_exists=False,
+    follow_unix=False,
 )
 app_locations = AppLocations(
     platform_dirs=_platform_dirs,
