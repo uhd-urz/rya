@@ -56,7 +56,7 @@ def show(
     show_borders: Annotated[
         bool,
         typer.Option(
-            "-B",
+            "--border", "-B",
             help="Show borders around the table.",
         ),
     ] = False,
