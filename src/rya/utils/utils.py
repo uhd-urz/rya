@@ -3,10 +3,7 @@ import subprocess
 from pathlib import Path
 from typing import Tuple
 
-from ..loggers import get_logger
-from ..utils import Missing
-
-logger = get_logger()
+from ..kernel import Missing
 
 
 class PreventiveWarning(RuntimeWarning): ...

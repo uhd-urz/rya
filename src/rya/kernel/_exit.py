@@ -1,6 +1,5 @@
 import sys
 from abc import ABC
-from typing import Self
 
 from ._callbacks import global_cli_result_callback
 
@@ -22,7 +21,7 @@ class Exit(BaseExit):
     else:
         SYSTEM_EXIT = True
 
-    def __new__(cls, *args, **kwargs) -> SystemExit | Self:  # type: ignore[misc]
+    def __new__(cls, *args, **kwargs) -> SystemExit | BaseExit:  # type: ignore[misc]
         global_cli_result_callback.call_callbacks()
         if cls.SYSTEM_EXIT:
             return SystemExit(*args)
