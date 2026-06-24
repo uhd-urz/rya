@@ -14,11 +14,12 @@ from ..loggers import get_logger
 from ._model_handler import (
     ConfigMaker,
     NoConfigModelRegistrationFound,
-    _PluginConfigType,
+    PluginConfigType,
     _PluginsConfigType,
 )
 from ._names import DynaConfArgs
 from ._names import PluginDefinitions as Pdf
+from .exceptions import BadConfigurationFile, IncompleteConfigModelAccessError
 
 logger = get_logger()
 
@@ -27,19 +28,24 @@ def get_dynaconf_settings(dynaconf_args_: DynaConfArgs, /) -> Dynaconf:
     return Dynaconf(**dynaconf_args_.model_dump())
 
 
-class BadConfigurationFile(Exception): ...
-
-
-class ConfigurationValidationError(Exception): ...
-
-
 AppConfigErrorRaiseType = Literal["raise", "ignore", "ignore+"]
+
+
+class IncompleteConfigPlaceholder(BaseModel):
+    def __getattr__(self, item):
+        raise IncompleteConfigModelAccessError(
+            f"Attribute '{item}' could not be read because the model that would "
+            f"have the attribute was not instantiated. This likely means that "
+            f"a configuration field is missing or of invalid type, "
+            f"so model validation failed. Try manually validating the "
+            f"model with 'AppConfig.validate' model, and debug the error"
+        )
 
 
 class AppConfig:
     PluginConfigModel: type[BaseModel] = types.new_class(
         f"{Pdf.config_section_name.capitalize()}ConfigModel",
-        (BaseModel,),
+        (IncompleteConfigPlaceholder,),
     )
 
     class ConfigModel(BaseModel): ...
@@ -153,7 +159,7 @@ class AppConfig:
         errors: AppConfigErrorRaiseType = "raise",
         reload: bool = False,
     ) -> BaseModel:
-        main_model_data: _PluginConfigType = ConfigMaker.get_main_model()
+        main_model_data: PluginConfigType = ConfigMaker.get_main_model()
         main_model = main_model_data["model"]
         validated_plugin_model = cls._handle_config_errors(
             lambda: cls._main_validate(main_model, reload=reload),
@@ -163,6 +169,7 @@ class AppConfig:
         if validated_plugin_model is None:
             return create_model(
                 f"Incomplete{main_model.__name__}",
+                __base__=IncompleteConfigPlaceholder,
             )()
         return validated_plugin_model
 

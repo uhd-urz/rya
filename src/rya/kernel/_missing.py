@@ -3,10 +3,11 @@ class Missing:
     Missing is a string representation of a None object.
     """
 
-    __slots__ = "_message"
+    __slots__ = "_message", "rich_color"
 
-    def __init__(self, message: str = "MISSING!"):
+    def __init__(self, message: str = "MISSING!", rich_color: str | None = None):
         self.message = message
+        self.rich_color = rich_color
 
     @property
     def message(self):
@@ -18,6 +19,8 @@ class Missing:
             self._message = str(value)
 
     def __str__(self) -> str:
+        if self.rich_color:
+            return f"[{self.rich_color}]{self.message}[/{self.rich_color}]"
         return self.message
 
     def __repr__(self):

@@ -14,10 +14,14 @@ __all__ = [
     "get_logger",
     "get_log_file_path",
     "AppRichHandlerArgs",
+    "LogFileNotGivenError",
 ]
 
 
-from ..pre_utils import (
+from .base import get_file_logger, get_main_logger, LogFileNotGivenError
+from .handlers import AppFileHandler, AppFileHandlerArgs
+from .log_file import get_log_file_path
+from ..kernel import (
     AppRichHandler,
     AppRichHandlerArgs,
     LoggerMaker,
@@ -29,6 +33,3 @@ from ..pre_utils import (
     get_simple_logger,
     global_log_record_container,
 )
-from .base import get_file_logger, get_main_logger
-from .handlers import AppFileHandler, AppFileHandlerArgs
-from .log_file import get_log_file_path

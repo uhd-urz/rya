@@ -6,7 +6,7 @@ from typing import ClassVar, Optional
 import typer
 from pydantic import BaseModel, ConfigDict
 
-from ..core_validators import Exit
+from ..kernel import Exit
 from ..loggers import get_logger
 from ..names import AppIdentity
 from ..plugins.commons import Typer

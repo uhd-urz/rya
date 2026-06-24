@@ -8,7 +8,7 @@ from rich_click.patch import patch_typer
 from typer.models import CommandFunctionType
 
 from ...loggers import get_logger
-from ...pre_utils import detected_click_feedback
+from ...kernel import detected_click_feedback
 from ._names import TyperArgs
 
 if TyperArgs().rich_markup_mode == "rich-click":

@@ -10,16 +10,16 @@ from ._pydantic_parser import FieldsConfigType, get_pydantic_nested_model_fields
 logger = get_logger()
 
 
-class _PluginConfigType(TypedDict, total=False):
+class PluginConfigType(TypedDict, total=False):
     model: type[BaseModel]
     fields: FieldsConfigType
 
 
-_PluginsConfigType = dict[str, _PluginConfigType]
+_PluginsConfigType = dict[str, PluginConfigType]
 
 
-class _AllModelsType(TypedDict, total=False):
-    main: _PluginConfigType
+class AllConfigModelsType(TypedDict, total=False):
+    main: PluginConfigType
     plugins: _PluginsConfigType
 
 
@@ -27,12 +27,12 @@ class NoConfigModelRegistrationFound(KeyError): ...
 
 
 class ConfigMaker:
-    _main_config_model: _PluginConfigType = {}
+    _main_config_model: PluginConfigType = {}
     _plugins_config_model: _PluginsConfigType = {}
     # Pycharm interprets the union type as if the assigned value must also be of a union type!
 
     @classmethod
-    def get_plugin_model(cls, plugin_name: str) -> _PluginConfigType:
+    def get_plugin_model(cls, plugin_name: str) -> PluginConfigType:
         try:
             return cls._plugins_config_model[plugin_name]
         except KeyError as e:
@@ -42,7 +42,7 @@ class ConfigMaker:
             ) from e
 
     @classmethod
-    def get_main_model(cls) -> _PluginConfigType:
+    def get_main_model(cls) -> PluginConfigType:
         if not cls._main_config_model:
             raise NoConfigModelRegistrationFound(
                 f"No main configuration model registered to {cls.__name__}."
@@ -58,7 +58,7 @@ class ConfigMaker:
         return cls._plugins_config_model
 
     @classmethod
-    def get_all_models(cls) -> _AllModelsType:
+    def get_all_models(cls) -> AllConfigModelsType:
         return {"main": cls._main_config_model, "plugins": cls._plugins_config_model}
 
     @staticmethod
@@ -70,7 +70,7 @@ class ConfigMaker:
             raise ValueError(
                 f"The name '{Pdf.config_section_name}' is reserved. "
                 f"Main model '{config_model}' cannot have '{Pdf.config_section_name}' as "
-                f"a field or a class attribute. Use 'plugin_name' class attribute "
+                f"a field or a class attribute. Use '{Pdf.cls_attr_name}' class attribute "
                 f"to add a plugin model."
             )
 
@@ -104,7 +104,7 @@ class ConfigMaker:
     ) -> None:
         if cls._main_config_model and not force_reregister:
             logger.warning(
-                f"Main model '{config_model}' for is already registered. "
+                f"Main model '{config_model}' is already registered. "
                 f"Re-registration will not be considered. Pass 'force_reregister=True' "
                 f"to force re-registration."
             )
@@ -133,7 +133,7 @@ class ConfigMaker:
                 raise ValueError(
                     f"Model '{config_model}' has '{Pdf.cls_attr_name}' class attribute. "
                     f"This indicates that the model is a plugin-specific "
-                    f"configuration model. plugin_name can only be a string, given "
+                    f"configuration model. {Pdf.cls_attr_name} can only be a string, given "
                     f"value '{plugin_name}' of type {type(plugin_name)}"
                 )
             cls._register_plugin_model(

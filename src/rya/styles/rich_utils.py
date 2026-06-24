@@ -7,10 +7,9 @@ from click import Context, HelpFormatter
 from pydantic import BaseModel
 from rich.text import Text
 from rich_click.rich_click_theme import RichClickThemeNotFound
-from typer.core import MarkupMode
-from typer.rich_utils import rich_format_help
+from typer.rich_utils import rich_format_help, MarkupModeStrict
 
-from ..pre_utils import get_logger
+from ..kernel import get_logger
 
 logger = get_logger()
 
@@ -19,7 +18,7 @@ def rich_format_help_with_callback(
     *,
     obj: click.Command | click.Group,
     ctx: Context,
-    markup_mode: MarkupMode,
+    markup_mode: MarkupModeStrict,
     callback: Optional[Iterable[Callable]] = None,
     result_callback: Optional[Iterable[Callable]] = None,
 ) -> None:

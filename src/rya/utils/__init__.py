@@ -1,5 +1,5 @@
 from ..pre_init import PatternNotFoundError, get_app_version
-from ..pre_utils import (
+from ..kernel import (
     DataObjectList,
     Missing,
     detected_click_feedback,

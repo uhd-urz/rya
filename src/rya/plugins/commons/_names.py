@@ -14,7 +14,7 @@ from ...config._names import (
     InternalPluginLoaderDefinitions as Ipdf,
 )
 from ...names import AppIdentity
-from ...pre_utils import LayerLoader, PublicLayerNames
+from ...kernel import LayerLoader, PublicLayerNames
 
 
 class TyperArgs(BaseModel, validate_assignment=True):
@@ -38,7 +38,7 @@ class TyperArgs(BaseModel, validate_assignment=True):
     deprecated: bool = False
     add_completion: bool = True
     # Rich settings
-    rich_markup_mode: MarkupMode | Literal["rich-click"] = "markdown"  # Modified
+    rich_markup_mode: MarkupMode | Literal["rich-click"] = "rich"  # Modified
     rich_help_panel: str | None = None
     suggest_commands: bool = True
     pretty_exceptions_enable: bool = True

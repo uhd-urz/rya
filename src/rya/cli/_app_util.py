@@ -7,7 +7,7 @@ from ..plugins.commons import Typer
 from ..plugins.commons._names import (
     TyperArgs,
 )
-from ..pre_utils import global_cli_result_callback
+from ..kernel import global_cli_result_callback
 from ._cli_handler_utils import is_run_with_help_arg, should_skip_cli_startup
 
 logger = get_logger()
