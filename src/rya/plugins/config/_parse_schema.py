@@ -6,9 +6,6 @@ from pydantic.fields import FieldInfo
 from pydantic_core import PydanticUndefined
 from rich.markup import escape
 
-from ...config import AllConfigModelsType, AppConfig, FieldsConfigType
-from ...config._names import PluginDefinitions as Pdf
-from ...kernel import Missing
 from ._names import (
     ConfDescDefinition,
 )
@@ -28,6 +25,9 @@ from .utils import (
     get_dynaconf_settings_history,
     partial_mask_secret,
 )
+from ...config import AllConfigModelsType, AppConfig, FieldsConfigType
+from ...config._names import PluginDefinitions as Pdf
+from ...kernel import Missing
 
 
 def flatten_config_schema(config_model: AllConfigModelsType) -> dict[str, FieldInfo]:
@@ -272,7 +272,6 @@ def _add_include_options_to_display_values(
             }"
             return ("Field name", "Value"), (
                 f"[green]{display_values.key}[/green]",
-                f"{display_values.location}",
                 value,
             )
         case ConfigDisplayIncludes(desc=False, loc=False, unit=False):

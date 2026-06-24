@@ -36,6 +36,22 @@ def show(
             "Dot notation is also supported. E.g.: [green]plugins.foo[/green]"
         ),
     ] = None,
+    short_view: Annotated[
+        bool,
+        typer.Option(
+            "--short",
+            "-s",
+            help="Shortcut flag to show only the configuration fild names and values.",
+        ),
+    ] = False,
+    long_view: Annotated[
+        bool,
+        typer.Option(
+            "--long",
+            "-l",
+            help="Shortcut flag to show all the available attributes of configuration fields.",
+        ),
+    ] = False,
     include_options: Annotated[
         str,
         typer.Option(
@@ -63,6 +79,10 @@ def show(
         ),
     ] = ConfigDisplayOptionDefaults.filter_cli_default,
 ):
+    if short_view:
+        include_options = "key val unit"
+    if long_view:
+        include_options = "key val desc loc unit"
     try:
         include_struct = _parse_config_disp_user_multi_options(
             include_options,
