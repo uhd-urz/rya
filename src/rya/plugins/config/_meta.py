@@ -26,6 +26,9 @@ def get_app_meta_info() -> dict:
         get_cached_data().app_meta, "external_plugins", None
     )
     return {
+        "Pre-defined configuration locations": ", ".join(
+            str(_.path) for _ in app_locations.config_files
+        ),
         "Log file path": log_file_path,
         "App data directory": app_locations.platform_dirs.user_data_dir,
         "Cache file path": app_locations.cache_path,

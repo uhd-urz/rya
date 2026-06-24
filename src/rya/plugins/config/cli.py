@@ -56,7 +56,8 @@ def show(
     show_borders: Annotated[
         bool,
         typer.Option(
-            "--border", "-B",
+            "--border",
+            "-B",
             help="Show borders around the table.",
         ),
     ] = False,
@@ -173,8 +174,21 @@ def show(
 
 
 @app.command(name="meta", help=f"Show {AppIdentity.app_fancy_name} meta information.")
-def meta():
-    table = Table(box=None, show_header=True)
+def meta(
+    show_borders: Annotated[
+        bool,
+        typer.Option(
+            "--border",
+            "-B",
+            help="Show borders around the table.",
+        ),
+    ] = False,
+):
+    table = Table(
+        box=box.HEAVY_HEAD if show_borders else None,
+        show_header=False,
+        show_lines=True,  # Doesn't show anyway when box=None
+    )
     table.add_column("", overflow="fold", no_wrap=False)
     table.add_column("", overflow="fold", no_wrap=False)
     stdout_console.print(f"[bold]{AppIdentity.app_fancy_name} meta information:[/bold]")
