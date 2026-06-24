@@ -33,6 +33,6 @@ class ConfigDisplayIncludes(BaseModel):
 
 class ConfigDisplayFilters(BaseModel):
     all: bool = True
-    mod: bool = False
+    nondef: bool = False
     secret: bool = False
     env: bool = False

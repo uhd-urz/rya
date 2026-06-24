@@ -66,20 +66,20 @@ def _can_pass_conf_display_filter(
     filter_: ConfigDisplayFilters,
 ) -> bool:
     match filter_:
-        case ConfigDisplayFilters(mod=False, secret=False, env=False):
+        case ConfigDisplayFilters(nondef=False, secret=False, env=False):
             return True
-        case ConfigDisplayFilters(mod=True, secret=False, env=False):
+        case ConfigDisplayFilters(nondef=True, secret=False, env=False):
             if field_value != field_info.default:
                 return True
             return False
-        case ConfigDisplayFilters(mod=False, secret=True, env=False):
+        case ConfigDisplayFilters(nondef=False, secret=True, env=False):
             if _is_field_secret(
                 field_info,
                 config_description,
             ):
                 return True
             return False
-        case ConfigDisplayFilters(mod=True, secret=True, env=False):
+        case ConfigDisplayFilters(nondef=True, secret=True, env=False):
             if _is_field_secret(
                 field_info,
                 config_description,
@@ -89,14 +89,14 @@ def _can_pass_conf_display_filter(
                 if field_value != field_info.default:
                     return True
             return False
-        case ConfigDisplayFilters(mod=False, secret=False, env=True):
+        case ConfigDisplayFilters(nondef=False, secret=False, env=True):
             if _is_value_from_dynaconf_env(
                 dynaconf_settings,
                 field_name=field_name,
             ):
                 return True
             return False
-        case ConfigDisplayFilters(mod=True, secret=False, env=True):
+        case ConfigDisplayFilters(nondef=True, secret=False, env=True):
             if _is_value_from_dynaconf_env(
                 dynaconf_settings,
                 field_name=field_name,
@@ -104,7 +104,7 @@ def _can_pass_conf_display_filter(
                 if field_value != field_info.default:
                     return True
             return False
-        case ConfigDisplayFilters(mod=False, secret=True, env=True):
+        case ConfigDisplayFilters(nondef=False, secret=True, env=True):
             if _is_value_from_dynaconf_env(
                 dynaconf_settings,
                 field_name=field_name,
@@ -115,7 +115,7 @@ def _can_pass_conf_display_filter(
                 ):
                     return True
             return False
-        case ConfigDisplayFilters(mod=True, secret=True, env=True):
+        case ConfigDisplayFilters(nondef=True, secret=True, env=True):
             if _is_value_from_dynaconf_env(
                 dynaconf_settings,
                 field_name=field_name,
