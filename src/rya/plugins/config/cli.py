@@ -3,6 +3,7 @@ from collections import defaultdict
 from typing import Annotated, Optional
 
 import typer
+from rich import box
 from rich.table import Table
 
 from ._meta import get_app_meta_info
@@ -52,6 +53,13 @@ def show(
             help="Shortcut flag to show all the available attributes of configuration fields.",
         ),
     ] = False,
+    show_borders: Annotated[
+        bool,
+        typer.Option(
+            "-B",
+            help="Show borders around the table.",
+        ),
+    ] = False,
     include_options: Annotated[
         str,
         typer.Option(
@@ -79,6 +87,15 @@ def show(
         ),
     ] = ConfigDisplayOptionDefaults.filter_cli_default,
 ):
+    def _create_columns(table_: Table, column_names_: tuple[str, ...]):
+        if len(table_.columns) != len(column_names_):
+            for _ in column_names_:
+                table_.add_column(
+                    "",
+                    overflow="fold",
+                    no_wrap=False,
+                )
+
     if short_view:
         include_options = "key val unit"
     if long_view:
@@ -107,11 +124,11 @@ def show(
         raise Exit(1)
 
     unique_config_files: dict[str | None, int] = defaultdict(int)
-    table = Table(box=None, show_header=True)
-    table.add_column("", overflow="fold", no_wrap=False)
-    table.add_column("", overflow="fold", no_wrap=False)
-    table.add_column("", overflow="fold", no_wrap=False)
-    table.add_column("", overflow="fold", no_wrap=False)
+    table = Table(
+        box=box.HEAVY_HEAD if show_borders else None,
+        show_header=True,
+        show_lines=True,  # Doesn't show anyway when box=None
+    )
     for key, val in flatten_config_schema(ConfigMaker.get_all_models()).items():
         match field_name:
             case None:
@@ -121,6 +138,7 @@ def show(
                     column_names, rows = _add_include_options_to_display_values(
                         include_options=include_struct, display_values=result
                     )
+                    _create_columns(table, column_names)
                     for _i, _c in enumerate(column_names):
                         table.columns[_i].header = _c
                     table.add_row(*rows)
@@ -140,11 +158,14 @@ def show(
                         column_names, rows = _add_include_options_to_display_values(
                             include_options=include_struct, display_values=result
                         )
+                        _create_columns(table, column_names)
                         for _i, _c in enumerate(column_names):
                             table.columns[_i].header = _c
                         table.add_row(*rows)
     if table.row_count > 0:
         stdout_console.print(table)
+    else:
+        raise Exit(1)
     if unique_config_files:
         stdout_console.print("\n[bold]Unique Configuration Files:[/bold]")
         for k, v in unique_config_files.items():
