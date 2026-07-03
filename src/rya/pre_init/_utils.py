@@ -8,8 +8,8 @@ from typing import ClassVar
 from properpath import P
 from pydantic.types import PositiveInt
 
-from ..names import AppIdentity
 from ..kernel import PublicLayerNames, get_logger
+from ..names import AppIdentity
 
 logger = get_logger()
 
@@ -29,7 +29,7 @@ class _ProjectDistMetadata:
 
 def _search_pyproject_file(root_dir: P | Path, depth: PositiveInt) -> P:
     if (path := root_dir / _ProjectDistMetadata.file_name).exists():
-        return path
+        return P(path)
     if depth <= 1:
         raise FileNotFoundError(
             f"{_ProjectDistMetadata.file_name} not found in {root_dir} "
@@ -57,6 +57,11 @@ def get_app_version() -> str:
                 f"E.g., uv add --dev {AppIdentity.app_name}. Alternatively, "
                 f"add a {_ProjectDistMetadata.file_name} to your "
                 f"project directory."
+            )
+        if module.__file__ is None:
+            raise AppVersionNotFound(
+                f"The '__file__' attribute of module layer '{app_names_layer}' is None. "
+                f"This means the app's root installation directory cannot be determined."
             )
         root_installation_dir = P(module.__file__).parent.parent
         try:
