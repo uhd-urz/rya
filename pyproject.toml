@@ -1,6 +1,6 @@
 [project]
 name = "rya"
-version = "0.2.41"
+version = "0.2.42"
 requires-python = ">=3.12,<4"
 description = "rya is a Python application bootstrapper."
 dependencies = [
@@ -61,6 +61,7 @@ build-backend = "uv_build"
 dev = [
     "mypy==1.18.2",
     "pip>=25.3",
+    "pydeps>=3.0.6",
     "types-pyyaml>=6.0.12.20250915",
 ]
 
@@ -72,3 +73,15 @@ packages = [
 
 [tool.mypy]
 plugins = "pydantic.mypy"
+
+[tool.pydeps]
+# https://github.com/thebjorn/pydeps
+# Run pydeps src/rya -o <file name>.svg
+only = ["rya"]
+max_bacon = 0
+max_module_depth = 2
+rankdir = "BT"
+cluster = true
+format = "svg"
+no_show = true
+exclude_exact = ["rya"]
