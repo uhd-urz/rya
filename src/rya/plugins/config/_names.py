@@ -7,6 +7,7 @@ from ...kernel import LayerLoader, PublicLayerNames
 @dataclass
 class ConfDescDefinition:
     conf_desc_key: ClassVar[str] = "__conf_desc__"
+    min_hidden_char_count: ClassVar[int] = 18
     max_reveal_masked_secret: ClassVar[int] = 0
 
 

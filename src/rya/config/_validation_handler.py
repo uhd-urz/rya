@@ -5,12 +5,10 @@ from typing import Literal, Optional
 
 from dynaconf import Dynaconf
 from dynaconf.vendor.ruamel.yaml.scanner import ScannerError
-
 # tomllib.TOMLDecodeError will not work since dynaconf uses vendored tomllib
 from dynaconf.vendor.tomllib import TOMLDecodeError
 from pydantic import BaseModel, ValidationError, create_model
 
-from ..loggers import get_logger
 from ._model_handler import (
     ConfigMaker,
     NoConfigModelRegistrationFound,
@@ -20,6 +18,7 @@ from ._model_handler import (
 from ._names import DynaConfArgs
 from ._names import PluginDefinitions as Pdf
 from .exceptions import BadConfigurationFile, IncompleteConfigModelAccessError
+from ..loggers import get_logger
 
 logger = get_logger()
 
@@ -38,7 +37,8 @@ class IncompleteConfigPlaceholder(BaseModel):
             f"have the attribute was not instantiated. This likely means that "
             f"a configuration field is missing or of invalid type, "
             f"so model validation failed. Try manually validating the "
-            f"model with 'AppConfig.validate' model, and debug the error"
+            f"model with '{AppConfig.validate.__name__}' "
+            f"method, and you will find the actual validation error."
         )
 
 
