@@ -345,6 +345,7 @@ def _get_field_config_result(
                                         key=field_name,
                                         value=partial_mask_secret(
                                             field_value,
+                                            min_hidden_char_count=ConfDescDefinition.min_hidden_char_count,
                                             max_reveal_char_count=ConfDescDefinition.max_reveal_masked_secret,
                                         ),
                                         description=config_description.description,
@@ -389,6 +390,7 @@ def _get_field_config_result(
                         key=field_name,
                         value=partial_mask_secret(
                             field_value,
+                            min_hidden_char_count=ConfDescDefinition.min_hidden_char_count,
                             max_reveal_char_count=ConfDescDefinition.max_reveal_masked_secret,
                         ),
                         location=field_location,

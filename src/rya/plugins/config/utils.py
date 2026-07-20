@@ -56,14 +56,20 @@ def _is_value_from_dynaconf_env(
     return False
 
 
-def partial_mask_secret(secret: str, max_reveal_char_count: int = 5) -> str:
+def partial_mask_secret(
+    secret: str,
+    min_hidden_char_count: int = 18,
+    max_reveal_char_count: int = 5,
+) -> str:
     mask_char = "*"
     breaking_char_limit = 18
-    minimum_mask_char = 10
+    if min_hidden_char_count > breaking_char_limit:
+        breaking_char_limit = min_hidden_char_count
+    mask_char_repeat_count = 10
     if (expose := abs(breaking_char_limit - len(secret)) // 2) > 0:
         if expose > max_reveal_char_count:
             expose = max_reveal_char_count
-    return f"{secret[:expose]}{mask_char * minimum_mask_char}{secret[: -expose - 1 : -1][::-1]}"
+    return f"{secret[:expose]}{mask_char * mask_char_repeat_count}{secret[: -expose - 1 : -1][::-1]}"
 
 
 def get_dynaconf_settings_history[AnyDefault](
